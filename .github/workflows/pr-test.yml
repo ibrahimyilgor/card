@@ -30,11 +30,11 @@ jobs:
 
       - name: Install frontend dependencies
         run: |
-          cd ../frontend
+          cd frontend
           npm install
 
       - name: Run frontend tests
         run: |
-          cd ../frontend
+          cd frontend
           npm test
         continue-on-error: false
