@@ -14,11 +14,18 @@ const pool = new Pool({
   port: 5432,
 });
 
-const authRouter = require('./auth')(pool);
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
 
-app.use(cors());
+const authRouter = require('./auth')(pool);
+const userRouter = require('./user')(pool);
+
+
 app.use(express.json());
 app.use('/auth', authRouter);
+app.use('/user', userRouter);
 
 app.get('/api', async (req, res) => {
   const result = await pool.query('SELECT NOW()');
@@ -36,5 +43,5 @@ app.get('/items', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Backend listening at http://localhost:${port}`);
+  console.log(`Backend listening at port: ${port}`);
 });

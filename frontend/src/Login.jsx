@@ -17,8 +17,9 @@ export default function Login({ onLogin, onSwitch }) {
         body: JSON.stringify({ username, password })
       });
       const data = await res.json();
-      if (res.ok) {
-        onLogin(username);
+      if (res.ok && data.token) {
+        localStorage.setItem('token', data.token);
+        onLogin();
       } else {
         setError(data.error || 'Login failed');
       }
