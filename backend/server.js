@@ -1,13 +1,17 @@
 
+
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const fetch = require('node-fetch');
+const authRouter = require('./auth');
 const app = express();
 const port = 5000;
 
+
 app.use(cors());
 app.use(express.json());
+app.use('/auth', authRouter);
 
 const pool = new Pool({
   user: 'postgres',
