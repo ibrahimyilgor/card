@@ -1,6 +1,6 @@
 nginx.
-github repo oluştur.
-maine pushladığımda otomatik build alan action yazılsın.
++github repo oluştur.
++maine pushladığımda otomatik build alan action yazılsın.
 prsız maine pushlanmasın
 prlarda test yapılsın geçmiyorsa kabul edilmesin
 otomatik deploy (mainden)
