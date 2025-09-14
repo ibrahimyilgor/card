@@ -1,5 +1,7 @@
+
 const express = require('express');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 module.exports = (pool) => {
   const router = express.Router();
@@ -24,11 +26,17 @@ module.exports = (pool) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
     try {
-      const result = await pool.query('SELECT password_hash FROM users WHERE username = $1', [username]);
+      const result = await pool.query('SELECT id, password_hash FROM users WHERE username = $1', [username]);
       if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
       const valid = await bcrypt.compare(password, result.rows[0].password_hash);
       if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-      res.json({ message: 'Login successful' });
+      // JWT token üret
+      const token = jwt.sign(
+        { userId: result.rows[0].id, username },
+        process.env.JWT_SECRET || 'dev_secret',
+        { expiresIn: '1h' }
+      );
+      res.json({ message: 'Login successful', token });
     } catch (err) {
       res.status(500).json({ error: 'Login failed' });
     }

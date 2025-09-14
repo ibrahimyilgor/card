@@ -3,19 +3,19 @@ import Login from './Login';
 import Signup from './Signup';
 import Info from './Info';
 
-function App() {
-  const [page, setPage] = useState('login');
-  const [username, setUsername] = useState('');
 
-  const handleLogin = (user) => {
-    setUsername(user);
+function App() {
+  const [page, setPage] = useState(() => {
+    return localStorage.getItem('token') ? 'info' : 'login';
+  });
+
+  const handleLogin = () => {
     setPage('info');
   };
-  const handleSignup = (user) => {
+  const handleSignup = () => {
     setPage('login');
   };
   const handleLogout = () => {
-    setUsername('');
     setPage('login');
   };
 
@@ -26,7 +26,7 @@ function App() {
     return <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />;
   }
   if (page === 'info') {
-    return <Info username={username} onLogout={handleLogout} />;
+    return <Info onLogout={handleLogout} />;
   }
   return null;
 }
