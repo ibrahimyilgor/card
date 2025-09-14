@@ -1,32 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import Login from './Login';
+import Signup from './Signup';
+import Info from './Info';
 
 function App() {
-  const [result, setResult] = useState([]);
+  const [page, setPage] = useState('login');
+  const [username, setUsername] = useState('');
 
-  useEffect(() => {
-    const fetchData = async () => {
-    const backendUrl = window.location.protocol + '//' + window.location.hostname + ':5000';
-    console.log('Backend URL:', backendUrl);
-    const res = await fetch(`${backendUrl}/items`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const data = await res.json();
-    setResult(data.items || []);
-    };
-    fetchData();
-  }, []);
+  const handleLogin = (user) => {
+    setUsername(user);
+    setPage('info');
+  };
+  const handleSignup = (user) => {
+    setPage('login');
+  };
+  const handleLogout = () => {
+    setUsername('');
+    setPage('login');
+  };
 
-  return (
-    <div>
-      <h2>Items</h2>
-      {result.map(item => (
-        <div key={item.id} style={{ marginTop: 16 }}>
-          {item && <b>Itemss {item.id}: {item.name}</b>}
-        </div>
-      ))}
-    </div>
-  );
+  if (page === 'login') {
+    return <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />;
+  }
+  if (page === 'signup') {
+    return <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />;
+  }
+  if (page === 'info') {
+    return <Info username={username} onLogout={handleLogout} />;
+  }
+  return null;
 }
 
 export default App;

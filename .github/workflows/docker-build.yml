@@ -29,6 +29,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
 
+
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
         with:
@@ -36,3 +37,11 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+
+      - name: Build and push db image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./db
+          file: ./db/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/db:latest
