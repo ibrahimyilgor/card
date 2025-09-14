@@ -1,25 +1,24 @@
 
-
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const fetch = require('node-fetch');
-const authRouter = require('./auth');
 const app = express();
 const port = 5000;
 
-
-app.use(cors());
-app.use(express.json());
-app.use('/auth', authRouter);
-
 const pool = new Pool({
   user: 'postgres',
-  host: 'db',
+  host: "localhost",
   database: 'postgres',
   password: 'postgres',
   port: 5432,
 });
+
+const authRouter = require('./auth')(pool);
+
+app.use(cors());
+app.use(express.json());
+app.use('/auth', authRouter);
 
 app.get('/api', async (req, res) => {
   const result = await pool.query('SELECT NOW()');
