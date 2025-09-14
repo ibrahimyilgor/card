@@ -1,0 +1,20 @@
+16.171.139.95
+
+ssh -i "card.pem" ubuntu@16.171.139.95 (GİRİŞ - info klasörüne gir)
+
+-DEĞİŞİKLİKLİKLERİ SUNUCUYA KOPYALAR
+scp -i "card.pem" -r "C:\Users\ibrah\OneDrive\Masaüstü\card" ubuntu@16.171.139.95:~/ (DOSYALARIN GÜNCEL HALİNİ KOPYALAR)
+
+-VERİLER DE SİLİNSİN İSTİYORSAN
+    -ÖNCE NODE_MODULES LERİ SİL Kİ KOPYALAMA UZUN SÜRMESİN 
+    -.env DOSYASINI KOPYALAMAMAK LAZIM
+ssh -i "card.pem" ubuntu@16.171.139.95 (ESKİ CONTAINER VE VOLUMELERİ SİLER)
+cd ~/card
+sudo docker-compose down -v
+sudo docker-compose up --build -d
+
+-VERİLER KALSIN İSTİYORSAN 
+    -ÖNCE NODE_MODULES LERİ SİL Kİ KOPYALAMA UZUN SÜRMESİN 
+    -.env DOSYASINI KOPYALAMAMAK LAZIM
+sudo docker-compose down
+sudo docker-compose up --build -d

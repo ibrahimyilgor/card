@@ -1,0 +1,25 @@
+docker login -u yilgor98 ile login ol 
+
+cd backend
+docker build -t yilgor98/backend:latest .
+docker push yilgor98/backend:latest
+
+cd ../frontend
+docker build -t yilgor98/frontend:latest .
+docker push yilgor98/frontend:latest
+
+cd ../db
+docker build -t yilgor98/db:latest .
+docker push yilgor98/db:latest
+
+
+
+SUNUCUDA 
+    ssh -i "card.pem" ubuntu@16.171.139.95 (GİRİŞ - info klasörüne gir)
+
+    docker pull yilgor98/backend:latest
+    docker pull yilgor98/frontend:latest
+    docker pull yilgor98/db:latest
+    sudo docker-compose up -d
+    
+    BUNLAR YERİNE DOCKER COMPOSE DOSYASINI SUNCUUYA ATIP ONU KALDIRSAK?
