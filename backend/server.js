@@ -8,7 +8,7 @@ const port = 5000;
 
 const pool = new Pool({
   user: 'postgres',
-  host: "localhost",
+  host: process.env.PGHOST || 'db',
   database: 'postgres',
   password: 'postgres',
   port: 5432,
