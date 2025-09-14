@@ -22,7 +22,7 @@ function App() {
       <h2>Items</h2>
       {result.map(item => (
         <div key={item.id} style={{ marginTop: 16 }}>
-          {item && <b>Item {item.id}: {item.name}</b>}
+          {item && <b>Itemss {item.id}: {item.name}</b>}
         </div>
       ))}
     </div>
