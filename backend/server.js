@@ -8,7 +8,7 @@ const port = 5000;
 
 const pool = new Pool({
   user: 'postgres',
-  host: process.env.PGHOST || 'db',
+  host: process.env.PGHOST || 'localhost', // Change 'localhost' to 'db' for Docker
   database: 'postgres',
   password: 'postgres',
   port: 5432,
