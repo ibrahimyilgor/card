@@ -30,7 +30,7 @@ export default function Login({ onLogin, onSwitch }) {
 
   return (
     <div className="auth-container">
-      <h2>Login</h2>
+      <h2>LogiN</h2>
       <form onSubmit={handleSubmit}>
         <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
         <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />

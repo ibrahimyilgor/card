@@ -38,10 +38,15 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
 
-      - name: Build and push db image
-        uses: docker/build-push-action@v5
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
         with:
-          context: ./db
-          file: ./db/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/db:latest
+          host: ${{ secrets.SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/card
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d --build
