@@ -6,22 +6,45 @@ const jwt = require('jsonwebtoken');
 module.exports = (pool) => {
   const router = express.Router();
 
-  // Kullanıcı kaydı
+  // Register
   router.post('/register', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    const client = await pool.connect();
     try {
+      await client.query('BEGIN');
       const hash = await bcrypt.hash(password, 10);
-      await pool.query('INSERT INTO users (username, password_hash) VALUES ($1, $2)', [username, hash]);
+      const userResult = await client.query(
+        'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id',
+        [username, hash]
+      );
+      const userId = userResult.rows[0].id;
+
+      // Create user_profiles
+      await client.query(
+        'INSERT INTO user_profiles (user_id) VALUES ($1)',
+        [userId]
+      );
+
+      // Create user_stats
+      await client.query(
+        'INSERT INTO user_stats (user_id) VALUES ($1)',
+        [userId]
+      );
+
+      await client.query('COMMIT');
       res.status(201).json({ message: 'User registered' });
     } catch (err) {
+      await client.query('ROLLBACK');
       console.error('Register error:', err);
       if (err.code === '23505') return res.status(409).json({ error: 'Username already exists' });
       res.status(500).json({ error: 'Registration failed' });
+    } finally {
+      client.release();
     }
   });
 
-  // Kullanıcı girişi
+  // Login
   router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
