@@ -6,6 +6,7 @@ import Info from './Info';
 import Settings from './Settings';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme';
+import { I18nProvider } from './i18n';
 
 
 
@@ -14,8 +15,9 @@ function App() {
     return localStorage.getItem('token') ? 'info' : 'login';
   });
   const [themeMode, setThemeMode] = useState('dark');
+  const [lang, setLang] = useState(null);
 
-  // Fetch theme_preference after login
+  // Fetch theme_preference and language after login
   const handleLogin = async () => {
     setPage('info');
     const token = localStorage.getItem('token');
@@ -25,8 +27,13 @@ function App() {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         const data = await res.json();
-        if (res.ok && data.profile && data.profile.theme_preference) {
-          setThemeMode(data.profile.theme_preference === 'light' ? 'light' : 'dark');
+        if (res.ok && data.profile) {
+          if (data.profile.theme_preference) {
+            setThemeMode(data.profile.theme_preference === 'light' ? 'light' : 'dark');
+          }
+          if (data.profile.language) {
+            setLang(data.profile.language);
+          }
         }
       } catch (err) {
         // fallback: do nothing
@@ -85,12 +92,14 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={page === 'login' || page === 'signup' ? darkThemeObj : themeObj}>
-      {page === 'login' && <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />}
-      {page === 'signup' && <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />}
-      {page === 'info' && <Info onLogout={handleLogout} onSettings={handleOpenSettings} />}
-      {page === 'settings' && <Settings currentTheme={themeMode} onThemeChange={handleThemeChange} onLogout={handleLogout} />}
-    </ThemeProvider>
+    <I18nProvider lang={lang} setLang={setLang}>
+      <ThemeProvider theme={page === 'login' || page === 'signup' ? darkThemeObj : themeObj}>
+        {page === 'login' && <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />}
+        {page === 'signup' && <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />}
+        {page === 'info' && <Info onLogout={handleLogout} onSettings={handleOpenSettings}  />}
+        {page === 'settings' && <Settings currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} onLogout={handleLogout} />}
+      </ThemeProvider>
+    </I18nProvider>
   );
 }
 

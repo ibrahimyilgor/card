@@ -1,0 +1,20 @@
+{
+  "card": "Card",
+  "settings": "Settings",
+  "profile": "Profile",
+  "logout": "Logout",
+  "theme": "Theme",
+  "dark": "Dark",
+  "light": "Light",
+  "save": "Save",
+  "cancel": "Cancel",
+  "login": "Login",
+  "signup": "Sign Up",
+  "email": "Email",
+  "password": "Password",
+  "no_account": "Don't have an account?",
+  "have_account": "Already have an account?",
+  "language": "Language",
+  "english": "English",
+  "turkish": "Turkish"
+}

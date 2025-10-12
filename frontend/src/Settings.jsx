@@ -1,24 +1,28 @@
-import React, { useState } from 'react';
-import { Box, Typography, RadioGroup, FormControlLabel, Radio, Button, Paper } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import Topbar from './Topbar';
+import { Box, Button, Divider, FormControlLabel, Paper, Radio, RadioGroup, Typography, useTheme } from "@mui/material";
+import { useContext, useState } from "react";
+import Topbar from "./Topbar";
+import { I18nContext } from "./i18n";
 
-export default function Settings({  currentTheme, onThemeChange, onLogout, onSettings }) {
+export default function Settings({ currentTheme, onThemeChange, onLangChange, onLogout, onSettings, onMainPage }) {
   const theme = useTheme();
+  const { t } = useContext(I18nContext);
   const [selectedTheme, setSelectedTheme] = useState(currentTheme || 'dark');
+  const [selectedLang, setSelectedLang] = useState(localStorage.getItem('lang') || 'en');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const handleChange = (e) => {
+  const handleThemeChangeLocal = (e) => {
     setSelectedTheme(e.target.value);
+  };
+  const handleLangChange = (e) => {
+    setSelectedLang(e.target.value);
   };
 
   const handleSave = async () => {
     setLoading(true);
-    setError('');
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/user/profile/theme', {
+      // Update theme
+      const themeRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/user/profile/theme', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -26,12 +30,25 @@ export default function Settings({  currentTheme, onThemeChange, onLogout, onSet
         },
         body: JSON.stringify({ theme_preference: selectedTheme })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update theme');
+      const themeData = await themeRes.json();
+      if (!themeRes.ok) throw new Error(themeData.error || 'Failed to update theme');
       if (onThemeChange) onThemeChange(selectedTheme);
 
+      // Update language
+      const langRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/user/profile/language', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ language: selectedLang })
+      });
+      const langData = await langRes.json();
+      if (!langRes.ok) throw new Error(langData.error || 'Failed to update language');
+      localStorage.setItem('lang', selectedLang);
+      if (onLangChange) onLangChange(selectedLang);
+
     } catch (err) {
-      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -39,17 +56,51 @@ export default function Settings({  currentTheme, onThemeChange, onLogout, onSet
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: theme.palette.background.default }}>
-      <Topbar onLogout={onLogout} onSettings={onSettings} />
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 64px)' }}>
-        <Paper sx={{ p: 4, borderRadius: 3, minWidth: 320, bgcolor: theme.palette.background.paper }} elevation={2}>
-          <Typography variant="h5" sx={{ mb: 3, fontWeight: 700 }}>Settings</Typography>
-          <Typography variant="subtitle1" sx={{ mb: 2 }}>Theme</Typography>
-          <RadioGroup value={selectedTheme} onChange={handleChange}>
-            <FormControlLabel value="dark" control={<Radio />} label="Dark" />
-            <FormControlLabel value="light" control={<Radio />} label="Light" />
+      <Topbar onLogout={onLogout} onSettings={onSettings} onMainPage={onMainPage} />
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: { xs: 'auto', sm: 'calc(100vh - 64px)' },
+          px: { xs: 1, sm: 2, md: 0 },
+          py: { xs: 2, sm: 0 },
+        }}
+      >
+        <Paper
+          sx={{
+            p: { xs: 2, sm: 4 },
+            borderRadius: 3,
+            minWidth: { xs: '90%', sm: 320 },
+            maxWidth: { xs: '90%', sm: 400, md: 480 },
+            width: { xs: '90%', sm: 'auto' },
+            bgcolor: theme.palette.background.paper,
+            boxShadow: 2,
+          }}
+          elevation={2}
+        >
+          <Typography variant="h5" sx={{ mb: 3, fontWeight: 700, fontSize: { xs: 22, sm: 26 } }}>{t('settings')}</Typography>
+          <Typography variant="subtitle1" sx={{ mb: 2, fontSize: { xs: 16, sm: 18 } }}>{t('theme')}</Typography>
+          <RadioGroup value={selectedTheme} onChange={handleThemeChangeLocal} row={false} sx={{ mb: 2 }}>
+            <FormControlLabel value="dark" control={<Radio size="small" />} label={t('dark')} sx={{ mr: 2 }} />
+            <FormControlLabel value="light" control={<Radio size="small" />} label={t('light')} sx={{ mr: 2 }} />
           </RadioGroup>
-          {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
-          <Button variant="contained" color="primary" sx={{ mt: 3 }} onClick={handleSave} fullWidth disabled={loading}>{loading ? 'Saving...' : 'Save'}</Button>
+          <Divider sx={{ my: { xs: 2, sm: 3 } }} />
+          <Typography variant="subtitle1" sx={{ mb: 2, fontSize: { xs: 16, sm: 18 } }}>{t('language')}</Typography>
+          <RadioGroup value={selectedLang} onChange={handleLangChange} row={false} sx={{ mb: 2 }}>
+            <FormControlLabel value="en" control={<Radio size="small" />} label={t('english')} sx={{ mr: 2 }} />
+            <FormControlLabel value="tr" control={<Radio size="small" />} label={t('turkish')} sx={{ mr: 2 }} />
+          </RadioGroup>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 3, fontSize: { xs: 15, sm: 16 }, py: { xs: 1, sm: 1.2 } }}
+            onClick={handleSave}
+            fullWidth
+            disabled={loading}
+          >
+            {loading ? t('saving') : t('save')}
+          </Button>
         </Paper>
       </Box>
     </Box>

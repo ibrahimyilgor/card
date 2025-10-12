@@ -1,0 +1,20 @@
+{
+  "card": "Kart",
+  "settings": "Ayarlar",
+  "profile": "Profil",
+  "logout": "Çıkış",
+  "theme": "Tema",
+  "dark": "Koyu",
+  "light": "Açık",
+  "save": "Kaydet",
+  "cancel": "İptal",
+  "login": "Giriş",
+  "signup": "Kayıt Ol",
+  "email": "E-posta",
+  "password": "Şifre",
+  "no_account": "Hesabınız yok mu? ",
+  "have_account": "Zaten bir hesabınız var mı? ",
+  "language": "Dil",
+  "english": "İngilizce",
+  "turkish": "Türkçe"
+}

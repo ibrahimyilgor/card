@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { AppBar, Toolbar, Typography, Box, IconButton, Popover, Button, useTheme } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import { I18nContext } from './i18n';
 
-export default function Topbar({ onLogout, onSettings }) {
+export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
   const theme = useTheme();
+  const { t } = useContext(I18nContext);
+  
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleProfileClick = (event) => {
@@ -14,6 +17,7 @@ export default function Topbar({ onLogout, onSettings }) {
   const handlePopoverClose = () => {
     setAnchorEl(null);
   };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     if (onLogout) onLogout();
@@ -23,9 +27,9 @@ export default function Topbar({ onLogout, onSettings }) {
 
   return (
     <AppBar position="static" elevation={1} sx={{ bgcolor: theme.palette.background.default, color: theme.palette.text.primary }}>
-      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
-          Card
+      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary }} onClick={onMainPage}>
+          {t('card')}
         </Typography>
         <Box>
           <IconButton sx={{ mx: 1, color: theme.palette.text.primary }} onClick={onSettings}>
@@ -55,7 +59,7 @@ export default function Topbar({ onLogout, onSettings }) {
             }}
           >
             <Box sx={{ p: 2, minWidth: 170, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: theme.palette.text.primary }}>Profile</Typography>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: theme.palette.text.primary }}>{t('profile')}</Typography>
               <Button
                 variant="contained"
                 sx={{
@@ -70,7 +74,7 @@ export default function Topbar({ onLogout, onSettings }) {
                 onClick={handleLogout}
                 fullWidth
               >
-                Logout
+                {t('logout')}
               </Button>
             </Box>
           </Popover>
