@@ -18,5 +18,7 @@
   "english": "English",
   "turkish": "Turkish",
   "settings_saved": "Settings saved successfully",
-  "settings_save_error": "Error saving settings!"
+  "settings_save_error": "Error saving settings!",
+  "create_first_deck": "Create your first deck",
+  "new_deck": "New Deck"
 }

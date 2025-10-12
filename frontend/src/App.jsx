@@ -16,6 +16,7 @@ function App() {
   });
   const [themeMode, setThemeMode] = useState('dark');
   const [lang, setLang] = useState(null);
+  const [userId, setUserId] = useState(() => localStorage.getItem('userId') || null);
 
   // Fetch theme_preference and language after login
   const handleLogin = async () => {
@@ -33,6 +34,11 @@ function App() {
           }
           if (data.profile.language) {
             setLang(data.profile.language);
+          }
+          console.log("ibrahimdata", data.profile)
+          if (data.profile.user_id) {
+            setUserId(data.profile.user_id);
+            localStorage.setItem('userId', data.profile.user_id);
           }
         }
       } catch (err) {
@@ -96,7 +102,7 @@ function App() {
       <ThemeProvider theme={page === 'login' || page === 'signup' ? darkThemeObj : themeObj}>
         {page === 'login' && <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />}
         {page === 'signup' && <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />}
-        {page === 'info' && <Info onLogout={handleLogout} onSettings={handleOpenSettings}  />}
+        {page === 'info' && <Info onLogout={handleLogout} onSettings={handleOpenSettings} userId={userId} />}
         {page === 'settings' && <Settings currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} onLogout={handleLogout} />}
       </ThemeProvider>
     </I18nProvider>
