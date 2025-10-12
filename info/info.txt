@@ -18,3 +18,11 @@ sudo docker-compose up --build -d
     -.env DOSYASINI KOPYALAMAMAK LAZIM
 sudo docker-compose down
 sudo docker-compose up --build -d
+
+Alan	                Değer
+Server Name	            postgres
+Host name/address	    db
+Port	                5432
+Database	            postgres
+User	                postgres
+Password	            postgres

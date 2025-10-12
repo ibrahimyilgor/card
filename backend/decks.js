@@ -3,7 +3,7 @@ module.exports = (pool) => {
 	const router = express.Router();
 
 	// Get all decks by userId
-	router.get('/decks/:userId', async (req, res) => {
+	router.get('/:userId', async (req, res) => {
 		const { userId } = req.params;
 		try {
 			const result = await pool.query('SELECT * FROM decks WHERE user_id = $1', [userId]);
