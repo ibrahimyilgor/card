@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS user_stats (
   total_flashcards_created INT DEFAULT 0,
   total_reviews_done INT DEFAULT 0,
   last_review_date TIMESTAMP,
-  streak_days INT DEFAULT 0,
+  streak_days INT DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS decks (
