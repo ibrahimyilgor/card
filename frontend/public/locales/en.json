@@ -16,5 +16,7 @@
   "have_account": "Already have an account?",
   "language": "Language",
   "english": "English",
-  "turkish": "Turkish"
+  "turkish": "Turkish",
+  "settings_saved": "Settings saved successfully",
+  "settings_save_error": "Error saving settings!"
 }

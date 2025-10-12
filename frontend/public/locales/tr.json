@@ -16,5 +16,7 @@
   "have_account": "Zaten bir hesabınız var mı? ",
   "language": "Dil",
   "english": "İngilizce",
-  "turkish": "Türkçe"
+  "turkish": "Türkçe",
+  "settings_saved": "Ayarlar başarıyla kaydedildi",
+  "settings_save_error": "Ayarlar kaydedilirken hata oluştu!"
 }

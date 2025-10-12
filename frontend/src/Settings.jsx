@@ -1,4 +1,4 @@
-import { Box, Button, Divider, FormControlLabel, Paper, Radio, RadioGroup, Typography, useTheme } from "@mui/material";
+import { Box, Button, Divider, FormControlLabel, Paper, Radio, RadioGroup, Typography, useTheme, Snackbar, Alert } from "@mui/material";
 import { useContext, useState } from "react";
 import Topbar from "./Topbar";
 import { I18nContext } from "./i18n";
@@ -9,6 +9,7 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange, on
   const [selectedTheme, setSelectedTheme] = useState(currentTheme || 'dark');
   const [selectedLang, setSelectedLang] = useState(localStorage.getItem('lang') || 'en');
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const handleThemeChangeLocal = (e) => {
     setSelectedTheme(e.target.value);
@@ -48,7 +49,9 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange, on
       localStorage.setItem('lang', selectedLang);
       if (onLangChange) onLangChange(selectedLang);
 
+      setSnackbar({ open: true, message: t('settings_saved') || 'Settings saved successfully!', severity: 'success' });
     } catch (err) {
+      setSnackbar({ open: true, message: err.message || t('settings_save_error') || 'Error saving settings!', severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -101,6 +104,16 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange, on
           >
             {loading ? t('saving') : t('save')}
           </Button>
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={3000}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          >
+            <Alert severity={snackbar.severity} sx={{ width: '100%' }} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
         </Paper>
       </Box>
     </Box>
