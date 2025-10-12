@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 module.exports = (pool) => {
   const router = express.Router();
 
-  // Token doğrulama middleware
+  // Token authentication middleware
   function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -16,7 +16,7 @@ module.exports = (pool) => {
     });
   }
 
-  // Kişiye özel bilgi endpointi
+  // User info endpoint
   router.get('/info', authenticateToken, async (req, res) => {
     try {
       const result = await pool.query('SELECT id, username FROM users WHERE id = $1', [req.user.userId]);
@@ -24,6 +24,28 @@ module.exports = (pool) => {
       res.json({ user: result.rows[0] });
     } catch (err) {
       res.status(500).json({ error: 'Failed to fetch user info' });
+    }
+  });
+
+  // User profile endpoint
+  router.get('/profile', authenticateToken, async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM user_profiles WHERE user_id = $1', [req.user.userId]);
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Profile not found' });
+      res.json({ profile: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch user profile' });
+    }
+  });
+
+  // User stats endpoint
+  router.get('/stats', authenticateToken, async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM user_stats WHERE user_id = $1', [req.user.userId]);
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Stats not found' });
+      res.json({ stats: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch user stats' });
     }
   });
 
