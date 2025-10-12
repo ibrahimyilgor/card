@@ -38,6 +38,38 @@ module.exports = (pool) => {
     }
   });
 
+  // Update language
+  router.put('/profile/language', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    const { language } = req.body;
+    if (!language) return res.status(400).json({ error: 'Language is required' });
+    try {
+      await pool.query(
+        'UPDATE user_profiles SET language = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2',
+        [language, userId]
+      );
+      res.json({ success: true, language });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to update language' });
+    }
+  });
+
+  // Update theme_preference
+  router.put('/profile/theme', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    const { theme_preference } = req.body;
+    if (!theme_preference) return res.status(400).json({ error: 'Theme preference is required' });
+    try {
+      await pool.query(
+        'UPDATE user_profiles SET theme_preference = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2',
+        [theme_preference, userId]
+      );
+      res.json({ success: true, theme_preference });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to update theme preference' });
+    }
+  });
+
   // User stats endpoint
   router.get('/stats', authenticateToken, async (req, res) => {
     try {
