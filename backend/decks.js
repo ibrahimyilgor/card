@@ -1,3 +1,4 @@
+
 const express = require('express');
 module.exports = (pool) => {
 	const router = express.Router();
@@ -10,6 +11,44 @@ module.exports = (pool) => {
 			res.json({ decks: result.rows });
 		} catch (err) {
 			res.status(500).json({ error: 'Failed to fetch decks' });
+		}
+	});
+
+	// Create a new deck
+	router.post('/create', async (req, res) => {
+		const { userId, title, description } = req.body;
+		if (!userId || !title) {
+			return res.status(400).json({ error: 'userId and title required' });
+		}
+		try {
+			const result = await pool.query(
+				'INSERT INTO decks (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
+				[userId, title, description || '']
+			);
+			res.status(201).json({ deck: result.rows[0] });
+		} catch (err) {
+			res.status(500).json({ error: 'Failed to create deck' });
+		}
+	});
+
+	// Update an existing deck
+	router.put('/:deckId', async (req, res) => {
+		const { deckId } = req.params;
+		const { title, description } = req.body;
+		if (!title) {
+			return res.status(400).json({ error: 'title required' });
+		}
+		try {
+			const result = await pool.query(
+				'UPDATE decks SET title = $1, description = $2 WHERE id = $3 RETURNING *',
+				[title, description || '', deckId]
+			);
+			if (result.rows.length === 0) {
+				return res.status(404).json({ error: 'Deck not found' });
+			}
+			res.json({ deck: result.rows[0] });
+		} catch (err) {
+			res.status(500).json({ error: 'Failed to update deck' });
 		}
 	});
 
