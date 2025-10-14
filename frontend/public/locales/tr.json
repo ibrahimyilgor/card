@@ -20,5 +20,7 @@
   "settings_saved": "Ayarlar başarıyla kaydedildi",
   "settings_save_error": "Ayarlar kaydedilirken hata oluştu!",
   "create_first_deck": "İlk destenizi oluşturun",
-  "new_deck": "Yeni Deste"
+  "new_deck": "Yeni Deste",
+  "deck_title": "Deste başlığı",
+  "deck_description": "Deste açıklaması"
 }

@@ -20,5 +20,7 @@
   "settings_saved": "Settings saved successfully",
   "settings_save_error": "Error saving settings!",
   "create_first_deck": "Create your first deck",
-  "new_deck": "New Deck"
+  "new_deck": "New Deck",
+  "deck_title": "Deck title",
+  "deck_description": "Deck description"
 }
