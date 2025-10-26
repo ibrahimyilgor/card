@@ -1,4 +1,6 @@
-nginx.
-awsye otomatik down up
+minio dockerhubdan kullanılabilir mi? avatar ve achievement için.
+dbyi bozmadan yeni column veya field ekleme işi nasıl olacak? 
+init.sql'i otomatik yollasın elle kopyalamak zorunda kalmayalım
+serverı her seferinde elle değiştirmek zorunda kalmayalım
 
 
