@@ -50,3 +50,11 @@ jobs:
             docker-compose pull
             docker-compose down
             docker-compose up -d --build
+
+      - name: Build and push db image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./db
+          file: ./db/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/db:latest
