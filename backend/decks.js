@@ -7,7 +7,7 @@ module.exports = (pool) => {
 	router.get('/:userId', async (req, res) => {
 		const { userId } = req.params;
 		try {
-			const result = await pool.query('SELECT * FROM decks WHERE user_id = $1', [userId]);
+			const result = await pool.query('SELECT * FROM deck WHERE user_id = $1', [userId]);
 			res.json({ decks: result.rows });
 		} catch (err) {
 			res.status(500).json({ error: 'Failed to fetch decks' });
@@ -22,7 +22,7 @@ module.exports = (pool) => {
 		}
 		try {
 			const result = await pool.query(
-				'INSERT INTO decks (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
+				'INSERT INTO deck (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
 				[userId, title, description || '']
 			);
 			res.status(201).json({ deck: result.rows[0] });
@@ -40,7 +40,7 @@ module.exports = (pool) => {
 		}
 		try {
 			const result = await pool.query(
-				'UPDATE decks SET title = $1, description = $2 WHERE id = $3 RETURNING *',
+				'UPDATE deck SET title = $1, description = $2 WHERE id = $3 RETURNING *',
 				[title, description || '', deckId]
 			);
 			if (result.rows.length === 0) {
@@ -56,7 +56,7 @@ module.exports = (pool) => {
 	router.get('/flashcards/:deckId', async (req, res) => {
 		const { deckId } = req.params;
 		try {
-			const result = await pool.query('SELECT * FROM flashcards WHERE deck_id = $1', [deckId]);
+			const result = await pool.query('SELECT * FROM flashcard WHERE deck_id = $1', [deckId]);
 			res.json({ flashcards: result.rows });
 		} catch (err) {
 			res.status(500).json({ error: 'Failed to fetch flashcards' });
