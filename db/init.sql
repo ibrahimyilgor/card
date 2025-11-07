@@ -1,4 +1,5 @@
-CREATE TABLE IF NOT EXISTS user (
+
+CREATE TABLE IF NOT EXISTS "user" (
   id SERIAL PRIMARY KEY,
   username VARCHAR(255) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE,
@@ -8,14 +9,14 @@ CREATE TABLE IF NOT EXISTS user (
 );
 
 CREATE TABLE IF NOT EXISTS user_preferences (
-  user_id INT PRIMARY KEY REFERENCES user(id) ON DELETE CASCADE,
+  user_id INT PRIMARY KEY REFERENCES "user"(id) ON DELETE CASCADE,
   language VARCHAR(10) DEFAULT 'en',
   theme_preference VARCHAR(10) DEFAULT 'light', 
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS user_daily_stats (
-  user_id INT REFERENCES user(id) ON DELETE CASCADE,
+  user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
   review_date TIMESTAMP NOT NULL,
   total_decks_review_done INT DEFAULT 0,
   PRIMARY KEY (user_id, review_date)
@@ -25,7 +26,7 @@ SELECT create_hypertable('user_daily_stats', 'review_date', if_not_exists => TRU
 
 CREATE TABLE IF NOT EXISTS deck (
   id SERIAL PRIMARY KEY,
-  user_id INT REFERENCES user(id) ON DELETE CASCADE,
+  user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
   description TEXT,
   mode VARCHAR(50) DEFAULT 'standard',
@@ -53,7 +54,7 @@ CREATE TABLE IF NOT EXISTS achievement (
 );
 
 CREATE TABLE IF NOT EXISTS user_achievements (
-  user_id INT REFERENCES user(id) ON DELETE CASCADE,
+  user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
   achievement_id INT REFERENCES achievement(id) ON DELETE CASCADE,
   done_count INT DEFAULT 0,
   earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
