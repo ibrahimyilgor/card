@@ -2,8 +2,15 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+
+# Aynı anda tek deploy koşsun
+concurrency:
+  group: build-and-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY_USER: ${{ secrets.DOCKERHUB_USERNAME }}
 
 jobs:
   build-and-push:
@@ -11,6 +18,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -21,24 +31,46 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # --- BACKEND ---
       - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
+          tags: |
+            ${{ env.REGISTRY_USER }}/backend:latest
+            ${{ env.REGISTRY_USER }}/backend:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY_USER }}/backend:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_USER }}/backend:buildcache,mode=max
 
-
+      # --- FRONTEND ---
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+          tags: |
+            ${{ env.REGISTRY_USER }}/frontend:latest
+            ${{ env.REGISTRY_USER }}/frontend:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY_USER }}/frontend:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_USER }}/frontend:buildcache,mode=max
 
+      # --- DB (init.sql’in imaja kopyalandığı yer burası) ---
+      - name: Build and push db image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./db
+          file: ./db/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY_USER }}/db:latest
+            ${{ env.REGISTRY_USER }}/db:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY_USER }}/db:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_USER }}/db:buildcache,mode=max
 
+      # --- DEPLOY (tüm imajlar push edildikten sonra) ---
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
@@ -46,15 +78,16 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd ~/card
-            docker-compose pull
-            docker-compose down
-            docker-compose up -d --build
-
-      - name: Build and push db image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./db
-          file: ./db/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/db:latest
+            # compose v2 komutu (önerilen)
+            if command -v docker >/dev/null && docker compose version >/dev/null 2>&1; then
+              docker compose pull
+              docker compose down
+              docker compose up -d --build
+            else
+              # eski sistemler için geri dönüş
+              docker-compose pull
+              docker-compose down
+              docker-compose up -d --build
+            fi

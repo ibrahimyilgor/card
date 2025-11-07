@@ -2,12 +2,12 @@
 
 ssh -i "card.pem" ubuntu@16.171.139.95 (GİRİŞ - info klasörüne gir)
 
--init.sql i sunucuya kopyalar
-    scp -i "card.pem" "C:\Users\ibrah\OneDrive\Masaüstü\Code\card\db\init.sql" ubuntu@16.171.139.95:~/db/
+-DOCKER COMPOSE DEĞİŞTİYSE SUNUCUDA DA GÜNCELLE
 
 -VERİLER DE SİLİNSİN İSTİYORSAN
     ssh -i "card.pem" ubuntu@16.171.139.95
     sudo docker-compose down -v
+    docker volume prune -f
     sudo docker-compose up --build -d
 
 -VERİLER KALSIN İSTİYORSAN 
