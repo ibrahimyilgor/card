@@ -1,5 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS timescaledb;
-
 CREATE TABLE IF NOT EXISTS "user" (
   id SERIAL PRIMARY KEY,
   username VARCHAR(255) UNIQUE NOT NULL,
@@ -22,8 +20,6 @@ CREATE TABLE IF NOT EXISTS user_daily_stats (
   total_decks_review_done INT DEFAULT 0,
   PRIMARY KEY (user_id, review_date)
 );
-
-SELECT create_hypertable('user_daily_stats', 'review_date', if_not_exists => TRUE);
 
 CREATE TABLE IF NOT EXISTS deck (
   id SERIAL PRIMARY KEY,
