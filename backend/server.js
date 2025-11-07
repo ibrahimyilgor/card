@@ -3,12 +3,13 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const fetch = require('node-fetch');
+require('dotenv').config();
 const app = express();
 const port = 5000;
 
 const pool = new Pool({
   user: 'postgres',
-  host: process.env.PGHOST || 'localhost', // Change 'localhost' to 'db' for Docker
+  host: process.env.PGHOST || 'db', // Change 'localhost' to 'db' for Docker
   database: 'postgres',
   password: 'postgres',
   port: 5432,

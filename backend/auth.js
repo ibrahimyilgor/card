@@ -15,7 +15,7 @@ module.exports = (pool) => {
       await client.query('BEGIN');
       const hash = await bcrypt.hash(password, 10);
       const userResult = await client.query(
-        'INSERT INTO user (username, password_hash) VALUES ($1, $2) RETURNING id',
+        'INSERT INTO "user" (username, password_hash) VALUES ($1, $2) RETURNING id',
         [username, hash]
       );
       const userId = userResult.rows[0].id;
@@ -23,12 +23,6 @@ module.exports = (pool) => {
       // Create user_preferences
       await client.query(
         'INSERT INTO user_preferences (user_id) VALUES ($1)',
-        [userId]
-      );
-
-      // Create user_daily_stats
-      await client.query(
-        'INSERT INTO user_daily_stats (user_id) VALUES ($1)',
         [userId]
       );
 
@@ -49,7 +43,7 @@ module.exports = (pool) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
     try {
-      const result = await pool.query('SELECT id, password_hash FROM user WHERE username = $1', [username]);
+      const result = await pool.query('SELECT id, password_hash FROM "user" WHERE username = $1', [username]);
       if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
       const valid = await bcrypt.compare(password, result.rows[0].password_hash);
       if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
