@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, useTheme } from '@mui/material';
+import { I18nContext } from './i18n';
 
-export default function DeckModal({ open, onClose, onSave, initialTitle = '', initialDesc = '', loading = false, error = '', t }) {
+export default function DeckModal({ open, onClose, onSave, initialTitle = '', initialDesc = '', loading = false, error = '' }) {
   const theme = useTheme();
+  const {t} = useContext(I18nContext);
+  
   const [title, setTitle] = useState(initialTitle);
   const [desc, setDesc] = useState(initialDesc);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { 
   Dialog, 
   DialogTitle, 
@@ -15,9 +15,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddFlashcardModal from './AddFlashcardModal';
+import { I18nContext } from './i18n';
 
-export default function FlashcardModal({ open, onClose, deckTitle, deckId, t }) {
+export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
   const theme = useTheme();
+  const {t} = useContext(I18nContext);
+  
+
   const [flashcards, setFlashcards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -211,7 +215,6 @@ export default function FlashcardModal({ open, onClose, deckTitle, deckId, t }) 
         onSave={handleAddFlashcard}
         loading={addLoading}
         error={error}
-        t={t}
       />
     </Dialog>
   );

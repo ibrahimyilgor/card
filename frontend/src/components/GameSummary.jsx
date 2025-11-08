@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Box, Typography, Button, Paper, useTheme } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { I18nContext } from '../i18n';
 
-export default function GameSummary({ correctCount, incorrectCount, onRestart, t }) {
+export default function GameSummary({ correctCount, incorrectCount, onRestart }) {
   const theme = useTheme();
   const totalCards = correctCount + incorrectCount;
   const percentage = Math.round((correctCount / totalCards) * 100);
-
+    const { t } = useContext(I18nContext);
   return (
     <Box
       sx={{

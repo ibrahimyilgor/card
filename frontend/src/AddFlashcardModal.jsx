@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,9 +12,12 @@ import {
   useTheme
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { I18nContext } from './i18n';
 
-export default function AddFlashcardModal({ open, onClose, onSave, loading, error, t }) {
+export default function AddFlashcardModal({ open, onClose, onSave, loading, error }) {
   const theme = useTheme();
+  const {t} = useContext(I18nContext);
+
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
 
