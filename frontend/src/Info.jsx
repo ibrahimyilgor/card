@@ -4,11 +4,14 @@ import { Box, Typography, useTheme, Fab, CircularProgress, Paper, IconButton } f
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import StyleIcon from '@mui/icons-material/Style';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Topbar from './Topbar';
 import { I18nContext } from './i18n';
 import DeckModal from './DeckModal';
+import FlashcardModal from './FlashcardModal';
 
-export default function Info({ onLogout, onSettings, accountId }) {
+export default function Info({ accountId, onStartGame }) {
   const theme = useTheme();
   const { t } = useContext(I18nContext);
   const [decks, setDecks] = useState(null);
@@ -17,6 +20,8 @@ export default function Info({ onLogout, onSettings, accountId }) {
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState('');
   const [editDeck, setEditDeck] = useState(null);
+  const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
+  const [selectedDeck, setSelectedDeck] = useState(null);
 
   const handleDeleteDeck = async (deck) => {
 
@@ -70,9 +75,8 @@ export default function Info({ onLogout, onSettings, accountId }) {
   }, [accountId]);
 
   return (
-    <Box sx={{ minHeight: '100vh', width: '100vw', bgcolor: theme.palette.background.default, p: 0, position: 'relative' }}>
-      <Topbar onLogout={onLogout} onSettings={onSettings} />
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 74px)', height: "90vh", overflow: "auto" }}>
+    <Box sx={{ minHeight: '100%', width: '100%', bgcolor: theme.palette.background.default, p: 0, position: 'relative' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100% - 74px)', height: "90vh", overflow: "auto" }}>
         {loading ? (
           <CircularProgress color="primary" />
         ) : decks && decks.length === 0 ? (
@@ -99,6 +103,33 @@ export default function Info({ onLogout, onSettings, accountId }) {
                     }}
                   >
                     <EditIcon />
+                  </IconButton>
+                  <IconButton 
+                    color="primary"
+                    onClick={() => { 
+                      setSelectedDeck(deck);
+                      setFlashcardModalOpen(true);
+                    }}
+                    sx={{
+                      '&:hover': {
+                        color: theme.palette.primary.main,
+                        bgcolor: 'rgba(111, 164, 175, 0.1)',
+                      }
+                    }}
+                  >
+                    <StyleIcon />
+                  </IconButton>
+                  <IconButton 
+                    color="primary"
+                    onClick={() => onStartGame(deck.id)}
+                    sx={{
+                      '&:hover': {
+                        color: theme.palette.success.main,
+                        bgcolor: 'rgba(76, 175, 80, 0.1)',
+                      }
+                    }}
+                  >
+                    <PlayArrowIcon />
                   </IconButton>
                   <IconButton 
                     sx={{
@@ -182,6 +213,16 @@ export default function Info({ onLogout, onSettings, accountId }) {
         initialDesc={editDeck ? editDeck.description : ''}
         loading={modalLoading}
         error={modalError}
+        t={t}
+      />
+      <FlashcardModal
+        open={flashcardModalOpen}
+        onClose={() => {
+          setFlashcardModalOpen(false);
+          setSelectedDeck(null);
+        }}
+        deckId={selectedDeck?.id}
+        deckTitle={selectedDeck?.title}
         t={t}
       />
     </Box>

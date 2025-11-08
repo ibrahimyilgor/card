@@ -22,5 +22,16 @@
   "create_first_deck": "Create your first deck",
   "new_deck": "New Deck",
   "deck_title": "Deck title",
-  "deck_description": "Deck description"
+  "deck_description": "Deck description",
+  "flashcards": "Flashcards",
+  "no_flashcards": "No flashcards found in this deck",
+  "add_flashcard": "Add flashcard",
+  "front_side": "Front side",
+  "back_side": "Back side",
+  "game_summary": "Game Summary",
+  "success_rate": "Success Rate",
+  "correct": "Correct",
+  "incorrect": "Incorrect",
+  "total": "Total",
+  "play_again": "Play Again"
 }

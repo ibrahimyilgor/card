@@ -1,6 +1,5 @@
 import { Box, Button, Divider, Paper, Typography, useTheme, Snackbar, Alert, Fade, Switch, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import { useContext, useState } from "react";
-import Topbar from "./Topbar";
 import { I18nContext } from "./i18n";
 import SettingsIcon from '@mui/icons-material/Settings';
 import TranslateIcon from '@mui/icons-material/Translate';
@@ -8,7 +7,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import PaletteIcon from '@mui/icons-material/Palette';
 
-export default function Settings({ currentTheme, onThemeChange, onLangChange, onLogout, onSettings, onMainPage }) {
+export default function Settings({ currentTheme, onThemeChange, onLangChange }) {
   const theme = useTheme();
   const { t } = useContext(I18nContext);
   const [selectedTheme, setSelectedTheme] = useState(currentTheme || 'dark');
@@ -66,27 +65,28 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange, on
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: theme.palette.background.gradient ?? theme.palette.background.default, position: 'relative' }}>
-      <Topbar onLogout={onLogout} onSettings={onSettings} onMainPage={onMainPage} />
+    <Box sx={{ minHeight: '100%', bgcolor: theme.palette.background.gradient ?? theme.palette.background.default, position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: { xs: 'auto', sm: 'calc(100vh - 74px)' },
-          px: { xs: 1, sm: 2, md: 0 },
-          py: { xs: 2, sm: 0 },
+          minHeight: { xs: 'auto', sm: 'calc(100% - 74px)' },
+          px: { xs: 2, sm: 3, md: 4 },
+          py: { xs: 3, sm: 4 },
+          height: { xs: 'auto', sm: '80%', md: '70%' },
+          width: { xs: '95%', sm: '90%', md: '85%', lg: '80%' },
         }}
       >
         <Fade in timeout={600}>
           <Paper
             sx={{
-              p: { xs: 3, sm: 5 },
-              borderRadius: 5,
-              width: '90%',
-              height: '95%',
-              maxWidth: '95%',
-              maxHeight: '95%',
+              p: { xs: 2, sm: 3, md: 4 },
+              borderRadius: { xs: 3, sm: 4, md: 5 },
+              width: '100%',
+              height: 'auto',
+              minHeight: { xs: 'auto', sm: '400px' },
+              maxWidth: '1200px',
         bgcolor: theme.palette.background.paper,
         // boxShadow: theme.shadows[4],
         border: `1.5px solid ${theme.palette.border.main}`,
@@ -100,32 +100,85 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange, on
               <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: 22, sm: 26 }, color: theme.palette.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('settings')}</Typography>
             </Box>
         <Divider sx={{ mb: 3, borderColor: theme.palette.text.primary, opacity: 0.18 }} />
-            <Box sx={{ mb: 4, display: 'flex', flexDirection: 'row', gap: 4, justifyContent: 'center', alignItems: 'flex-start', width: '100%' }}>
+            <Box sx={{ 
+              mb: { xs: 3, sm: 4 }, 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' }, 
+              gap: { xs: 4, sm: 4, md: 6 }, 
+              justifyContent: 'center', 
+              alignItems: { xs: 'center', sm: 'flex-start' }, 
+              width: '100%' 
+            }}>
               {/* Theme Section */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 180 }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                  <PaletteIcon sx={{ fontSize: 28, color: theme.palette.primary.main }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: { xs: 15, sm: 17 }, color: theme.palette.text.primary }}>{t('theme')}</Typography>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                flex: { xs: '0 0 auto', sm: 1 },
+                width: { xs: '100%', sm: 'auto' },
+                maxWidth: { xs: '300px', sm: 'none' }
+              }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  gap: { xs: 1.5, sm: 1 },
+                  width: '100%',
+                  justifyContent: { xs: 'center', sm: 'center' }
+                }}>
+                  <PaletteIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: theme.palette.primary.main }} />
+                  <Typography variant="subtitle1" sx={{ 
+                    fontWeight: 600, 
+                    fontSize: { xs: 16, sm: 17, md: 18 }, 
+                    color: theme.palette.text.primary 
+                  }}>{t('theme')}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                  <DarkModeIcon sx={{ fontSize: 22, mr: 1, color: theme.palette.primary.main }} />
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  mt: { xs: 2, sm: 2.5 },
+                  width: '100%',
+                  justifyContent: 'center'
+                }}>
+                  <DarkModeIcon sx={{ fontSize: { xs: 20, sm: 22 }, mr: 1, color: theme.palette.primary.main }} />
                   <Switch
                     checked={selectedTheme === 'light'}
                     onChange={handleThemeChangeLocal}
                     color="primary"
-                    sx={{ mx: 1 }}
+                    sx={{ mx: { xs: 0.5, sm: 1 } }}
                     inputProps={{ 'aria-label': 'theme switch' }}
                   />
-                  <LightModeIcon sx={{ fontSize: 22, ml: 1, color: theme.palette.primary.main }} />
+                  <LightModeIcon sx={{ fontSize: { xs: 20, sm: 22 }, ml: 1, color: theme.palette.primary.main }} />
                 </Box>
               </Box>
               {/* Language Section */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 180 }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                  <TranslateIcon sx={{ fontSize: 28, color: theme.palette.primary.main }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: { xs: 15, sm: 17 }, color: theme.palette.text.primary }}>{t('language')}</Typography>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                flex: { xs: '0 0 auto', sm: 1 },
+                width: { xs: '100%', sm: 'auto' },
+                maxWidth: { xs: '300px', sm: 'none' }
+              }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  gap: { xs: 1.5, sm: 1 },
+                  width: '100%',
+                  justifyContent: { xs: 'center', sm: 'center' }
+                }}>
+                  <TranslateIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: theme.palette.primary.main }} />
+                  <Typography variant="subtitle1" sx={{ 
+                    fontWeight: 600, 
+                    fontSize: { xs: 16, sm: 17, md: 18 }, 
+                    color: theme.palette.text.primary 
+                  }}>{t('language')}</Typography>
                 </Box>
-                <FormControl fullWidth variant="standard" sx={{ mt: 2 }}>
+                <FormControl fullWidth variant="standard" sx={{ 
+                  mt: { xs: 2, sm: 2.5 },
+                  width: { xs: '100%', sm: '180px', md: '200px' }
+                }}>
                   <Select
                     labelId="lang-select-label"
                     value={selectedLang}
@@ -133,13 +186,13 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange, on
                     disableUnderline
                     sx={{
                       fontWeight: 600,
-                      fontSize: 16,
+                      fontSize: { xs: 15, sm: 16 },
                       bgcolor: theme.palette.background.paper,
                       color: theme.palette.text.primary,
-                      borderRadius: 2,
-                      pl: 2,
-                      height: 48,
-                      minHeight: 48,
+                      borderRadius: { xs: 1.5, sm: 2 },
+                      pl: { xs: 1.5, sm: 2 },
+                      height: { xs: 44, sm: 48 },
+                      minHeight: { xs: 44, sm: 48 },
                       display: 'flex',
                       alignItems: 'center',
                       // boxShadow: selectedTheme === 'light' ? '0 1px 4px 0 #2e4f8822' : undefined,
