@@ -14,7 +14,7 @@ function App() {
   const [page, setPage] = useState(() => {
     return localStorage.getItem('token') ? 'info' : 'login';
   });
-  const [themeMode, setThemeMode] = useState('dark');
+  const [themeMode, setThemeMode] = useState(localStorage.getItem('theme') || 'dark');
   const [lang, setLang] = useState(null);
   const [accountId, setAccountId] = useState(() => localStorage.getItem('accountId') || null);
 
@@ -31,6 +31,7 @@ function App() {
         if (res.ok && data.profile) {
           if (data.profile.theme_preference) {
             setThemeMode(data.profile.theme_preference === 'light' ? 'light' : 'dark');
+            localStorage.setItem('theme', data.profile.theme_preference === 'light' ? 'light' : 'dark');
           }
           if (data.profile.language) {
             setLang(data.profile.language);
@@ -58,43 +59,16 @@ function App() {
   };
   const handleThemeChange = (mode) => {
     setThemeMode(mode);
-    // Optionally: persist to backend
+    localStorage.setItem('theme', mode);
   };
 
   // Theme switching logic
   const darkThemeObj = {
     ...theme,
-    palette: {
-      ...theme.palette,
-      mode: 'dark',
-      background: {
-        ...theme.palette.background,
-        default: '#1d1d1f',
-        paper: '#232326',
-      },
-      text: {
-        ...theme.palette.text,
-        primary: '#EEEEEE',
-        secondary: '#1d1d1f',
-      },
-    },
+
   };
   const themeObj = {
     ...theme,
-    palette: {
-      ...theme.palette,
-      mode: themeMode,
-      background: {
-        ...theme.palette.background,
-        default: themeMode === 'dark' ? '#1d1d1f' : '#f5f5f5',
-        paper: themeMode === 'dark' ? '#232326' : '#fff',
-      },
-      text: {
-        ...theme.palette.text,
-        primary: themeMode === 'dark' ? '#EEEEEE' : '#222',
-        secondary: themeMode === 'dark' ? '#1d1d1f' : '#555',
-      },
-    },
   };
 
   return (
@@ -103,7 +77,7 @@ function App() {
         {page === 'login' && <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />}
         {page === 'signup' && <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />}
         {page === 'info' && <Info onLogout={handleLogout} onSettings={handleOpenSettings} accountId={accountId} />}
-        {page === 'settings' && <Settings currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} onLogout={handleLogout} />}
+        {page === 'settings' && <Settings onSettings={handleOpenSettings}  currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} onLogout={handleLogout} />}
       </ThemeProvider>
     </I18nProvider>
   );
