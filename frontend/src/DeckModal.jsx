@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, useTheme } from '@mui/material';
+import { I18nContext } from './i18n';
 
 export default function DeckModal({ open, onClose, onSave, initialTitle = '', initialDesc = '', loading = false, error = '' }) {
   const theme = useTheme();
