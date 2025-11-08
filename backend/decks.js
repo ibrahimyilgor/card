@@ -16,14 +16,14 @@ module.exports = (pool) => {
 
 	// Create a new deck
 	router.post('/create', async (req, res) => {
-		const { accountId, title, description } = req.body;
+		const { accountId, title, description, difficulty_enabled, mode } = req.body;
 		if (!accountId || !title) {
 			return res.status(400).json({ error: 'accountId and title required' });
 		}
 		try {
 			const result = await pool.query(
-				'INSERT INTO deck (account_id, title, description) VALUES ($1, $2, $3) RETURNING *',
-				[accountId, title, description || '']
+				'INSERT INTO deck (account_id, title, description, difficulty_enabled, mode) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+				[accountId, title, description || '', difficulty_enabled || false, mode || 'standard']
 			);
 			res.status(201).json({ deck: result.rows[0] });
 		} catch (err) {
@@ -34,14 +34,14 @@ module.exports = (pool) => {
 	// Update an existing deck
 	router.put('/:deckId', async (req, res) => {
 		const { deckId } = req.params;
-		const { title, description } = req.body;
+		const { title, description, difficulty_enabled, mode } = req.body;
 		if (!title) {
 			return res.status(400).json({ error: 'title required' });
 		}
 		try {
 			const result = await pool.query(
-				'UPDATE deck SET title = $1, description = $2 WHERE id = $3 RETURNING *',
-				[title, description || '', deckId]
+				'UPDATE deck SET title = $1, description = $2, difficulty_enabled = $3, mode = $4 WHERE id = $5 RETURNING *',
+				[title, description || '', difficulty_enabled || false, mode || 'standard', deckId]
 			);
 			if (result.rows.length === 0) {
 				return res.status(404).json({ error: 'Deck not found' });
@@ -49,6 +49,41 @@ module.exports = (pool) => {
 			res.json({ deck: result.rows[0] });
 		} catch (err) {
 			res.status(500).json({ error: 'Failed to update deck' });
+		}
+	});
+
+	// Get deck settings
+	router.get('/settings/:deckId', async (req, res) => {
+		const { deckId } = req.params;
+		try {
+			const result = await pool.query(
+				'SELECT difficulty_enabled, mode FROM deck WHERE id = $1',
+				[deckId]
+			);
+			if (result.rows.length === 0) {
+				return res.status(404).json({ error: 'Deck not found' });
+			}
+			res.json({ settings: result.rows[0] });
+		} catch (err) {
+			res.status(500).json({ error: 'Failed to fetch deck settings' });
+		}
+	});
+
+	// Update deck settings
+	router.put('/settings/:deckId', async (req, res) => {
+		const { deckId } = req.params;
+		const { difficulty_enabled, mode } = req.body;
+		try {
+			const result = await pool.query(
+				'UPDATE deck SET difficulty_enabled = $1, mode = $2 WHERE id = $3 RETURNING *',
+				[difficulty_enabled, mode, deckId]
+			);
+			if (result.rows.length === 0) {
+				return res.status(404).json({ error: 'Deck not found' });
+			}
+			res.json({ settings: result.rows[0] });
+		} catch (err) {
+			res.status(500).json({ error: 'Failed to update deck settings' });
 		}
 	});
 

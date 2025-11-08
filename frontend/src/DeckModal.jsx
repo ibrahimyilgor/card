@@ -1,22 +1,50 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, useTheme } from '@mui/material';
+import { 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  TextField, 
+  Button, 
+  useTheme,
+  FormControlLabel,
+  Checkbox,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box
+} from '@mui/material';
 import { I18nContext } from './i18n';
 
-export default function DeckModal({ open, onClose, onSave, initialTitle = '', initialDesc = '', loading = false, error = '' }) {
+export default function DeckModal({ 
+  open, 
+  onClose, 
+  onSave, 
+  initialTitle = '', 
+  initialDesc = '', 
+  loading = false, 
+  error = '',
+  editDeck = null 
+}) {
   const theme = useTheme();
   const {t} = useContext(I18nContext);
   
   const [title, setTitle] = useState(initialTitle);
   const [desc, setDesc] = useState(initialDesc);
+  const [difficultyEnabled, setDifficultyEnabled] = useState(editDeck?.difficulty_enabled || false);
+  const [mode, setMode] = useState(editDeck?.mode || 'standard');
 
   useEffect(() => {
     setTitle(initialTitle);
     setDesc(initialDesc);
-  }, [initialTitle, initialDesc, open]);
+    setDifficultyEnabled(editDeck?.difficulty_enabled || false);
+    setMode(editDeck?.mode || 'standard');
+  }, [initialTitle, initialDesc, editDeck, open]);
 
   const handleSave = () => {
     if (title.trim()) {
-      onSave(title, desc);
+      onSave(title, desc, { difficulty_enabled: difficultyEnabled, mode });
     }
   };
 
@@ -39,14 +67,16 @@ export default function DeckModal({ open, onClose, onSave, initialTitle = '', in
       <DialogTitle 
         sx={{ 
           bgcolor: theme.palette.background.paper, 
-          color: theme.palette.text.primary,
           p: 3,
-          fontWeight: 600,
-          fontSize: 24,
-          borderBottom: `1px solid ${theme.palette.border.main}`
+          borderBottom: `1px solid ${theme.palette.border.main}`,
+          '& .MuiTypography-root': {
+            color: theme.palette.text.primary,
+            fontWeight: 600,
+            fontSize: 24,
+          }
         }}
       >
-        {t('new_deck')}
+        {editDeck ? t('edit_deck') : t('new_deck')}
       </DialogTitle>
       <DialogContent 
         sx={{ 
@@ -101,6 +131,33 @@ export default function DeckModal({ open, onClose, onSave, initialTitle = '', in
           }}
           variant="outlined"
         />
+        {!editDeck && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 3 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={difficultyEnabled}
+                  onChange={(e) => setDifficultyEnabled(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label={t('enable_difficulty') || 'Enable Difficulty'}
+            />
+            <FormControl fullWidth>
+              <InputLabel id="mode-select-label">
+                {t('game_mode') || 'Game Mode'}
+              </InputLabel>
+              <Select
+                labelId="mode-select-label"
+                value={mode}
+                label={t('game_mode') || 'Game Mode'}
+                onChange={(e) => setMode(e.target.value)}
+              >
+                <MenuItem value="standard">{t('mode_standard') || 'Standard'}</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        )}
         {error && (
           <div style={{ 
             color: theme.palette.error.main, 

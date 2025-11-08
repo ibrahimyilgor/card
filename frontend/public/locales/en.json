@@ -1,4 +1,5 @@
 {
+  "edit_deck": "Edit Deck",
   "card": "Card",
   "settings": "Settings",
   "profile": "Profile",
@@ -33,5 +34,12 @@
   "correct": "Correct",
   "incorrect": "Incorrect",
   "total": "Total",
-  "play_again": "Play Again"
+  "play_again": "Play Again",
+  "back_to_decks": "Back to Decks",
+  "game_settings": "Game Settings",
+  "enable_difficulty": "Enable Difficulty",
+  "game_mode": "Game Mode",
+  "mode_standard": "Standard",
+  "starting": "Starting...",
+  "start_game": "Start Game"
 }

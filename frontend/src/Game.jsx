@@ -6,7 +6,7 @@ import FlashCard from './components/FlashCard';
 import GameSummary from './components/GameSummary';
 import { I18nContext } from './i18n';
 
-export default function Game({ deckId }) {
+export default function Game({ deckId, onBackToDecks }) {
   const theme = useTheme();
   const { t } = useContext(I18nContext);
   const [flashcards, setFlashcards] = useState([]);
@@ -24,7 +24,7 @@ export default function Game({ deckId }) {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/flashcards/' + deckId, {
+      const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/games/' + deckId, {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       const data = await res.json();
@@ -115,6 +115,7 @@ export default function Game({ deckId }) {
           correctCount={scores.correct}
           incorrectCount={scores.incorrect}
           onRestart={handleRestart}
+          onBackToDecks={onBackToDecks}
         />
       </Box>
     );
@@ -128,7 +129,6 @@ export default function Game({ deckId }) {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-   
       gap: 4
     }}>
       {/* Progress indicator */}
