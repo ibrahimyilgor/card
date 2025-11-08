@@ -1,4 +1,5 @@
 {
+  "edit_deck": "Desteyi Düzenle",
   "card": "Kart",
   "settings": "Ayarlar",
   "profile": "Profil",
@@ -33,5 +34,12 @@
   "correct": "Doğru",
   "incorrect": "Yanlış",
   "total": "Toplam",
-  "play_again": "Tekrar Oyna"
+  "play_again": "Tekrar Oyna",
+  "back_to_decks": "Destelere Dön",
+  "game_settings": "Oyun Ayarları",
+  "enable_difficulty": "Zorluk Etkin",
+  "game_mode": "Oyun Modu",
+  "mode_standard": "Standart",
+  "starting": "Başlatılıyor...",
+  "start_game": "Oyunu Başlat"
 }

@@ -3,11 +3,11 @@ import { Box, Typography, Button, Paper, useTheme } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { I18nContext } from '../i18n';
 
-export default function GameSummary({ correctCount, incorrectCount, onRestart }) {
+export default function GameSummary({ correctCount, incorrectCount, onRestart, onBackToDecks }) {
   const theme = useTheme();
   const totalCards = correctCount + incorrectCount;
   const percentage = Math.round((correctCount / totalCards) * 100);
-    const { t } = useContext(I18nContext);
+  const { t } = useContext(I18nContext);
   return (
     <Box
       sx={{
@@ -70,20 +70,35 @@ export default function GameSummary({ correctCount, incorrectCount, onRestart })
         </Box>
       </Paper>
 
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<ReplayIcon />}
-        onClick={onRestart}
-        sx={{
-          borderRadius: 2,
-          py: 1,
-          px: 4,
-          fontWeight: 600
-        }}
-      >
-        {t('play_again') || 'Play Again'}
-      </Button>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={onBackToDecks}
+          sx={{
+            borderRadius: 2,
+            py: 1,
+            px: 4,
+            fontWeight: 600
+          }}
+        >
+          {t('back_to_decks') || 'Back to Decks'}
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<ReplayIcon />}
+          onClick={onRestart}
+          sx={{
+            borderRadius: 2,
+            py: 1,
+            px: 4,
+            fontWeight: 600
+          }}
+        >
+          {t('play_again') || 'Play Again'}
+        </Button>
+      </Box>
     </Box>
   );
 }

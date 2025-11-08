@@ -103,7 +103,7 @@ function App() {
                 }}
               />
             )}
-            {page === 'game' && <Game deckId={selectedDeckForGame} />}
+            {page === 'game' && <Game deckId={selectedDeckForGame} onBackToDecks={() => setPage('info')} />}
             {page === 'settings' && <Settings onSettings={handleOpenSettings}  currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} />}
           </Box>
         </Box>
