@@ -115,7 +115,6 @@ export default function Game({ deckId }) {
           correctCount={scores.correct}
           incorrectCount={scores.incorrect}
           onRestart={handleRestart}
-          t={t}
         />
       </Box>
     );

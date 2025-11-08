@@ -213,7 +213,6 @@ export default function Info({ accountId, onStartGame }) {
         initialDesc={editDeck ? editDeck.description : ''}
         loading={modalLoading}
         error={modalError}
-        t={t}
       />
       <FlashcardModal
         open={flashcardModalOpen}
@@ -223,7 +222,6 @@ export default function Info({ accountId, onStartGame }) {
         }}
         deckId={selectedDeck?.id}
         deckTitle={selectedDeck?.title}
-        t={t}
       />
     </Box>
   );
