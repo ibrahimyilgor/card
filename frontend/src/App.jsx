@@ -4,6 +4,7 @@ import Login from './Login';
 import Signup from './Signup';
 import Info from './Info';
 import Settings from './Settings';
+import Game from './Game';
 import { ThemeProvider } from '@mui/material/styles';
 import {darkTheme, lightTheme} from './theme';
 import { I18nProvider } from './i18n';
@@ -19,6 +20,7 @@ function App() {
   const [themeMode, setThemeMode] = useState(localStorage.getItem('theme') || 'dark');
   const [lang, setLang] = useState(null);
   const [accountId, setAccountId] = useState(() => localStorage.getItem('accountId') || null);
+  const [selectedDeckForGame, setSelectedDeckForGame] = useState(null);
 
   // Fetch theme_preference and language after login
   const handleLogin = async () => {
@@ -92,7 +94,16 @@ function App() {
           <Box sx={{ height: ['login', 'signup'].includes(page) ? '100%' : '91%' }}>
             {page === 'login' && <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />}
             {page === 'signup' && <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />}
-            {page === 'info' && <Info accountId={accountId} />}
+            {page === 'info' && (
+              <Info 
+                accountId={accountId} 
+                onStartGame={(deckId) => {
+                  setSelectedDeckForGame(deckId);
+                  setPage('game');
+                }}
+              />
+            )}
+            {page === 'game' && <Game deckId={selectedDeckForGame} />}
             {page === 'settings' && <Settings onSettings={handleOpenSettings}  currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} />}
           </Box>
         </Box>

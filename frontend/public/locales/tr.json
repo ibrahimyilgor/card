@@ -22,5 +22,16 @@
   "create_first_deck": "İlk destenizi oluşturun",
   "new_deck": "Yeni Deste",
   "deck_title": "Deste başlığı",
-  "deck_description": "Deste açıklaması"
+  "deck_description": "Deste açıklaması",
+  "flashcards": "Kartlar",
+  "no_flashcards": "Bu destede hiç kart yok",
+  "add_flashcard": "Kart ekle",
+  "front_side": "Ön yüz",
+  "back_side": "Arka yüz",
+  "game_summary": "Oyun Özeti",
+  "success_rate": "Başarı Oranı",
+  "correct": "Doğru",
+  "incorrect": "Yanlış",
+  "total": "Toplam",
+  "play_again": "Tekrar Oyna"
 }

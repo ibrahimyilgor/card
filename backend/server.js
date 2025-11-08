@@ -2,7 +2,6 @@
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
-const fetch = require('node-fetch');
 require('dotenv').config();
 const app = express();
 const port = 5000;
@@ -23,26 +22,21 @@ app.use(cors({
 const authRouter = require('./auth')(pool);
 const accountRouter = require('./account')(pool);
 const decksRouter = require('./decks')(pool);
+const flashcardsRouter = require('./flashcards')(pool);
+const gameRouter = require('./game')(pool);
 
 app.use(express.json());
 app.use('/auth', authRouter);
 app.use('/account', accountRouter);
 app.use('/decks', decksRouter);
+app.use('/games', gameRouter);
+app.use('/flashcards', flashcardsRouter);
 
 app.get('/api', async (req, res) => {
   const result = await pool.query('SELECT NOW()');
   res.json({ time: result.rows[0].now });
 });
 
-
-app.get('/items', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM items');
-    res.json({ items: result.rows });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 app.listen(port, () => {
   console.log(`Backend listening at port: ${port}`);
