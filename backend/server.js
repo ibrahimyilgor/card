@@ -21,12 +21,12 @@ app.use(cors({
 }));
 
 const authRouter = require('./auth')(pool);
-const userRouter = require('./user')(pool);
+const accountRouter = require('./account')(pool);
 const decksRouter = require('./decks')(pool);
 
 app.use(express.json());
 app.use('/auth', authRouter);
-app.use('/user', userRouter);
+app.use('/account', accountRouter);
 app.use('/decks', decksRouter);
 
 app.get('/api', async (req, res) => {

@@ -7,7 +7,7 @@ import Topbar from './Topbar';
 import { I18nContext } from './i18n';
 import DeckModal from './DeckModal';
 
-export default function Info({ onLogout, onSettings, userId }) {
+export default function Info({ onLogout, onSettings, accountId }) {
   const theme = useTheme();
   const { t } = useContext(I18nContext);
   const [decks, setDecks] = useState(null);
@@ -22,13 +22,13 @@ export default function Info({ onLogout, onSettings, userId }) {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        console.log("ibrahim", userId, token)
-        if (!userId) {
+        console.log("ibrahim", accountId, token)
+        if (!accountId) {
           setDecks([]);
           setLoading(false);
           return;
         }
-        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/' + userId, {
+        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/' + accountId, {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         const data = await res.json();
@@ -44,7 +44,7 @@ export default function Info({ onLogout, onSettings, userId }) {
       }
     };
     fetchDecks();
-  }, [userId]);
+  }, [accountId]);
 
   return (
     <Box sx={{ minHeight: '100vh', width: '100vw', bgcolor: theme.palette.background.default, p: 0, position: 'relative' }}>
@@ -94,7 +94,7 @@ export default function Info({ onLogout, onSettings, userId }) {
             const token = localStorage.getItem('token');
             let url = window.location.protocol + '//' + window.location.hostname + ':5000/decks';
             let method = 'POST';
-            let body = { userId, title, description: desc };
+            let body = { accountId, title, description: desc };
             if (editDeck) {
               url += '/' + editDeck.id;
               method = 'PUT';
@@ -117,7 +117,7 @@ export default function Info({ onLogout, onSettings, userId }) {
               setModalError('');
               // Refresh decks
               setLoading(true);
-              const decksRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/' + userId, {
+              const decksRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/' + accountId, {
                 headers: { 'Authorization': 'Bearer ' + token }
               });
               const decksData = await decksRes.json();

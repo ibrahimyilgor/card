@@ -3,11 +3,11 @@ const express = require('express');
 module.exports = (pool) => {
 	const router = express.Router();
 
-	// Get all decks by userId
-	router.get('/:userId', async (req, res) => {
-		const { userId } = req.params;
+	// Get all decks by accountId
+	router.get('/:accountId', async (req, res) => {
+		const { accountId } = req.params;
 		try {
-			const result = await pool.query('SELECT * FROM deck WHERE user_id = $1', [userId]);
+			const result = await pool.query('SELECT * FROM deck WHERE account_id = $1', [accountId]);
 			res.json({ decks: result.rows });
 		} catch (err) {
 			res.status(500).json({ error: 'Failed to fetch decks' });
@@ -16,14 +16,14 @@ module.exports = (pool) => {
 
 	// Create a new deck
 	router.post('/create', async (req, res) => {
-		const { userId, title, description } = req.body;
-		if (!userId || !title) {
-			return res.status(400).json({ error: 'userId and title required' });
+		const { accountId, title, description } = req.body;
+		if (!accountId || !title) {
+			return res.status(400).json({ error: 'accountId and title required' });
 		}
 		try {
 			const result = await pool.query(
-				'INSERT INTO deck (user_id, title, description) VALUES ($1, $2, $3) RETURNING *',
-				[userId, title, description || '']
+				'INSERT INTO deck (account_id, title, description) VALUES ($1, $2, $3) RETURNING *',
+				[accountId, title, description || '']
 			);
 			res.status(201).json({ deck: result.rows[0] });
 		} catch (err) {

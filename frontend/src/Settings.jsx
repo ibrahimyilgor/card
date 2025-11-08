@@ -23,7 +23,7 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange, on
     const token = localStorage.getItem('token');
     try {
       // Update theme
-      const themeRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/user/profile/theme', {
+      const themeRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/account/profile/theme', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange, on
       if (onThemeChange) onThemeChange(selectedTheme);
 
       // Update language
-      const langRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/user/profile/language', {
+      const langRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/account/profile/language', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

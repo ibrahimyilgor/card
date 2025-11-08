@@ -8,30 +8,30 @@ module.exports = (pool) => {
 
   // Register
   router.post('/register', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    const { accountname, password } = req.body;
+    if (!accountname || !password) return res.status(400).json({ error: 'Account name and password required' });
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
       const hash = await bcrypt.hash(password, 10);
-      const userResult = await client.query(
-        'INSERT INTO "user" (username, password_hash) VALUES ($1, $2) RETURNING id',
-        [username, hash]
+      const accountResult = await client.query(
+        'INSERT INTO account (accountname, password_hash) VALUES ($1, $2) RETURNING id',
+        [accountname, hash]
       );
-      const userId = userResult.rows[0].id;
+      const accountId = accountResult.rows[0].id;
 
-      // Create user_preferences
+      // Create account_preferences
       await client.query(
-        'INSERT INTO user_preferences (user_id) VALUES ($1)',
-        [userId]
+        'INSERT INTO account_preferences (account_id) VALUES ($1)',
+        [accountId]
       );
 
       await client.query('COMMIT');
-      res.status(201).json({ message: 'User registered' });
+      res.status(201).json({ message: 'Account registered' });
     } catch (err) {
       await client.query('ROLLBACK');
       console.error('Register error:', err);
-      if (err.code === '23505') return res.status(409).json({ error: 'Username already exists' });
+      if (err.code === '23505') return res.status(409).json({ error: 'accountname already exists' });
       res.status(500).json({ error: 'Registration failed' });
     } finally {
       client.release();
@@ -40,16 +40,16 @@ module.exports = (pool) => {
 
   // Login
   router.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    const { accountname, password } = req.body;
+    if (!accountname || !password) return res.status(400).json({ error: 'Account name and password required' });
     try {
-      const result = await pool.query('SELECT id, password_hash FROM "user" WHERE username = $1', [username]);
+      const result = await pool.query('SELECT id, password_hash FROM account WHERE accountname = $1', [accountname]);
       if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
       const valid = await bcrypt.compare(password, result.rows[0].password_hash);
       if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
       // JWT token üret
       const token = jwt.sign(
-        { userId: result.rows[0].id, username },
+        { accountId: result.rows[0].id, accountname },
         process.env.JWT_SECRET || 'dev_secret',
         { expiresIn: '1h' }
       );
