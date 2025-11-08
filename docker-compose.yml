@@ -1,32 +1,41 @@
 services:
   db:
     image: yilgor98/db:latest
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
 
   backend:
     image: yilgor98/backend:latest
+    ports: 
+      - "5000:5000"
     depends_on:
-      db:
-        condition: service_healthy
-    # ... (diğer ayarlar)
+      - db
 
   frontend:
     image: yilgor98/frontend:latest
+    ports:
+      - "3000:80"
     depends_on:
       - backend
-    # ... (diğer ayarlar)
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/cert.pem:/etc/ssl/certs/cert.pem:ro
+      - ./nginx/key.pem:/etc/ssl/private/key.pem:ro
+    depends_on:
+      - frontend
+      - backend
 
   pgadmin:
     image: dpage/pgadmin4
