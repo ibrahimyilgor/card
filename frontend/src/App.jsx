@@ -16,7 +16,7 @@ function App() {
   });
   const [themeMode, setThemeMode] = useState('dark');
   const [lang, setLang] = useState(null);
-  const [userId, setUserId] = useState(() => localStorage.getItem('userId') || null);
+  const [accountId, setAccountId] = useState(() => localStorage.getItem('accountId') || null);
 
   // Fetch theme_preference and language after login
   const handleLogin = async () => {
@@ -24,7 +24,7 @@ function App() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/user/profile', {
+        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/account/profile', {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         const data = await res.json();
@@ -36,9 +36,9 @@ function App() {
             setLang(data.profile.language);
           }
           console.log("ibrahimdata", data.profile)
-          if (data.profile.user_id) {
-            setUserId(data.profile.user_id);
-            localStorage.setItem('userId', data.profile.user_id);
+          if (data.profile.account_id) {
+            setAccountId(data.profile.account_id);
+            localStorage.setItem('accountId', data.profile.account_id);
           }
         }
       } catch (err) {
@@ -102,7 +102,7 @@ function App() {
       <ThemeProvider theme={page === 'login' || page === 'signup' ? darkThemeObj : themeObj}>
         {page === 'login' && <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />}
         {page === 'signup' && <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />}
-        {page === 'info' && <Info onLogout={handleLogout} onSettings={handleOpenSettings} userId={userId} />}
+        {page === 'info' && <Info onLogout={handleLogout} onSettings={handleOpenSettings} accountId={accountId} />}
         {page === 'settings' && <Settings currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} onLogout={handleLogout} />}
       </ThemeProvider>
     </I18nProvider>

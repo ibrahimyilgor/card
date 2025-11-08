@@ -7,7 +7,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import BoltIcon from '@mui/icons-material/Bolt';
 
 export default function Login({ onLogin, onSwitch }) {
-  const [username, setUsername] = useState('');
+  const [accountname, setAccountname] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { t } = useContext(I18nContext);
@@ -20,7 +20,7 @@ export default function Login({ onLogin, onSwitch }) {
       const res = await fetch(backendUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ accountname, password })
       });
       const data = await res.json();
       if (res.ok && data.token) {
@@ -60,8 +60,8 @@ export default function Login({ onLogin, onSwitch }) {
             <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
               <ThumbUpAltIcon color="primary" sx={{ mr: 2 }} />
               <Box>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }} color="text.primary">{t('great_user_experience') || 'Great user experience'}</Typography>
-                <Typography variant="body2" color="text.gray">{t('great_user_experience_desc') || 'Integrate our product into your routine with an intuitive and easy-to-use interface.'}</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }} color="text.primary">{t('great_account_experience') || 'Great account experience'}</Typography>
+                <Typography variant="body2" color="text.gray">{t('great_account_experience_desc') || 'Integrate our product into your routine with an intuitive and easy-to-use interface.'}</Typography>
               </Box>
             </Box>
             <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
@@ -81,8 +81,8 @@ export default function Login({ onLogin, onSwitch }) {
               <TextField
                 label={t('email') || 'Email'}
                 variant="outlined"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
+                value={accountname}
+                onChange={e => setAccountname(e.target.value)}
                 fullWidth
                 InputLabelProps={{ sx: { color: 'primary.main' } }}
                 sx={{

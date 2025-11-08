@@ -5,7 +5,7 @@ import { Container, Box, Typography, TextField, Button, Alert, Link, Paper } fro
 
 export default function Signup({ onSignup, onSwitch }) {
   const { t } = useContext(I18nContext);
-  const [username, setUsername] = useState('');
+  const [accountname, setAccountname] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -19,12 +19,12 @@ export default function Signup({ onSignup, onSwitch }) {
       const res = await fetch(backendUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ accountname, password })
       });
       const data = await res.json();
       if (res.ok) {
         setSuccess(true);
-        onSignup && onSignup(username);
+        onSignup && onSignup(accountname);
       } else {
         setError(data.error || 'Signup failed');
       }
@@ -42,8 +42,8 @@ export default function Signup({ onSignup, onSwitch }) {
               <TextField
                 label={t('email') || 'Email'}
                 variant="outlined"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
+                value={accountname}
+                onChange={e => setAccountname(e.target.value)}
                 fullWidth
                 InputLabelProps={{ sx: { color: 'primary.main' } }}
                 sx={{
