@@ -3,6 +3,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { Box, Typography, useTheme, Fab, CircularProgress, Paper, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Topbar from './Topbar';
 import { I18nContext } from './i18n';
 import DeckModal from './DeckModal';
@@ -16,6 +17,28 @@ export default function Info({ onLogout, onSettings, accountId }) {
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState('');
   const [editDeck, setEditDeck] = useState(null);
+
+  const handleDeleteDeck = async (deck) => {
+
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/' + deck.id, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        
+        if (res.ok) {
+          // Remove deck from local state
+          setDecks(prevDecks => prevDecks.filter(d => d.id !== deck.id));
+        } else {
+          alert(t('delete_deck_error') || 'Error deleting deck');
+        }
+      } catch (err) {
+        alert(t('network_error') || 'Network error');
+      }
+  };
 
   useEffect(() => {
     const fetchDecks = async () => {
@@ -49,7 +72,7 @@ export default function Info({ onLogout, onSettings, accountId }) {
   return (
     <Box sx={{ minHeight: '100vh', width: '100vw', bgcolor: theme.palette.background.default, p: 0, position: 'relative' }}>
       <Topbar onLogout={onLogout} onSettings={onSettings} />
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 64px)', height: "90vh", overflow: "auto" }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 74px)', height: "90vh", overflow: "auto" }}>
         {loading ? (
           <CircularProgress color="primary" />
         ) : decks && decks.length === 0 ? (
@@ -64,9 +87,32 @@ export default function Info({ onLogout, onSettings, accountId }) {
                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{deck.title}</Typography>
                   <Typography variant="body2" color="text.secondary">{deck.description}</Typography>
                 </Box>
-                <IconButton color="primary" onClick={() => { setEditDeck(deck); setModalOpen(true); }}>
-                  <EditIcon />
-                </IconButton>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <IconButton 
+                    color="primary" 
+                    onClick={() => { setEditDeck(deck); setModalOpen(true); }}
+                    sx={{
+                      '&:hover': {
+                        color: theme.palette.primary.main,
+                        bgcolor: 'rgba(111, 164, 175, 0.1)',
+                      }
+                    }}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton 
+                    sx={{
+                      color: theme.palette.error.main,
+                      '&:hover': {
+                        color: theme.palette.error.dark,
+                        bgcolor: 'rgba(217, 125, 85, 0.1)',
+                      }
+                    }}
+                    onClick={() => handleDeleteDeck(deck)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
               </Paper>
             ))}
           </Box>

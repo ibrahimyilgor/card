@@ -63,5 +63,33 @@ module.exports = (pool) => {
 		}
 	});
 
+	// Delete a deck and its flashcards
+	router.delete('/:deckId', async (req, res) => {
+		const { deckId } = req.params;
+		try {
+			// Start a transaction to ensure both operations complete or none do
+			await pool.query('BEGIN');
+			
+			// First delete all flashcards in the deck
+			await pool.query('DELETE FROM flashcard WHERE deck_id = $1', [deckId]);
+			
+			// Then delete the deck itself
+			const result = await pool.query('DELETE FROM deck WHERE id = $1 RETURNING *', [deckId]);
+			
+			// Commit the transaction
+			await pool.query('COMMIT');
+
+			if (result.rows.length === 0) {
+				return res.status(404).json({ error: 'Deck not found' });
+			}
+
+			res.json({ message: 'Deck and its flashcards deleted successfully', deck: result.rows[0] });
+		} catch (err) {
+			// If there's an error, rollback the transaction
+			await pool.query('ROLLBACK');
+			res.status(500).json({ error: 'Failed to delete deck' });
+		}
+	});
+
 	return router;
 };

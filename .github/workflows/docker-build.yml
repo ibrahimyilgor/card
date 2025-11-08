@@ -54,7 +54,14 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/ubuntu
-            docker-compose pull
             docker-compose down
+            # Force remove all images related to the compose file
+            docker-compose rm -f
+            docker rmi -f $(docker images -q yilgor98/frontend:latest)
+            docker rmi -f $(docker images -q yilgor98/backend:latest)
+            docker rmi -f $(docker images -q yilgor98/db:latest)
+            # Clean up any dangling images
             docker image prune -f
+            # Pull and start new images
+            docker-compose pull
             docker-compose up -d
