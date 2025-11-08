@@ -8,7 +8,7 @@ import Topbar from './Topbar';
 import { I18nContext } from './i18n';
 import DeckModal from './DeckModal';
 
-export default function Info({ onLogout, onSettings, accountId }) {
+export default function Info({ accountId }) {
   const theme = useTheme();
   const { t } = useContext(I18nContext);
   const [decks, setDecks] = useState(null);
@@ -70,9 +70,8 @@ export default function Info({ onLogout, onSettings, accountId }) {
   }, [accountId]);
 
   return (
-    <Box sx={{ minHeight: '100vh', width: '100vw', bgcolor: theme.palette.background.default, p: 0, position: 'relative' }}>
-      <Topbar onLogout={onLogout} onSettings={onSettings} />
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 74px)', height: "90vh", overflow: "auto" }}>
+    <Box sx={{ minHeight: '100%', width: '100%', bgcolor: theme.palette.background.default, p: 0, position: 'relative' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100% - 74px)', height: "90vh", overflow: "auto" }}>
         {loading ? (
           <CircularProgress color="primary" />
         ) : decks && decks.length === 0 ? (

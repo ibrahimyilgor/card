@@ -7,7 +7,7 @@ module.exports = (pool) => {
 	router.get('/:accountId', async (req, res) => {
 		const { accountId } = req.params;
 		try {
-			const result = await pool.query('SELECT * FROM deck WHERE account_id = $1', [accountId]);
+			const result = await pool.query('SELECT * FROM deck WHERE account_id = $1 ORDER BY id ASC', [accountId]);
 			res.json({ decks: result.rows });
 		} catch (err) {
 			res.status(500).json({ error: 'Failed to fetch decks' });

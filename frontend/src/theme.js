@@ -1,54 +1,111 @@
 import { createTheme } from '@mui/material/styles';
 
-const theme = createTheme({
-  palette: {
-    primary: { 
-      main: '#6FA4AF', // Ana mavi ton
-      light: '#8FB8C1', // Açık mavi
-      dark: '#5B8A94', // Koyu mavi
-      contrastText: '#F4E9D7' // Krem rengi metin
+const theme = {
+  common: {
+    typography: {
+      fontFamily: 'Inter, Roboto, Arial, sans-serif',
+      fontWeightBold: 700,
+      fontWeightMedium: 600,
+      fontWeightRegular: 400,
     },
-    secondary: { 
-      main: '#D97D55', // Turuncu
-      light: '#E19676', // Açık turuncu
-      dark: '#B66744', // Koyu turuncu
-      contrastText: '#F4E9D7' // Krem rengi
-    },
-    error: { 
-      main: '#D97D55', // Turuncu hata rengi
-      light: '#E19676',
-      dark: '#B66744'
-    },
-    background: {
-      default: 'linear-gradient(135deg, #B8C4A9 0%, #6FA4AF 100%)', // Yeşilden maviye gradyan
-      paper: '#F4E9D7', // Krem rengi arka plan
-    },
-    text: {
-      primary: '#6FA4AF', // Mavi metin
-      secondary: '#B8C4A9', // Yeşil ikincil metin
-      gray: '#D97D55', // Turuncu gri
-    },
-    border: {
-      main: 'rgba(111, 164, 175, 0.2)' // Yarı saydam mavi (#6FA4AF)
+    shape: {
+      borderRadius: 3
     }
   },
-  typography: {
-    fontFamily: 'Inter, Roboto, Arial, sans-serif',
-    fontWeightBold: 700,
-    fontWeightMedium: 600,
-    fontWeightRegular: 400,
+  dark: {
+    palette: {
+      mode: 'dark',
+      primary: { 
+        main: '#6FA4AF',
+        light: '#8FB8C1',
+        dark: '#5B8A94',
+        contrastText: '#F4E9D7'
+      },
+      secondary: { 
+        main: '#D97D55',
+        light: '#E19676',
+        dark: '#B66744',
+        contrastText: '#F4E9D7'
+      },
+      error: { 
+        main: '#D97D55',
+        light: '#E19676',
+        dark: '#B66744'
+      },
+      background: {
+        default: '#1d1d1f',
+        paper: '#232326',
+        gradient: 'linear-gradient(135deg, #1d1d1f 0%, #232326 100%)'
+      },
+      text: {
+        primary: '#EFECE3',
+        secondary: '#8FABD4',
+        gray: '#D97D55'
+      },
+      border: {
+        main: 'rgba(111, 164, 175, 0.2)'
+      }
+    },
+    shadows: [
+      "none",
+      "0px 2px 8px 0px rgba(0,0,0,0.2)",
+      "0px 4px 16px 0px rgba(0,0,0,0.3)",
+      "0px 8px 32px 0px rgba(0,0,0,0.4)",
+      "0px 12px 48px 0px rgba(0,0,0,0.5)",
+      ...Array(20).fill("none")
+    ]
   },
-  shape: {
-    borderRadius: 3
-  },
-  shadows: [
-    "none",
-    "0px 2px 8px 0px #23232622",
-    "0px 4px 16px 0px #23232644",
-    "0px 8px 32px 0px #23232666",
-    "0px 12px 48px 0px #23232688",
-    ...Array(20).fill("none")
-  ],
-});
+  light: {
+    palette: {
+      mode: 'light',
+      primary: { 
+        main: '#6FA4AF',
+        light: '#8FB8C1',
+        dark: '#5B8A94',
+        contrastText: '#232326'
+      },
+      secondary: { 
+        main: '#D97D55',
+        light: '#E19676',
+        dark: '#B66744',
+        contrastText: '#232326'
+      },
+      error: { 
+        main: '#D97D55',
+        light: '#E19676',
+        dark: '#B66744'
+      },
+      background: {
+        default: '#F4E9D7',
+        paper: '#FFFFFF',
+        gradient: 'linear-gradient(135deg, #F4E9D7 0%, #FFFFFF 100%)'
+      },
+      text: {
+        primary: '#232326',
+        secondary: '#4A70A9',
+        gray: '#B66744'
+      },
+      border: {
+        main: 'rgba(74, 112, 169, 0.2)'
+      }
+    },
+    shadows: [
+      "none",
+      "0px 2px 8px 0px rgba(0,0,0,0.05)",
+      "0px 4px 16px 0px rgba(0,0,0,0.1)",
+      "0px 8px 32px 0px rgba(0,0,0,0.15)",
+      "0px 12px 48px 0px rgba(0,0,0,0.2)",
+      ...Array(20).fill("none")
+    ]
+  }
+};
 
-export default theme;
+const createCustomTheme = (mode) => {
+  return createTheme({
+    ...theme.common,
+    ...theme[mode],
+  });
+};
+
+export const darkTheme = createCustomTheme('dark');
+export const lightTheme = createCustomTheme('light');

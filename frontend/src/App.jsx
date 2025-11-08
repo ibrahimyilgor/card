@@ -5,8 +5,10 @@ import Signup from './Signup';
 import Info from './Info';
 import Settings from './Settings';
 import { ThemeProvider } from '@mui/material/styles';
-import theme from './theme';
+import {darkTheme, lightTheme} from './theme';
 import { I18nProvider } from './i18n';
+import Topbar from './Topbar';
+import {  Box } from '@mui/material';
 
 
 
@@ -62,22 +64,38 @@ function App() {
     localStorage.setItem('theme', mode);
   };
 
-  // Theme switching logic
-  const darkThemeObj = {
-    ...theme,
 
-  };
-  const themeObj = {
-    ...theme,
-  };
+
+  const selectTheme = () => {
+    if(['login', 'signup'].includes(page)) {
+      return darkTheme;
+    }
+    if (themeMode === 'light') {
+      return lightTheme;
+    }
+    return darkTheme;
+  }
 
   return (
     <I18nProvider lang={lang} setLang={setLang}>
-      <ThemeProvider theme={page === 'login' || page === 'signup' ? darkThemeObj : themeObj}>
-        {page === 'login' && <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />}
-        {page === 'signup' && <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />}
-        {page === 'info' && <Info onLogout={handleLogout} onSettings={handleOpenSettings} accountId={accountId} />}
-        {page === 'settings' && <Settings onSettings={handleOpenSettings}  currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} onLogout={handleLogout} />}
+      <ThemeProvider theme={selectTheme()}>
+        <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: selectTheme().palette.background.default }}>
+          {!['login', 'signup'].includes(page) && (
+            <>
+              <Box sx={{ height: '1%' }} /> {/* Top margin */}
+              <Box sx={{ height: '7%' }}>
+                <Topbar onLogout={handleLogout} onSettings={handleOpenSettings} onMainPage={() => setPage('info')} />
+              </Box>
+              <Box sx={{ height: '1%' }} /> {/* Bottom margin */}
+            </>
+          )}
+          <Box sx={{ height: ['login', 'signup'].includes(page) ? '100%' : '91%' }}>
+            {page === 'login' && <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />}
+            {page === 'signup' && <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />}
+            {page === 'info' && <Info accountId={accountId} />}
+            {page === 'settings' && <Settings onSettings={handleOpenSettings}  currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} />}
+          </Box>
+        </Box>
       </ThemeProvider>
     </I18nProvider>
   );

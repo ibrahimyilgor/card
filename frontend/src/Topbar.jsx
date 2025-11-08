@@ -44,13 +44,14 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
 
   return (
     <AppBar position="static" elevation={0} sx={{ 
-      bgcolor: theme.palette.primary.contrastText,
-      color: theme.palette.text.primary,
+      backgroundColor: theme.palette.primary.light,
+      color: theme.palette.text.contrastText,
       borderRadius: 3,
+      height: '100%',
       // boxShadow: theme.shadows[4],
       border: `1.5px solid ${theme.palette.border.main}`,
       mx: 'auto',
-      mt: 2,
+
       mb: 1,
       width: { xs: '95%', sm: '90%' },
       // maxWidth: 900,
@@ -63,7 +64,6 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        cursor: 'pointer', 
         px: { xs: 2, sm: 3 },
         py: 1,
         minHeight: 56,
@@ -77,7 +77,7 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
             color: theme.palette.text.primary,
             letterSpacing: 1,
             transition: 'color 0.2s',
-            '&:hover': { color: theme.palette.primary.main, textShadow: '0 2px 8px #2e4f8822' },
+            cursor: 'pointer',
           }}
           onClick={onMainPage}
         >
@@ -89,7 +89,7 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
               mx: 1,
               color: theme.palette.text.primary,
               transition: 'color 0.2s, transform 0.2s',
-              '&:hover': { color: theme.palette.primary.main, transform: 'scale(1.1)' },
+              '&:hover': { color: theme.palette.primary.contrastText, transform: 'scale(1.1)' },
               animation: clickedIcon === 'settings' ? `${iconClickAnim} 0.2s` : undefined,
             }}
             onClick={() => { setClickedIcon('settings'); setTimeout(() => setClickedIcon(null), 200); onSettings(); }}
@@ -101,7 +101,7 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
               mx: 1,
               color: theme.palette.text.primary,
               transition: 'color 0.2s, transform 0.2s',
-              '&:hover': { color: theme.palette.primary.main, transform: 'scale(1.1)' },
+              '&:hover': { color: theme.palette.primary.contrastText, transform: 'scale(1.1)' },
               animation: clickedIcon === 'stats' ? `${iconClickAnim} 0.2s` : undefined,
             }}
             onClick={() => { setClickedIcon('stats'); setTimeout(() => setClickedIcon(null), 200); }}
@@ -113,7 +113,7 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
               mx: 1,
               color: theme.palette.text.primary,
               transition: 'color 0.2s, transform 0.2s',
-              '&:hover': { color: theme.palette.primary.main, transform: 'scale(1.1)' },
+              '&:hover': { color: theme.palette.primary.contrastText, transform: 'scale(1.1)' },
               animation: clickedIcon === 'profile' ? `${iconClickAnim} 0.2s` : undefined,
             }}
             onClick={handleProfileClick}
