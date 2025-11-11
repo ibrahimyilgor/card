@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { getFlashcards, createFlashcard, deleteFlashcard } from './services/flashcardServices';
 import { 
   Dialog, 
   DialogTitle, 
@@ -30,20 +31,8 @@ export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
 
   const handleDeleteFlashcard = async (flashcardId) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/flashcards/' + flashcardId, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      });
-      
-      if (res.ok) {
-        setFlashcards(prev => prev.filter(f => f.id !== flashcardId));
-      } else {
-        const data = await res.json();
-        console.error('Error deleting flashcard:', data.error);
-      }
+      await deleteFlashcard(flashcardId);
+      setFlashcards(prev => prev.filter(f => f.id !== flashcardId));
     } catch (err) {
       console.error('Error deleting flashcard:', err);
     }
@@ -53,26 +42,12 @@ export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
     setAddLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/flashcards/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          deckId,
-          frontText: front,
-          backText: back
-        })
-      });
-      
-      const data = await res.json();
-      if (res.ok) {
-        setFlashcards(prev => [...prev, data.flashcard]);
+      const res = await createFlashcard({ deckId, frontText: front, backText: back });
+      if (res.data && res.data.flashcard) {
+        setFlashcards(prev => [...prev, res.data.flashcard]);
         setAddModalOpen(false);
       } else {
-        setError(data.error || 'Failed to add flashcard');
+        setError(res.data?.error || 'Failed to add flashcard');
       }
     } catch (err) {
       setError('Network error');
@@ -82,18 +57,13 @@ export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
   };
 
   useEffect(() => {
-    const fetchFlashcards = async () => {
+    const fetchFlashcardsList = async () => {
       if (!open || !deckId) return;
-      
       setLoading(true);
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/flashcards/' + deckId, {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
-        if (res.ok && Array.isArray(data.flashcards)) {
-          setFlashcards(data.flashcards);
+        const res = await getFlashcards(deckId);
+        if (res.data && Array.isArray(res.data.flashcards)) {
+          setFlashcards(res.data.flashcards);
         } else {
           setFlashcards([]);
         }
@@ -104,8 +74,7 @@ export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
         setLoading(false);
       }
     };
-
-    fetchFlashcards();
+    fetchFlashcardsList();
   }, [deckId, open]);
 
   return (

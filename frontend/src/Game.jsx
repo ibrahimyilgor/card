@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
+import { getGameFlashcards } from './services/gameServices';
 import { Box, Typography, CircularProgress, Button, useTheme } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -23,14 +24,10 @@ export default function Game({ deckId, onBackToDecks }) {
   const fetchFlashcards = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/games/' + deckId, {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      const data = await res.json();
-      if (res.ok && Array.isArray(data.flashcards)) {
+      const res = await getGameFlashcards(deckId);
+      if (res.data && Array.isArray(res.data.flashcards)) {
         // Shuffle the flashcards
-        const shuffled = [...data.flashcards].sort(() => Math.random() - 0.5);
+        const shuffled = [...res.data.flashcards].sort(() => Math.random() - 0.5);
         setFlashcards(shuffled);
         console.log("ibrahimflashcards", shuffled)
       } else {

@@ -1,20 +1,9 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const authenticateToken = require('./middleware/authenticateToken');
 
 module.exports = (pool) => {
   const router = express.Router();
-
-  // Token authentication middleware
-  function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'No token provided' });
-    jwt.verify(token, process.env.JWT_SECRET || 'dev_secret', (err, account) => {
-      if (err) return res.status(403).json({ error: 'Invalid token' });
-      req.account = account;
-      next();
-    });
-  }
 
   // Account info endpoint
   router.get('/info', authenticateToken, async (req, res) => {

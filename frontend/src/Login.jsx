@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { login } from './services/authServices';
 import { I18nContext } from './i18n';
 import { Box, Typography, TextField, Button, Alert, Link, Paper, Checkbox, FormControlLabel } from '@mui/material';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
@@ -16,14 +17,9 @@ export default function Login({ onLogin, onSwitch }) {
     e.preventDefault();
     setError('');
     try {
-      const backendUrl = window.location.protocol + '//' + window.location.hostname + ':5000/auth/login';
-      const res = await fetch(backendUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountname, password })
-      });
-      const data = await res.json();
-      if (res.ok && data.token) {
+      const res = await login(accountname, password);
+      const data = res.data;
+      if (res.status === 200 && data.token) {
         localStorage.setItem('token', data.token);
         onLogin();
       } else {

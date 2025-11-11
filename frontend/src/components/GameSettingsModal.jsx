@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
+import { getDeckSettings, updateDeckSettings } from '../services/deckServices';
 import {
   Dialog,
   DialogTitle,
@@ -27,43 +28,28 @@ export default function GameSettingsModal({ open, onClose, onStart, deckId, init
   });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchSettings = async () => {
       if (!deckId || !open) return;
-      
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/settings/' + deckId, {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
-        if (res.ok && data.settings) {
+        const res = await getDeckSettings(deckId);
+        if (res.data && res.data.settings) {
           setSettings({
-            difficulty_enabled: data.settings.difficulty_enabled,
-            mode: data.settings.mode || 'standard'
+            difficulty_enabled: res.data.settings.difficulty_enabled,
+            mode: res.data.settings.mode || 'standard'
           });
         }
       } catch (err) {
         console.error('Error fetching deck settings:', err);
       }
     };
-
     fetchSettings();
   }, [deckId, open]);
 
   const handleSaveAndStart = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/settings/' + deckId, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(settings)
-      });
-      
+      await updateDeckSettings(deckId, settings);
       onStart(settings);
     } catch (err) {
       console.error('Error saving deck settings:', err);

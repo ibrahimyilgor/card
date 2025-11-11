@@ -1,6 +1,7 @@
 import { Box, Button, Divider, Paper, Typography, useTheme, Snackbar, Alert, Fade, Switch, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import { useContext, useState } from "react";
 import { I18nContext } from "./i18n";
+import { updateTheme, updateLanguage } from './services/accountServices';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TranslateIcon from '@mui/icons-material/Translate';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -28,29 +29,13 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange }) 
     const token = localStorage.getItem('token');
     try {
       // Update theme
-      const themeRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/account/profile/theme', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({ theme_preference: selectedTheme })
-      });
-      const themeData = await themeRes.json();
-      if (!themeRes.ok) throw new Error(themeData.error || 'Failed to update theme');
+      const themeRes = await updateTheme(selectedTheme);
+      if (themeRes.status !== 200) throw new Error(themeRes.data?.error || 'Failed to update theme');
       if (onThemeChange) onThemeChange(selectedTheme);
 
       // Update language
-      const langRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/account/profile/language', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({ language: selectedLang })
-      });
-      const langData = await langRes.json();
-      if (!langRes.ok) throw new Error(langData.error || 'Failed to update language');
+      const langRes = await updateLanguage(selectedLang);
+      if (langRes.status !== 200) throw new Error(langRes.data?.error || 'Failed to update language');
       localStorage.setItem('lang', selectedLang);
       if (onLangChange) onLangChange(selectedLang);
 
