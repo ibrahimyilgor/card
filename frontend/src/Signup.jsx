@@ -1,5 +1,6 @@
 
 import React, { useState, useContext } from 'react';
+import { register } from './services/authServices';
 import { I18nContext } from './i18n';
 import { Container, Box, Typography, TextField, Button, Alert, Link, Paper } from '@mui/material';
 
@@ -15,14 +16,9 @@ export default function Signup({ onSignup, onSwitch }) {
     setError('');
     setSuccess(false);
     try {
-      const backendUrl = window.location.protocol + '//' + window.location.hostname + ':5000/auth/register';
-      const res = await fetch(backendUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountname, password })
-      });
-      const data = await res.json();
-      if (res.ok) {
+      const res = await register(accountname, password);
+      const data = res.data;
+      if (res.status === 200) {
         setSuccess(true);
         onSignup && onSignup(accountname);
       } else {

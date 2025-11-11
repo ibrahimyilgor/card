@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { getProfile } from './services/accountServices';
 import Login from './Login';
 import Signup from './Signup';
 import Info from './Info';
@@ -28,11 +29,9 @@ function App() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/account/profile', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
-        if (res.ok && data.profile) {
+        const res = await getProfile();
+        const data = res.data;
+        if (data.profile) {
           if (data.profile.theme_preference) {
             setThemeMode(data.profile.theme_preference === 'light' ? 'light' : 'dark');
             localStorage.setItem('theme', data.profile.theme_preference === 'light' ? 'light' : 'dark');

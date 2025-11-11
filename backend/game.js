@@ -1,10 +1,12 @@
 
 const express = require('express');
+const authenticateToken = require('./middleware/authenticateToken');
+
 module.exports = (pool) => {
     const router = express.Router();
 
     // Get all flashcards and deck settings by deckId
-    router.get('/:deckId', async (req, res) => {
+    router.get('/:deckId', authenticateToken, async (req, res) => {
         const { deckId } = req.params;
         try {
             // First fetch deck settings

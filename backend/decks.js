@@ -1,10 +1,12 @@
 
 const express = require('express');
+const authenticateToken = require('./middleware/authenticateToken');
+
 module.exports = (pool) => {
-	const router = express.Router();
+const router = express.Router();
 
 	// Get all decks by accountId
-	router.get('/:accountId', async (req, res) => {
+	router.get('/:accountId', authenticateToken, async (req, res) => {
 		const { accountId } = req.params;
 		try {
 			const result = await pool.query('SELECT * FROM deck WHERE account_id = $1 ORDER BY id ASC', [accountId]);
@@ -15,7 +17,7 @@ module.exports = (pool) => {
 	});
 
 	// Create a new deck
-	router.post('/create', async (req, res) => {
+	router.post('/create', authenticateToken, async (req, res) => {
 		const { accountId, title, description, difficulty_enabled, mode } = req.body;
 		if (!accountId || !title) {
 			return res.status(400).json({ error: 'accountId and title required' });
@@ -32,7 +34,7 @@ module.exports = (pool) => {
 	});
 
 	// Update an existing deck
-	router.put('/:deckId', async (req, res) => {
+	router.put('/:deckId', authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
 		const { title, description, difficulty_enabled, mode } = req.body;
 		if (!title) {
@@ -53,7 +55,7 @@ module.exports = (pool) => {
 	});
 
 	// Get deck settings
-	router.get('/settings/:deckId', async (req, res) => {
+	router.get('/settings/:deckId', authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
 		try {
 			const result = await pool.query(
@@ -70,7 +72,7 @@ module.exports = (pool) => {
 	});
 
 	// Update deck settings
-	router.put('/settings/:deckId', async (req, res) => {
+	router.put('/settings/:deckId', authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
 		const { difficulty_enabled, mode } = req.body;
 		try {
@@ -88,7 +90,7 @@ module.exports = (pool) => {
 	});
 
 	// Get all flashcards by deckId
-	router.get('/flashcards/:deckId', async (req, res) => {
+	router.get('/flashcards/:deckId', authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
 		try {
 			const result = await pool.query('SELECT * FROM flashcard WHERE deck_id = $1', [deckId]);
@@ -99,7 +101,7 @@ module.exports = (pool) => {
 	});
 
 	// Delete a deck and its flashcards
-	router.delete('/:deckId', async (req, res) => {
+	router.delete('/:deckId', authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
 		try {
 			// Start a transaction to ensure both operations complete or none do

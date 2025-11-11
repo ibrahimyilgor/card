@@ -1,12 +1,12 @@
 
-import React, { useEffect, useState, useContext } from 'react';
+import  { useEffect, useState, useContext } from 'react';
+import { getDecks, createDeck, updateDeck, deleteDeck } from './services/deckServices';
 import { Box, Typography, useTheme, Fab, CircularProgress, Paper, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import StyleIcon from '@mui/icons-material/Style';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import Topbar from './Topbar';
 import { I18nContext } from './i18n';
 import DeckModal from './DeckModal';
 import FlashcardModal from './FlashcardModal';
@@ -27,44 +27,26 @@ export default function Info({ accountId, onStartGame }) {
   const [selectedDeckForGame, setSelectedDeckForGame] = useState(null);
 
   const handleDeleteDeck = async (deck) => {
-
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/' + deck.id, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': 'Bearer ' + token
-          }
-        });
-        
-        if (res.ok) {
-          // Remove deck from local state
-          setDecks(prevDecks => prevDecks.filter(d => d.id !== deck.id));
-        } else {
-          alert(t('delete_deck_error') || 'Error deleting deck');
-        }
-      } catch (err) {
-        alert(t('network_error') || 'Network error');
-      }
+    try {
+      await deleteDeck(deck.id);
+      setDecks(prevDecks => prevDecks.filter(d => d.id !== deck.id));
+    } catch (err) {
+      alert(t('delete_deck_error') || 'Error deleting deck');
+    }
   };
 
   useEffect(() => {
-    const fetchDecks = async () => {
+    const fetchDecksList = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('token');
-        console.log("ibrahim", accountId, token)
         if (!accountId) {
           setDecks([]);
           setLoading(false);
           return;
         }
-        const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/' + accountId, {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
-        if (res.ok && Array.isArray(data.decks)) {
-          setDecks(data.decks);
+        const res = await getDecks(accountId);
+        if (Array.isArray(res.data.decks)) {
+          setDecks(res.data.decks);
         } else {
           setDecks([]);
         }
@@ -74,7 +56,7 @@ export default function Info({ accountId, onStartGame }) {
         setLoading(false);
       }
     };
-    fetchDecks();
+    fetchDecksList();
   }, [accountId]);
 
   return (
@@ -174,58 +156,39 @@ export default function Info({ accountId, onStartGame }) {
         onSave={async (title, desc, settings) => {
           setModalLoading(true);
           setModalError('');
-            try {
-   
-            const token = localStorage.getItem('token');
-            let url = window.location.protocol + '//' + window.location.hostname + ':5000/decks';
-            let method = 'POST';
-            let body = { 
-              accountId, 
-              title, 
-              description: desc,
-              difficulty_enabled: settings.difficulty_enabled,
-              mode: settings.mode 
-            };
+          try {
+            let res;
             if (editDeck) {
-              url += '/' + editDeck.id;
-              method = 'PUT';
-              body = { 
-                title, 
+              res = await updateDeck(editDeck.id, {
+                title,
                 description: desc,
                 difficulty_enabled: settings.difficulty_enabled,
-                mode: settings.mode 
-              };
+                mode: settings.mode
+              });
+            } else {
+              res = await createDeck({
+                accountId,
+                title,
+                description: desc,
+                difficulty_enabled: settings.difficulty_enabled,
+                mode: settings.mode
+              });
             }
-            else {
-              url += "/create"
-            }
-            const res = await fetch(url, {
-              method,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token,
-              },
-              body: JSON.stringify(body)
-            });
-            const data = await res.json();
-            if (res.ok) {
+            if (res.status === 200 || res.status === 201) {
               setModalOpen(false);
               setModalError('');
-              // Refresh decks
               setLoading(true);
-              const decksRes = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/decks/' + accountId, {
-                headers: { 'Authorization': 'Bearer ' + token }
-              });
-              const decksData = await decksRes.json();
-              setDecks(decksData.decks || []);
+              // Refresh decks
+              const decksRes = await getDecks(accountId);
+              setDecks(decksRes.data.decks || []);
             } else {
-              setModalError(data.error || 'Error saving deck');
+              setModalError('Error saving deck');
             }
           } catch (err) {
             setModalError('Network error');
           } finally {
             setModalLoading(false);
-            setLoading(false)
+            setLoading(false);
           }
         }}
         initialTitle={editDeck ? editDeck.title : ''}

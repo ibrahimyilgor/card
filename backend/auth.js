@@ -2,6 +2,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const authenticateToken = require('./middleware/authenticateToken');
 
 module.exports = (pool) => {
   const router = express.Router();
@@ -59,5 +60,6 @@ module.exports = (pool) => {
     }
   });
 
+  router.authenticateToken = authenticateToken;
   return router;
 };

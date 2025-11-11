@@ -1,10 +1,12 @@
 
 const express = require('express');
+const authenticateToken = require('./middleware/authenticateToken');
+
 module.exports = (pool) => {
     const router = express.Router();
 
     // Get all flashcards by deckId
-    router.get('/:deckId', async (req, res) => {
+    router.get('/:deckId', authenticateToken, async (req, res) => {
         const { deckId } = req.params;
         try {
             const result = await pool.query('SELECT * FROM flashcard WHERE deck_id = $1 ORDER BY id ASC', [deckId]);
@@ -15,7 +17,7 @@ module.exports = (pool) => {
     });
 
     // Create a new flashcard
-    router.post('/create', async (req, res) => {
+    router.post('/create', authenticateToken, async (req, res) => {
         const { deckId, frontText, backText } = req.body;
         if (!deckId || !frontText || !backText) {
             return res.status(400).json({ error: 'deckId, frontText and backText required' });
@@ -32,7 +34,7 @@ module.exports = (pool) => {
     });
 
     // Update an existing flashcard
-    router.put('/:flashcardId', async (req, res) => {
+    router.put('/:flashcardId', authenticateToken, async (req, res) => {
         const { flashcardId } = req.params;
         const { frontText, backText } = req.body;
         if (!frontText && !backText) {
@@ -53,7 +55,7 @@ module.exports = (pool) => {
     });
 
     // Delete a flashcard
-    router.delete('/:flashcardId', async (req, res) => {
+    router.delete('/:flashcardId', authenticateToken, async (req, res) => {
         const { flashcardId } = req.params;
         try {
             const result = await pool.query('DELETE FROM flashcard WHERE id = $1 RETURNING *', [flashcardId]);
