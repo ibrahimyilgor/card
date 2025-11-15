@@ -28,9 +28,10 @@ function App() {
   const handleLogin = async () => {
     setPage('info');
     const token = localStorage.getItem('token');
+    const accountId = localStorage.getItem('accountId');
     if (token) {
       try {
-        const res = await getProfile();
+        const res = await getProfile(accountId);
         const data = res.data;
         if (data.profile) {
           if (data.profile.theme_preference) {

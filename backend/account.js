@@ -8,7 +8,7 @@ module.exports = (pool) => {
   // Account info endpoint
   router.get('/info', authenticateToken, async (req, res) => {
     try {
-      const result = await pool.query('SELECT id, accountname FROM account WHERE id = $1', [req.account.accountId]);
+      const result = await pool.query('SELECT id, accountname FROM account WHERE id = $1', [req.body.accountId]);
       if (result.rows.length === 0) return res.status(404).json({ error: 'Account not found' });
       res.json({ account: result.rows[0] });
     } catch (err) {
@@ -17,9 +17,9 @@ module.exports = (pool) => {
   });
 
   // Account profile endpoint
-  router.get('/profile', authenticateToken, async (req, res) => {
+  router.post('/profile', authenticateToken, async (req, res) => {
     try {
-      const result = await pool.query('SELECT * FROM account_preferences WHERE account_id = $1', [req.account.accountId]);
+      const result = await pool.query('SELECT * FROM account_preferences WHERE account_id = $1', [req.body.accountId]);
       if (result.rows.length === 0) return res.status(404).json({ error: 'Profile not found' });
       res.json({ profile: result.rows[0] });
     } catch (err) {
@@ -29,8 +29,7 @@ module.exports = (pool) => {
 
   // Update language
   router.put('/profile/language', authenticateToken, async (req, res) => {
-    const accountId = req.account.accountId;
-    const { language } = req.body;
+    const { language, accountId } = req.body;
     if (!language) return res.status(400).json({ error: 'Language is required' });
     try {
       await pool.query(
@@ -45,8 +44,7 @@ module.exports = (pool) => {
 
   // Update theme_preference
   router.put('/profile/theme', authenticateToken, async (req, res) => {
-    const accountId = req.account.accountId;
-    const { theme_preference } = req.body;
+    const { theme_preference, accountId } = req.body;
     if (!theme_preference) return res.status(400).json({ error: 'Theme preference is required' });
     try {
       await pool.query(
@@ -62,7 +60,7 @@ module.exports = (pool) => {
   // Account stats endpoint
   router.get('/stats', authenticateToken, async (req, res) => {
     try {
-      const result = await pool.query('SELECT * FROM account_daily_stats WHERE account_id = $1', [req.account.accountId]);
+      const result = await pool.query('SELECT * FROM account_daily_stats WHERE account_id = $1', [req.body.accountId]);
       if (result.rows.length === 0) return res.status(404).json({ error: 'Stats not found' });
       res.json({ stats: result.rows[0] });
     } catch (err) {
