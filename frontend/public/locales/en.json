@@ -41,5 +41,7 @@
   "game_mode": "Game Mode",
   "mode_standard": "Standard",
   "starting": "Starting...",
-  "start_game": "Start Game"
+  "start_game": "Start Game",
+  "session_expired": "Your session has expired",
+  "redirecting_to_login": "Redirecting to login page..."
 }

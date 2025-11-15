@@ -41,5 +41,7 @@
   "game_mode": "Oyun Modu",
   "mode_standard": "Standart",
   "starting": "Başlatılıyor...",
-  "start_game": "Oyunu Başlat"
+  "start_game": "Oyunu Başlat",
+  "session_expired": "Oturumunuzun süresi doldu",
+  "redirecting_to_login": "Giriş sayfasına yönlendiriliyorsunuz..."
 }
