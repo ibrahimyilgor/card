@@ -26,6 +26,7 @@
   "deck_description": "Deste açıklaması",
   "flashcards": "Kartlar",
   "no_flashcards": "Bu destede hiç kart yok",
+  "update_flashcard": "Kartı Güncelle",
   "add_flashcard": "Kart ekle",
   "front_side": "Ön yüz",
   "back_side": "Arka yüz",
@@ -49,5 +50,7 @@
   "delete_deck": "Sil",
   "add": "Ekle",
   "edit": "Düzenle",
-  "saving": "Kaydediliyor..."
+  "saving": "Kaydediliyor...",
+  "close": "Kapat",
+  "delete": "Sil"
 }

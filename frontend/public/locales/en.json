@@ -26,6 +26,7 @@
   "deck_description": "Deck description",
   "flashcards": "Flashcards",
   "no_flashcards": "No flashcards found in this deck",
+  "update_flashcard": "Update Flashcard",
   "add_flashcard": "Add flashcard",
   "front_side": "Front side",
   "back_side": "Back side",
@@ -49,5 +50,7 @@
   "delete_deck": "Delete",
   "add": "Add",
   "edit": "Edit",
-  "saving": "Saving..."
+  "saving": "Saving...",
+  "close": "Close",
+  "delete": "Delete"
 }

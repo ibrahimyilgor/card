@@ -1,8 +1,7 @@
-import { Box, Button, Divider, Paper, Typography, useTheme, Snackbar, Alert, Fade, Switch, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { Box, Grid, Button, Divider, Paper, Typography, useTheme, Snackbar, Alert, Switch, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import { useContext, useState } from "react";
 import { I18nContext } from "./i18n";
 import { updateTheme, updateLanguage } from './services/accountServices';
-import SettingsIcon from '@mui/icons-material/Settings';
 import TranslateIcon from '@mui/icons-material/Translate';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -50,176 +49,116 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange }) 
   };
 
   return (
-    <Box sx={{ minHeight: '100%', bgcolor: theme.palette.background.gradient ?? theme.palette.background.default, position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+    <Box sx={{ height: "98%", width: '95%', bgcolor: theme.palette.background.paper, p: 0, position: 'relative', mx: 'auto', display: 'flex', flexDirection: 'column', borderBottomLeftRadius: 12, borderBottomRightRadius: 12 }}>    
       <Box
         sx={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: { xs: 'auto', sm: 'calc(100% - 74px)' },
-          px: { xs: 2, sm: 3, md: 4 },
-          py: { xs: 3, sm: 4 },
-          height: { xs: 'auto', sm: '80%', md: '70%' },
-          width: { xs: '95%', sm: '90%', md: '85%', lg: '80%' },
+          width: '100%',
+          height: '100%',
+          overflow: 'auto',
         }}
       >
-        <Fade in timeout={600}>
-          <Paper
-            sx={{
-              p: { xs: 2, sm: 3, md: 4 },
-              borderRadius: { xs: 3, sm: 4, md: 5 },
-              width: '100%',
-              height: 'auto',
-              minHeight: { xs: 'auto', sm: '400px' },
-              maxWidth: '1200px',
-        bgcolor: theme.palette.background.paper,
-        // boxShadow: theme.shadows[4],
-        border: `1.5px solid ${theme.palette.border.main}`,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-            elevation={4}
-          >
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 3, width: '100%' }}>
-              <SettingsIcon sx={{ fontSize: 32, color: theme.palette.primary.main, mr: 2 }} />
-              <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: 22, sm: 26 }, color: theme.palette.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('settings')}</Typography>
+          <Box sx={{ mb: { xs: 3, sm: 4 }, width: '100%' }}>
+            <Box sx={{ width: '100%' }}>
+              <Grid container spacing={4} justifyContent="center" alignItems="center">
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '45%' }, display: 'flex', alignItems: 'stretch' }}>
+                  <Paper elevation={2} sx={{ p: 3, borderRadius: 3, width: '100%', height: '100%', minHeight: 150, display: 'flex', flexDirection: 'column'}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2 }}>
+                      <PaletteIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: theme.palette.text.cardTitle, mr: 1 }} />
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: { xs: 16, sm: 17, md: 18 }, color: theme.palette.text.cardTitle }}>{t('theme')}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                      <DarkModeIcon sx={{ fontSize: { xs: 20, sm: 22 }, mr: 1, color: theme.palette.text.cardTitle }} />
+                      <Switch
+                        checked={selectedTheme === 'light'}
+                        onChange={handleThemeChangeLocal}
+                        color="primary"
+                        sx={{ mx: { xs: 0.5, sm: 1 } }}
+                        inputProps={{ 'aria-label': 'theme switch' }}
+                      />
+                      <LightModeIcon sx={{ fontSize: { xs: 20, sm: 22 }, ml: 1, color: theme.palette.text.cardTitle }} />
+                    </Box>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '45%' }, display: 'flex', alignItems: 'stretch' }}>
+                  <Paper elevation={2} sx={{ p: 3, borderRadius: 3, width: '100%', height: '100%', minHeight: 150, display: 'flex', flexDirection: 'column' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2 }}>
+                      <TranslateIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: theme.palette.text.cardTitle, mr: 1 }} />
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: { xs: 16, sm: 17, md: 18 }, color: theme.palette.text.cardTitle }}>{t('language')}</Typography>
+                    </Box>
+                    <FormControl fullWidth variant="standard" sx={{ mt: 1 }}>
+                      <Select
+                        labelId="lang-select-label"
+                        value={selectedLang}
+                        onChange={handleLangChange}
+                        disableUnderline
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: { xs: 15, sm: 16 },
+                          bgcolor: theme.palette.background.paper,
+                          color: theme.palette.text.cardTitle,
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          pl: { xs: 1.5, sm: 2 },
+                          height: { xs: 44, sm: 48 },
+                          minHeight: { xs: 44, sm: 48 },
+                          display: 'flex',
+                          alignItems: 'center',
+                          '& .MuiSelect-icon': {
+                            color: theme.palette.text.cardTitle,
+                          },
+                        }}
+                        MenuProps={{
+                          PaperProps: {
+                            sx: {
+                              bgcolor: theme.palette.background.paper,
+                            }
+                          }
+                        }}
+                      >
+                        <MenuItem value="en" sx={{ color: theme.palette.text.cardTitle, bgcolor: theme.palette.background.paper }}>
+                          {t('english')}
+                        </MenuItem>
+                        <MenuItem value="tr" sx={{ color: theme.palette.text.cardTitle, bgcolor: theme.palette.background.paper }}>
+                          {t('turkish')}
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Paper>
+                </Grid>
+              </Grid>
             </Box>
-        <Divider sx={{ mb: 3, borderColor: theme.palette.text.primary, opacity: 0.18 }} />
-            <Box sx={{ 
-              mb: { xs: 3, sm: 4 }, 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' }, 
-              gap: { xs: 4, sm: 4, md: 6 }, 
-              justifyContent: 'center', 
-              alignItems: { xs: 'center', sm: 'flex-start' }, 
-              width: '100%' 
-            }}>
-              {/* Theme Section */}
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                flex: { xs: '0 0 auto', sm: 1 },
-                width: { xs: '100%', sm: 'auto' },
-                maxWidth: { xs: '300px', sm: 'none' }
-              }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'row', 
-                  alignItems: 'center', 
-                  gap: { xs: 1.5, sm: 1 },
-                  width: '100%',
-                  justifyContent: { xs: 'center', sm: 'center' }
-                }}>
-                  <PaletteIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: theme.palette.primary.main }} />
-                  <Typography variant="subtitle1" sx={{ 
-                    fontWeight: 600, 
-                    fontSize: { xs: 16, sm: 17, md: 18 }, 
-                    color: theme.palette.text.primary 
-                  }}>{t('theme')}</Typography>
-                </Box>
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  mt: { xs: 2, sm: 2.5 },
-                  width: '100%',
-                  justifyContent: 'center'
-                }}>
-                  <DarkModeIcon sx={{ fontSize: { xs: 20, sm: 22 }, mr: 1, color: theme.palette.primary.main }} />
-                  <Switch
-                    checked={selectedTheme === 'light'}
-                    onChange={handleThemeChangeLocal}
-                    color="primary"
-                    sx={{ mx: { xs: 0.5, sm: 1 } }}
-                    inputProps={{ 'aria-label': 'theme switch' }}
-                  />
-                  <LightModeIcon sx={{ fontSize: { xs: 20, sm: 22 }, ml: 1, color: theme.palette.primary.main }} />
-                </Box>
-              </Box>
-              {/* Language Section */}
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                flex: { xs: '0 0 auto', sm: 1 },
-                width: { xs: '100%', sm: 'auto' },
-                maxWidth: { xs: '300px', sm: 'none' }
-              }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'row', 
-                  alignItems: 'center', 
-                  gap: { xs: 1.5, sm: 1 },
-                  width: '100%',
-                  justifyContent: { xs: 'center', sm: 'center' }
-                }}>
-                  <TranslateIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: theme.palette.primary.main }} />
-                  <Typography variant="subtitle1" sx={{ 
-                    fontWeight: 600, 
-                    fontSize: { xs: 16, sm: 17, md: 18 }, 
-                    color: theme.palette.text.primary 
-                  }}>{t('language')}</Typography>
-                </Box>
-                <FormControl fullWidth variant="standard" sx={{ 
-                  mt: { xs: 2, sm: 2.5 },
-                  width: { xs: '100%', sm: '180px', md: '200px' }
-                }}>
-                  <Select
-                    labelId="lang-select-label"
-                    value={selectedLang}
-                    onChange={handleLangChange}
-                    disableUnderline
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: { xs: 15, sm: 16 },
-                      bgcolor: theme.palette.background.paper,
-                      color: theme.palette.text.primary,
-                      borderRadius: { xs: 1.5, sm: 2 },
-                      pl: { xs: 1.5, sm: 2 },
-                      height: { xs: 44, sm: 48 },
-                      minHeight: { xs: 44, sm: 48 },
-                      display: 'flex',
-                      alignItems: 'center',
-                      // boxShadow: selectedTheme === 'light' ? '0 1px 4px 0 #2e4f8822' : undefined,
-                    }}
-                  >
-                    <MenuItem value="en">{t('english')}</MenuItem>
-                    <MenuItem value="tr">{t('turkish')}</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-              <Divider sx={{ mb: 3, borderColor: theme.palette.text.primary, opacity: 0.18 }} />
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-              <Button
-                variant="contained"
-                color="primary"
-                sx={{
-                  mt: 2,
-                  fontSize: { xs: 16, sm: 17 },
-                  py: { xs: 1.2, sm: 1.4 },
-                  fontWeight: 700,
-                  borderRadius: 2,
-                  // boxShadow: savedAnim ? '0 0 16px 2px #2e4f88aa' : '0 2px 8px #2e4f8822',
-                  transition: 'box-shadow 0.3s',
-                  animation: savedAnim ? 'pulse 1.2s' : undefined,
-                  '@keyframes pulse': {
-                    '0%': { boxShadow: '0 0 0 0 #2e4f88aa' },
-                    '70%': { boxShadow: '0 0 16px 8px #2e4f88aa' },
-                    '100%': { boxShadow: '0 0 0 0 #2e4f88aa' },
-                  },
-                  minWidth: 160,
-                  maxWidth: 220,
-                }}
-                onClick={handleSave}
-                disabled={loading}
-              >
-                {loading ? t('saving') : t('save')}
-              </Button>
-            </Box>
-            
-          </Paper>
-        </Fade>
+          </Box>
+          <Divider sx={{ mb: 3, borderColor: theme.palette.text.primary, opacity: 0.18 }} />
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{
+                mt: 2,
+                fontSize: { xs: 16, sm: 17 },
+                py: { xs: 1.2, sm: 1.4 },
+                mr: { xs: 2, sm: 3 },
+                fontWeight: 700,
+                borderRadius: 2,
+                transition: 'box-shadow 0.3s',
+                animation: savedAnim ? 'pulse 1.2s' : undefined,
+                '@keyframes pulse': {
+                  '0%': { boxShadow: '0 0 0 0 #2e4f88aa' },
+                  '70%': { boxShadow: '0 0 16px 8px #2e4f88aa' },
+                  '100%': { boxShadow: '0 0 0 0 #2e4f88aa' },
+                },
+                minWidth: 160,
+                maxWidth: 220,
+              }}
+              onClick={handleSave}
+              disabled={loading}
+            >
+              {loading ? t('saving') : t('save')}
+            </Button>
+          </Box>
       </Box>
       <Snackbar
         open={snackbar.open}

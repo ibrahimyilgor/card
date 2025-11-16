@@ -54,6 +54,25 @@ module.exports = (pool) => {
         }
     });
 
+        // Update a flashcard
+        router.put('/:id', authenticateToken, async (req, res) => {
+            const { id } = req.params;
+            const { frontText, backText } = req.body;
+            try {
+                const result = await pool.query(
+                    'UPDATE flashcard SET front_text = $1, back_text = $2 WHERE id = $3 RETURNING *',
+                    [frontText, backText, id]
+                );
+                if (result.rows.length > 0) {
+                    res.json({ flashcard: result.rows[0] });
+                } else {
+                    res.status(404).json({ error: 'Flashcard not found' });
+                }
+            } catch (err) {
+                res.status(500).json({ error: 'Failed to update flashcard' });
+            }
+        });
+
     // Delete a flashcard
     router.delete('/:flashcardId', authenticateToken, async (req, res) => {
         const { flashcardId } = req.params;
