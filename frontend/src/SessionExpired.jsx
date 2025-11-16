@@ -8,7 +8,7 @@ export default function SessionExpired() {
   useEffect(() => {
     const timer = setTimeout(() => {
       window.location.href = '/';
-    }, 200000);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 

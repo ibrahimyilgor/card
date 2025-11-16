@@ -8,3 +8,8 @@ export const createFlashcard = ({ deckId, frontText, backText }) =>
 
 export const deleteFlashcard = flashcardId =>
   api.delete(`/flashcards/${flashcardId}`);
+  
+export async function updateFlashcard(flashcardId, data) {
+  // expects { frontText, backText }
+  return await api.put(`/flashcards/${flashcardId}`, data);
+}

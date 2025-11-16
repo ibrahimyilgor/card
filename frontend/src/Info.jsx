@@ -65,7 +65,7 @@ export default function Info({ accountId, onStartGame }) {
         {loading ? (
           <CircularProgress color="primary" />
         ) : decks && decks.length === 0 ? (
-          <Typography variant="h6" color="text.primary" sx={{ textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ textAlign: 'center', color: theme.palette.text.cardTitle, fontWeight: 600 }}>
             {t('create_first_deck') || 'İlk destenizi oluşturun'}
           </Typography>
         ) : (
