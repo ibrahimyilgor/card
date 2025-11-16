@@ -26,15 +26,15 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange }) 
 
   const handleSave = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
+    const accountId = localStorage.getItem('accountId');
     try {
       // Update theme
-      const themeRes = await updateTheme(selectedTheme);
+      const themeRes = await updateTheme(selectedTheme, accountId);
       if (themeRes.status !== 200) throw new Error(themeRes.data?.error || 'Failed to update theme');
       if (onThemeChange) onThemeChange(selectedTheme);
 
       // Update language
-      const langRes = await updateLanguage(selectedLang);
+      const langRes = await updateLanguage(selectedLang, accountId);
       if (langRes.status !== 200) throw new Error(langRes.data?.error || 'Failed to update language');
       localStorage.setItem('lang', selectedLang);
       if (onLangChange) onLangChange(selectedLang);

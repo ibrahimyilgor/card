@@ -1,5 +1,5 @@
 {
-  "edit_deck": "Edit Deck",
+  "edit_deck": "Edit",
   "card": "Card",
   "settings": "Settings",
   "profile": "Profile",
@@ -41,5 +41,13 @@
   "game_mode": "Game Mode",
   "mode_standard": "Standard",
   "starting": "Starting...",
-  "start_game": "Start Game"
+  "start_game": "Start Game",
+  "session_expired": "Your session has expired",
+  "redirecting_to_login": "Redirecting to login page...",
+  "manage_flashcards": "Flashcards",
+  "play_deck": "Play",
+  "delete_deck": "Delete",
+  "add": "Add",
+  "edit": "Edit",
+  "saving": "Saving..."
 }
