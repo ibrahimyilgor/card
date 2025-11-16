@@ -44,16 +44,19 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
 
   return (
     <AppBar position="static" elevation={0} sx={{ 
-      backgroundColor: theme.palette.primary.light,
+      backgroundColor: theme.palette.primary.paper ?? theme.palette.primary.main,
       color: theme.palette.text.contrastText,
-      borderRadius: 3,
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12,
+      borderBottomLeftRadius: 0,
+      borderBottomRightRadius: 0,
       height: '100%',
       // boxShadow: theme.shadows[4],
-      border: `1.5px solid ${theme.palette.border.main}`,
+      // border: `1.5px solid ${theme.palette.border.main}`,
       mx: 'auto',
 
       mb: 1,
-      width: { xs: '95%', sm: '90%' },
+      width: '95%',
       // maxWidth: 900,
       minWidth: 'auto',
       boxSizing: 'border-box',
@@ -74,10 +77,11 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
           variant="h6"
           sx={{
             fontWeight: 700,
-            color: theme.palette.text.primary,
+            color: theme.palette.primary.contrastText,
             letterSpacing: 1,
             transition: 'color 0.2s',
             cursor: 'pointer',
+            fontFamily: theme.typography.fontFamily
           }}
           onClick={onMainPage}
         >

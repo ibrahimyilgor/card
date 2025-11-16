@@ -15,86 +15,112 @@ const theme = {
   dark: {
     palette: {
       mode: 'dark',
-      primary: { 
-        main: '#6FA4AF',
-        light: '#8FB8C1',
-        dark: '#5B8A94',
-        contrastText: '#F4E9D7'
+      primary: {
+        main: '#161b22',
+        light: '#3b82f6', // Accent Blue
+        dark: '#1e40af',
+        contrastText: '#e5e7eb' // Header text
       },
-      secondary: { 
-        main: '#D97D55',
-        light: '#E19676',
-        dark: '#B66744',
-        contrastText: '#F4E9D7'
+      secondary: {
+        main: '#3b82f6', // Accent
+        light: '#60a5fa', // Icon blue
+        dark: '#1e40af',
+        contrastText: '#e5e7eb'
       },
-      error: { 
-        main: '#D97D55',
-        light: '#E19676',
-        dark: '#B66744'
+      error: {
+        main: '#dc2626', // Soft red
+        light: '#f87171',
+        dark: '#991b1b'
       },
       background: {
-        default: '#1d1d1f',
-        paper: '#232326',
-        gradient: 'linear-gradient(135deg, #1d1d1f 0%, #232326 100%)'
+        default: '#0b0f14', // Page background
+        paper: '#111827', // Card background
+        gradient: 'linear-gradient(135deg, #0b0f14 0%, #e5e7eb 100%)'
       },
       text: {
-        primary: '#EFECE3',
-        secondary: '#8FABD4',
-        gray: '#D97D55'
+        primary: '#e5e7eb', // Header text
+        secondary: '#93c5fd', // Icon text
+        cardTitle: '#f1f5f9', // Card title
+        cardSubtitle: '#94a3b8', // Card subtitle
       },
       border: {
-        main: 'rgba(111, 164, 175, 0.2)'
+        main: 'rgba(37, 99, 235, 0.12)'
+      },
+      action: {
+        edit: '#60a5fa',
+        play: '#3b82f6',
+        delete: '#dc2626',
+        icon: '#93c5fd',
+        hover: '#2563eb',
+        newDeckBg: '#1f2937',
+        newDeckText: '#e2e8f0',
+        newDeckIcon: '#93c5fd',
+        newDeckHover: '#374151',
+        shadow: '0px 2px 8px 0px rgba(0,0,0,0.04)'
       }
     },
     shadows: [
       "none",
-      "0px 2px 8px 0px rgba(0,0,0,0.2)",
-      "0px 4px 16px 0px rgba(0,0,0,0.3)",
-      "0px 8px 32px 0px rgba(0,0,0,0.4)",
-      "0px 12px 48px 0px rgba(0,0,0,0.5)",
+      "0px 2px 8px 0px rgba(0,0,0,0.04)",
+      "0px 4px 16px 0px rgba(0,0,0,0.08)",
+      "0px 8px 32px 0px rgba(0,0,0,0.12)",
+      "0px 12px 48px 0px rgba(0,0,0,0.16)",
       ...Array(20).fill("none")
     ]
   },
   light: {
     palette: {
       mode: 'light',
-      primary: { 
-        main: '#6FA4AF',
-        light: '#8FB8C1',
-        dark: '#5B8A94',
-        contrastText: '#232326'
+      primary: {
+        main: '#2563eb',
+        light: '#3b82f6',
+        dark: '#1e40af',
+        contrastText: '#e5e7eb'
       },
-      secondary: { 
-        main: '#D97D55',
-        light: '#E19676',
-        dark: '#B66744',
-        contrastText: '#232326'
+      secondary: {
+        main: '#3b82f6',
+        light: '#60a5fa',
+        dark: '#1e40af',
+        contrastText: '#e5e7eb'
       },
-      error: { 
-        main: '#D97D55',
-        light: '#E19676',
-        dark: '#B66744'
+      error: {
+        main: '#dc2626',
+        light: '#f87171',
+        dark: '#991b1b'
       },
       background: {
-        default: '#F4E9D7',
-        paper: '#FFFFFF',
-        gradient: 'linear-gradient(135deg, #F4E9D7 0%, #FFFFFF 100%)'
+        default: '#f8fafc', // Off-white
+        paper: '#ffffff', // Card background
+        gradient: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)'
       },
       text: {
-        primary: '#232326',
-        secondary: '#4A70A9',
-        gray: '#B66744'
+        primary: '#e5e7eb', // Header text
+        secondary: '#2563eb', // Icon text
+        cardTitle: '#1e293b', // Card title
+        cardSubtitle: '#64748b', // Card subtitle
       },
       border: {
-        main: 'rgba(74, 112, 169, 0.2)'
+        main: 'rgba(37, 99, 235, 0.12)'
+      },
+      action: {
+        edit: '#2563eb',
+        play: '#2563eb',
+        delete: '#dc2626',
+        icon: '#3b82f6',
+        hover: '#2563eb',
+        newDeckBg: '#1f2937',
+        newDeckText: '#e2e8f0',
+        newDeckIcon: '#93c5fd',
+        newDeckHover: '#374151',
+        shadow: '0px 2px 8px 0px rgba(0,0,0,0.04)'
       }
     },
     shadows: [
       "none",
-      "0px 2px 8px 0px rgba(0,0,0,0.05)",
-      "0px 4px 16px 0px rgba(0,0,0,0.1)",
-      "0px 8px 32px 0px rgba(0,0,0,0.15)",
-      "0px 12px 48px 0px rgba(0,0,0,0.2)",
+      "0px 2px 8px 0px rgba(0,0,0,0.04)",
+      "0px 4px 16px 0px rgba(0,0,0,0.08)",
+      "0px 8px 32px 0px rgba(0,0,0,0.12)",
+      "0px 12px 48px 0px rgba(0,0,0,0.16)",
       ...Array(20).fill("none")
     ]
   }

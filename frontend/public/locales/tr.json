@@ -1,5 +1,5 @@
 {
-  "edit_deck": "Desteyi Düzenle",
+  "edit_deck": "Düzenle",
   "card": "Kart",
   "settings": "Ayarlar",
   "profile": "Profil",
@@ -43,5 +43,8 @@
   "starting": "Başlatılıyor...",
   "start_game": "Oyunu Başlat",
   "session_expired": "Oturumunuzun süresi doldu",
-  "redirecting_to_login": "Giriş sayfasına yönlendiriliyorsunuz..."
+  "redirecting_to_login": "Giriş sayfasına yönlendiriliyorsunuz...",
+  "manage_flashcards": "Kartlar",
+  "play_deck": "Oyna",
+  "delete_deck": "Sil"
 }

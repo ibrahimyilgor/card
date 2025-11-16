@@ -17,9 +17,10 @@ module.exports = (pool) => {
   });
 
   // Account profile endpoint
-  router.post('/profile', authenticateToken, async (req, res) => {
+  router.get('/profile', authenticateToken, async (req, res) => {
     try {
-      const result = await pool.query('SELECT * FROM account_preferences WHERE account_id = $1', [req.body.accountId]);
+      const accountId = req.user.accountId; // By token
+      const result = await pool.query('SELECT * FROM account_preferences WHERE account_id = $1', [accountId]);
       if (result.rows.length === 0) return res.status(404).json({ error: 'Profile not found' });
       res.json({ profile: result.rows[0] });
     } catch (err) {

@@ -13,6 +13,13 @@ import Topbar from './Topbar';
 import {  Box } from '@mui/material';
 
 
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/poppins/400.css';
+import '@fontsource/poppins/600.css';
+import '@fontsource/poppins/700.css';
+
 
 function App() {
   const [page, setPage] = useState(() => {
@@ -28,10 +35,9 @@ function App() {
   const handleLogin = async () => {
     setPage('info');
     const token = localStorage.getItem('token');
-    const accountId = localStorage.getItem('accountId');
     if (token) {
       try {
-        const res = await getProfile(accountId);
+        const res = await getProfile();
         const data = res.data;
         if (data.profile) {
           if (data.profile.theme_preference) {
@@ -89,10 +95,9 @@ function App() {
               <Box sx={{ height: '7%' }}>
                 <Topbar onLogout={handleLogout} onSettings={handleOpenSettings} onMainPage={() => setPage('info')} />
               </Box>
-              <Box sx={{ height: '1%' }} /> {/* Bottom margin */}
             </>
           )}
-          <Box sx={{ height: ['login', 'signup', 'session-expired'].includes(page) ? '100%' : '91%' }}>
+          <Box sx={{ height: ['login', 'signup', 'session-expired'].includes(page) ? '100%' : '92%' }}>
             {page === 'login' && <Login onLogin={handleLogin} onSwitch={() => setPage('signup')} />}
             {page === 'signup' && <Signup onSignup={handleSignup} onSwitch={() => setPage('login')} />}
             {page === 'session-expired' && <SessionExpired />}
