@@ -46,5 +46,8 @@
   "redirecting_to_login": "Giriş sayfasına yönlendiriliyorsunuz...",
   "manage_flashcards": "Kartlar",
   "play_deck": "Oyna",
-  "delete_deck": "Sil"
+  "delete_deck": "Sil",
+  "add": "Ekle",
+  "edit": "Düzenle",
+  "saving": "Kaydediliyor..."
 }

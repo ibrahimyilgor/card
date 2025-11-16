@@ -46,5 +46,8 @@
   "redirecting_to_login": "Redirecting to login page...",
   "manage_flashcards": "Flashcards",
   "play_deck": "Play",
-  "delete_deck": "Delete"
+  "delete_deck": "Delete",
+  "add": "Add",
+  "edit": "Edit",
+  "saving": "Saving..."
 }

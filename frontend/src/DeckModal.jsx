@@ -49,39 +49,44 @@ export default function DeckModal({
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="xs" 
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
       fullWidth
       PaperProps={{
         sx: {
           bgcolor: theme.palette.background.paper,
-          borderRadius: 3,
-          boxShadow: theme.shadows[4],
+          borderRadius: 2.5,
+          boxShadow: theme.shadows[3],
           border: `1.5px solid ${theme.palette.border.main}`,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          px: { xs: 0, sm: 0 },
         }
       }}
     >
-      <DialogTitle 
-        sx={{ 
-          bgcolor: theme.palette.background.paper, 
+      <DialogTitle
+        sx={{
+          bgcolor: theme.palette.primary.paper ?? theme.palette.primary.main,
           p: 3,
-          borderBottom: `1px solid ${theme.palette.border.main}`,
+          // borderBottom: `1px solid ${theme.palette.border.main}`,
           '& .MuiTypography-root': {
-            color: theme.palette.text.primary,
-            fontWeight: 600,
-            fontSize: 24,
+            color: theme.palette.text.cardTitle,
+            fontWeight: 700,
+            fontSize: 22,
+            letterSpacing: 0.5,
           }
         }}
       >
         {editDeck ? t('edit_deck') : t('new_deck')}
       </DialogTitle>
-      <DialogContent 
-        sx={{ 
+      <DialogContent
+        sx={{
           bgcolor: theme.palette.background.paper,
           p: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2.5,
           '& .MuiTextField-root': {
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
@@ -89,15 +94,35 @@ export default function DeckModal({
                 transition: 'all 0.2s',
               },
               '&:hover fieldset': {
-                borderColor: theme.palette.primary.main,
+                borderColor: theme.palette.text.cardTitle,
               },
               '&.Mui-focused fieldset': {
-                borderColor: theme.palette.primary.main,
+                borderColor: theme.palette.text.cardTitle,
                 borderWidth: '2px',
               },
+              '& input': {
+                color: theme.palette.text.cardTitle,
+              }
+            },
+            '& .MuiInputLabel-root': {
+              color: theme.palette.text.cardTitle,
             },
             '& .MuiInputLabel-root.Mui-focused': {
-              color: theme.palette.primary.main,
+              color: theme.palette.text.cardTitle,
+            },
+            '& .MuiInputLabel-root.MuiFormLabel-filled': {
+              color: theme.palette.text.cardTitle,
+            },
+            '& .MuiInputLabel-root.MuiFormLabel-filled.Mui-focused': {
+              color: theme.palette.text.cardTitle,
+            }
+          },
+          '& .MuiSelect-root': {
+            color: theme.palette.text.cardTitle,
+          },
+          '& .MuiOutlinedInput-root.Mui-focused': {
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: theme.palette.text.cardTitle,
             }
           }
         }}
@@ -107,12 +132,18 @@ export default function DeckModal({
           value={title}
           onChange={e => setTitle(e.target.value)}
           fullWidth
-          sx={{ mb: 3 }}
-          InputLabelProps={{ 
-            sx: { 
-              color: theme.palette.text.secondary,
-              fontWeight: 500
-            } 
+          sx={{ mt: 3, mb: 2, fontWeight: 600, fontSize: 18, borderRadius: 2, bgcolor: theme.palette.background.paper }}
+          InputLabelProps={{
+            sx: {
+              color: theme.palette.text.cardTitle,
+              fontWeight: 525,
+              fontSize: 15,
+            }
+          }}
+          inputProps={{
+            style: {
+              color: theme.palette.text.cardTitle,
+            }
           }}
           variant="outlined"
         />
@@ -123,28 +154,59 @@ export default function DeckModal({
           fullWidth
           multiline
           minRows={3}
-          InputLabelProps={{ 
-            sx: { 
-              color: theme.palette.text.secondary,
-              fontWeight: 500
-            } 
+          sx={{ fontSize: 15, borderRadius: 2, bgcolor: theme.palette.background.paper }}
+          InputLabelProps={{
+            sx: {
+              color: theme.palette.text.cardTitle,
+              fontWeight: 525,
+              fontSize: 15,
+            }
+          }}
+          inputProps={{
+            style: {
+              color: theme.palette.text.cardTitle,
+            }
           }}
           variant="outlined"
         />
         {!editDeck && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <FormControlLabel
               control={
                 <Checkbox
                   checked={difficultyEnabled}
                   onChange={(e) => setDifficultyEnabled(e.target.checked)}
-                  color="primary"
+                  sx={{
+                    p: 0.5,
+                    color: theme.palette.text.cardTitle,
+                    '&.Mui-checked': {
+                      color: theme.palette.text.cardTitle,
+                    }
+                  }}
                 />
               }
               label={t('enable_difficulty') || 'Enable Difficulty'}
+              sx={{ ml: 0.5, fontWeight: 525, color: theme.palette.text.cardTitle }}
             />
             <FormControl fullWidth>
-              <InputLabel id="mode-select-label">
+              <InputLabel
+                id="mode-select-label"
+                sx={{
+                  color: theme.palette.text.cardTitle,
+                  fontWeight: 525,
+                  '&.Mui-focused': {
+                    color: theme.palette.text.cardTitle,
+                  },
+                  '&.MuiFormLabel-filled': {
+                    color: theme.palette.text.cardTitle,
+                  },
+                  '&.MuiFormLabel-filled.Mui-focused': {
+                    color: theme.palette.text.cardTitle,
+                  }
+                }}
+                shrink={true}
+                className="select-label"
+              >
                 {t('game_mode') || 'Game Mode'}
               </InputLabel>
               <Select
@@ -152,6 +214,29 @@ export default function DeckModal({
                 value={mode}
                 label={t('game_mode') || 'Game Mode'}
                 onChange={(e) => setMode(e.target.value)}
+                sx={{ fontWeight: 500, fontSize: 15, color: theme.palette.text.cardTitle,
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: theme.palette.text.cardTitle,
+                  }
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      bgcolor: theme.palette.background.paper,
+                      '& .MuiMenuItem-root': {
+                        color: theme.palette.text.cardTitle,
+                      },
+                      '& .MuiMenuItem-root.Mui-selected': {
+                        backgroundColor: theme.palette.background.paper,
+                        color: theme.palette.text.cardTitle,
+                      },
+                      '& .MuiMenuItem-root.Mui-selected:hover': {
+                        backgroundColor: theme.palette.background.paper,
+                        color: theme.palette.text.cardTitle,
+                      }
+                    }
+                  }
+                }}
               >
                 <MenuItem value="standard">{t('mode_standard') || 'Standard'}</MenuItem>
               </Select>
@@ -159,58 +244,74 @@ export default function DeckModal({
           </Box>
         )}
         {error && (
-          <div style={{ 
-            color: theme.palette.error.main, 
-            marginTop: 16,
-            padding: '8px 12px',
-            borderRadius: 8,
+          <Box sx={{
+            color: theme.palette.error.main,
+            mt: 2,
+            px: 2,
+            py: 1,
+            borderRadius: 2,
             backgroundColor: `${theme.palette.error.main}15`,
-            fontSize: '0.875rem'
+            fontSize: '0.95rem',
+            fontWeight: 500,
           }}>
             {error}
-          </div>
+          </Box>
         )}
       </DialogContent>
-      <DialogActions 
-        sx={{ 
+      <DialogActions
+        sx={{
           bgcolor: theme.palette.background.paper,
           p: 3,
           pt: 2,
-          gap: 1,
-          borderTop: `1px solid ${theme.palette.border.main}`
+          gap: 1.5,
+          borderTop: `1px solid ${theme.palette.border.main}`,
+          display: 'flex',
+          justifyContent: 'flex-end',
         }}
       >
-        <Button 
-          onClick={onClose} 
+        <Button
+          onClick={onClose}
           sx={{
-            color: theme.palette.text.primary,
-            borderColor: theme.palette.border.main,
+            color: theme.palette.error.main,
+            borderColor: theme.palette.error.main,
+            fontWeight: 600,
+            fontSize: 15,
+            borderRadius: 2,
+            minWidth: 100,
+            px: 2,
+            py: 1,
+            boxShadow: 'none',
             '&:hover': {
-              borderColor: theme.palette.text.primary,
-              backgroundColor: 'rgba(255, 255, 255, 0.05)'
+              borderColor: theme.palette.error.dark,
+              backgroundColor: theme.palette.error.light,
+              color: theme.palette.error.contrastText,
             },
-            minWidth: 100
           }}
           variant="outlined"
         >
           {t('cancel')}
         </Button>
-        <Button 
-          onClick={handleSave} 
-          variant="contained" 
+        <Button
+          onClick={handleSave}
+          variant="contained"
           disabled={loading || !title.trim()}
           sx={{
-            bgcolor: theme.palette.primary.main,
-            color: theme.palette.primary.contrastText,
-            fontWeight: 600,
-            '&:hover': {
-              bgcolor: theme.palette.primary.dark,
-            },
+            bgcolor: theme.palette.success.main,
+            color: theme.palette.success.contrastText,
+            fontWeight: 700,
+            fontSize: 15,
+            borderRadius: 2,
             minWidth: 100,
-            boxShadow: loading ? 'none' : theme.shadows[2]
+            px: 2,
+            py: 1,
+            boxShadow: loading ? 'none' : theme.shadows[1],
+            letterSpacing: 0.5,
+            '&:hover': {
+              bgcolor: theme.palette.success.dark,
+            },
           }}
         >
-          {loading ? t('saving') || 'Kaydediliyor...' : t('save')}
+          {loading ? t('saving') || 'Kaydediliyor...' : editDeck ? t('edit') || 'Düzenle' : t('add') || 'Ekle'}
         </Button>
       </DialogActions>
     </Dialog>
