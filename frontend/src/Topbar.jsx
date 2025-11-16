@@ -133,29 +133,47 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
             sx={{ mt: 1 }}
             PaperProps={{
               sx: {
-                bgcolor: theme.palette.background.paper ?? theme.palette.primary.main2 ?? theme.palette.primary.main,
-                color: theme.palette.text.primary,
-                borderRadius: 2,
-                boxShadow: '0 4px 16px 0 rgba(0,0,0,0.18)',
+                bgcolor: theme.palette.background.paper,
+                color: theme.palette.text.cardTitle,
+                borderRadius: 2.5,
+                boxShadow: theme.shadows[2],
                 p: 0,
-                border: `1px solid ${theme.palette.border?.main ?? '#2e4f88ff'}`,
+                border: `1.5px solid ${theme.palette.border.main}`,
                 animation: `${fadeIn} 0.3s`,
+                minWidth: 200,
               }
             }}
           >
-            <Box sx={{ p: 2, minWidth: 170, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: theme.palette.text.primary, animation: `${fadeIn} 0.4s` }}>{t('profile')}</Typography>
+            <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  mb: 1,
+                  fontWeight: 700,
+                  color: theme.palette.text.cardTitle,
+                  fontSize: 18,
+                  letterSpacing: 0.3,
+                  animation: `${fadeIn} 0.4s`,
+                }}
+              >
+                {t('profile')}
+              </Typography>
               <Button
                 variant="contained"
                 sx={{
                   fontWeight: 700,
-                  borderRadius: 1,
+                  borderRadius: 2,
                   bgcolor: theme.palette.error.main,
-                  color: theme.palette.primary.main,
-                  boxShadow: '0 2px 8px #8a2c3a22',
+                  color: theme.palette.secondary.contrastText,
+                  boxShadow: theme.shadows[1],
+                  fontSize: 15,
+                  py: 1.2,
+                  px: 2,
+                  letterSpacing: 0.2,
                   transition: 'background 0.2s, transform 0.2s',
                   '&:hover': {
-                    bgcolor: theme.palette.error.dark ?? '#8a2c3a',
+                    bgcolor: theme.palette.error.dark,
+                    color: theme.palette.secondary.contrastText,
                     transform: 'scale(1.05)',
                   },
                   animation: clickedIcon === 'logout' ? `${iconClickAnim} 0.2s` : undefined,
