@@ -6,7 +6,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import { I18nContext } from './i18n';
 
-export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
+export default function Topbar({ onLogout, onSettings, onMainPage= () => {}, onStats }) {
   const theme = useTheme();
   const { t } = useContext(I18nContext);
   
@@ -108,7 +108,7 @@ export default function Topbar({ onLogout, onSettings, onMainPage= () => {} }) {
               '&:hover': { color: theme.palette.primary.contrastText, transform: 'scale(1.1)' },
               animation: clickedIcon === 'stats' ? `${iconClickAnim} 0.2s` : undefined,
             }}
-            onClick={() => { setClickedIcon('stats'); setTimeout(() => setClickedIcon(null), 200); }}
+            onClick={() => { setClickedIcon('stats'); setTimeout(() => setClickedIcon(null), 200); if (onStats) onStats(); }}
           >
             <BarChartIcon />
           </IconButton>

@@ -3,6 +3,7 @@ import { getProfile } from './services/accountServices';
 import Login from './Login';
 import Signup from './Signup';
 import Info from './Info';
+import Stats from './Stats';
 import Settings from './Settings';
 import Game from './Game';
 import SessionExpired from './SessionExpired';
@@ -93,7 +94,7 @@ function App() {
             <>
               <Box sx={{ height: '1%' }} /> {/* Top margin */}
               <Box sx={{ height: '7%' }}>
-                <Topbar onLogout={handleLogout} onSettings={handleOpenSettings} onMainPage={() => setPage('info')} />
+                <Topbar onLogout={handleLogout} onSettings={handleOpenSettings} onMainPage={() => setPage('info')} onStats={() => setPage('stats')} />
               </Box>
             </>
           )}
@@ -110,6 +111,7 @@ function App() {
                 }}
               />
             )}
+            {page === 'stats' && <Stats />}
             {page === 'game' && <Game deckId={selectedDeckForGame} onBackToDecks={() => setPage('info')} />}
             {page === 'settings' && <Settings onSettings={handleOpenSettings}  currentTheme={themeMode} onThemeChange={handleThemeChange} onMainPage={() => setPage('info')} onLangChange={setLang} />}
           </Box>
