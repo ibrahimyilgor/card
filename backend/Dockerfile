@@ -12,17 +12,12 @@ RUN npm ci
 # Uygulama dosyalarını kopyala
 COPY . .
 
-# Build stage’de Prisma generate **opsiyonel** olarak kaldırıldı
-# RUN npx prisma generate  # artık build sırasında çalıştırılmıyor
-
 # --------------------------
 # Stage 2: Production
 # --------------------------
 FROM node:20-bullseye-slim AS production
 
 WORKDIR /app
-
-COPY .env.prod .
 
 # Optional: npm cache’i /tmp’ye yönlendir (disk tasarrufu için)
 ENV NPM_CONFIG_CACHE=/tmp/.npm
@@ -37,5 +32,5 @@ COPY --from=builder /app ./
 # Port aç
 EXPOSE 5000
 
+# Runtime: Prisma generate + migrate + Node server start
 CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npm start"]
-
