@@ -1,7 +1,21 @@
-FROM node:18-alpine
+FROM node:20-bullseye
+
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+
+# Paketleri yükle
+COPY package*.json ./
+
+# npm install hataları için legacy peer deps ve clean cache
+RUN npm install --legacy-peer-deps
+
+# Uygulama dosyalarını kopyala
 COPY . .
+
+# Prisma client generate
+RUN npx prisma generate
+
+# Port aç
 EXPOSE 5000
-CMD ["npm", "start"]
+
+# Container ayağa kalkınca migrate ve server start
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
