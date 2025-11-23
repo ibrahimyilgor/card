@@ -52,6 +52,9 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          env:
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            NODE_ENV: production
           script: |
             cd /home/ubuntu
             docker-compose down
