@@ -54,6 +54,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/ubuntu
+            # .env.prod dosyasını oluştur
+            cat > ./backend/.env.prod <<EOL
+            DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres?schema=public
+            NODE_ENV=production
+            EOL
             docker-compose down
             # Force remove all images related to the compose file
             docker-compose rm -f
