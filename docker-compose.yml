@@ -16,9 +16,9 @@ services:
       - "5000:5000"
     depends_on:
       - db
+    env_file:
+      - ./backend/.env.prod  # sunucuda bu dosya olacak
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      NODE_ENV: production
       NPM_CONFIG_CACHE: /tmp/.npm
     command: sh -c "npx prisma generate && npx prisma migrate deploy && npm start"
 
