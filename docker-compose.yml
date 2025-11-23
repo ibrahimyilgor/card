@@ -2,7 +2,7 @@ services:
   db:
     image: yilgor98/db:latest
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -11,11 +11,14 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   backend:
-    image: yilgor98/backend:latest
-    ports: 
+    build: ./backend
+    ports:
       - "5000:5000"
     depends_on:
       - db
+    env_file:
+      - .env.prod #burayı dev veya proda göre yap
+    command: sh -c "npx prisma migrate deploy && npm start"
 
   frontend:
     image: yilgor98/frontend:latest
