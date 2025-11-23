@@ -52,11 +52,11 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          env:
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
-            NODE_ENV: production
           script: |
             cd /home/ubuntu
+            # Secrets ile .env.prod dosyasını oluştur
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env.prod
+            echo "NODE_ENV=prod" >> .env.prod
             docker-compose down
             # Force remove all images related to the compose file
             docker-compose rm -f
