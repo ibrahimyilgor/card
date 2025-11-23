@@ -14,6 +14,8 @@ ssh -i "card.pem" ubuntu@16.171.139.95 (GİRİŞ - info klasörüne gir)
     sudo docker-compose down
     sudo docker-compose up --build -d
 
+npx prisma migrate resolve --applied 20251123121342_init
+
 Alan	                Değer
 Server Name	            postgres
 Host name/address	    db
