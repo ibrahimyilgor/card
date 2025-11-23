@@ -1,18 +1,39 @@
-FROM node:20-bullseye
+# --------------------------
+# Stage 1: Build
+# --------------------------
+FROM node:20-bullseye AS builder
 
 WORKDIR /app
 
-# Paketleri yükle
+# Tüm bağımlılıkları yükle (dev + prod)
 COPY package*.json ./
-
-# npm install hataları için legacy peer deps ve clean cache
-RUN npm install --legacy-peer-deps
+RUN npm ci
 
 # Uygulama dosyalarını kopyala
 COPY . .
 
+# Build stage’de Prisma generate **opsiyonel** olarak kaldırıldı
+# RUN npx prisma generate  # artık build sırasında çalıştırılmıyor
+
+# --------------------------
+# Stage 2: Production
+# --------------------------
+FROM node:20-bullseye-slim AS production
+
+WORKDIR /app
+
+# Prod-only bağımlılıkları yükle
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Builder stage’den uygulama dosyalarını kopyala
+COPY --from=builder /app ./
+
+# Optional: npm cache’i /tmp’ye yönlendir (disk tasarrufu için)
+ENV NPM_CONFIG_CACHE=/tmp/.npm
+
 # Port aç
 EXPOSE 5000
 
-# Container ayağa kalkınca migrate ve server start
+# Runtime: Prisma generate + migrate + start
 CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npm start"]
