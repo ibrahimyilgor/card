@@ -1,7 +1,7 @@
 
 import React, { useState, useContext } from 'react';
-import { register } from './services/authServices';
-import { I18nContext } from './i18n';
+import { register } from '../services/authServices';
+import { I18nContext } from '../utils/i18n';
 import { Container, Box, Typography, TextField, Button, Alert, Link, Paper } from '@mui/material';
 
 export default function Signup({ onSignup, onSwitch }) {

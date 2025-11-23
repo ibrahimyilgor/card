@@ -12,7 +12,7 @@ import {
   useTheme
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { I18nContext } from './i18n';
+import { I18nContext } from '../../utils/i18n';
 
 export default function AddFlashcardModal({ open, onClose, onSave, loading, error, editFlashcard }) {
   const theme = useTheme();

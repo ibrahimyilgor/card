@@ -1,16 +1,16 @@
 
 import  { useEffect, useState, useContext } from 'react';
-import { getDecks, createDeck, updateDeck, deleteDeck } from './services/deckServices';
+import { getDecks, createDeck, updateDeck, deleteDeck } from '../services/deckServices';
 import { Box, Typography, useTheme, Fab, CircularProgress, Paper, IconButton, Button, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import StyleIcon from '@mui/icons-material/Style';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { I18nContext } from './i18n';
-import DeckModal from './DeckModal';
-import FlashcardModal from './FlashcardModal';
-import GameSettingsModal from './components/GameSettingsModal';
+import { I18nContext } from '../utils/i18n';
+import DeckModal from '../components/modals/DeckModal';
+import FlashcardModal from '../components/modals/FlashcardModal';
+import GameSettingsModal from '../components/modals/GameSettingsModal';
 
 export default function Info({ accountId, onStartGame }) {
   const theme = useTheme();

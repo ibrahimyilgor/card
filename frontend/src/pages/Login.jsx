@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { login } from './services/authServices';
-import { I18nContext } from './i18n';
+import { login } from '../services/authServices';
+import { I18nContext } from '../utils/i18n';
 import { Box, Typography, TextField, Button, Alert, Link, Paper, Checkbox, FormControlLabel } from '@mui/material';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';

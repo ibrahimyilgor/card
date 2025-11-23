@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Box, Typography, Button, Paper, useTheme } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
-import { I18nContext } from '../i18n';
+import { I18nContext } from '../utils/i18n';
 
 export default function GameSummary({ correctCount, incorrectCount, onRestart, onBackToDecks }) {
   const theme = useTheme();

@@ -4,7 +4,7 @@ import { AppBar, Toolbar, Typography, Box, IconButton, Popover, Button, useTheme
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import BarChartIcon from '@mui/icons-material/BarChart';
-import { I18nContext } from './i18n';
+import { I18nContext } from '../utils/i18n';
 
 export default function Topbar({ onLogout, onSettings, onMainPage= () => {}, onStats }) {
   const theme = useTheme();

@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { getGameFlashcards } from './services/gameServices';
+import { getGameFlashcards } from '../services/gameServices';
 import { Box, Typography, CircularProgress, Button, useTheme } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import FlashCard from './components/FlashCard';
-import GameSummary from './components/GameSummary';
-import { I18nContext } from './i18n';
+import FlashCard from '../components/FlashCard';
+import GameSummary from '../components/GameSummary';
+import { I18nContext } from '../utils/i18n';
 
 export default function Game({ deckId, onBackToDecks }) {
   const theme = useTheme();

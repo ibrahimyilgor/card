@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { getProfile } from './services/accountServices';
-import Login from './Login';
-import Signup from './Signup';
-import Info from './Info';
-import Stats from './Stats';
-import Settings from './Settings';
-import Game from './Game';
-import SessionExpired from './SessionExpired';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Info from './pages/Info';
+import Stats from './pages/Stats';
+import Settings from './pages/Settings';
+import Game from './pages/Game';
+import SessionExpired from './pages/SessionExpired';
 import { ThemeProvider } from '@mui/material/styles';
-import {darkTheme, lightTheme} from './theme';
-import { I18nProvider } from './i18n';
-import Topbar from './Topbar';
+import {darkTheme, lightTheme} from './styles/theme';
+import { I18nProvider } from './utils/i18n';
+import Topbar from './components/Topbar';
 import {  Box } from '@mui/material';
 
 

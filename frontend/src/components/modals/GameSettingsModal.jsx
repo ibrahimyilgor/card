@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { getDeckSettings, updateDeckSettings } from '../services/deckServices';
+import { getDeckSettings, updateDeckSettings } from '../../services/deckServices';
 import {
   Dialog,
   DialogTitle,
@@ -16,7 +16,7 @@ import {
   Typography,
   useTheme
 } from '@mui/material';
-import { I18nContext } from '../i18n';
+import { I18nContext } from '../../utils/i18n';
 
 export default function GameSettingsModal({ open, onClose, onStart, deckId, initialSettings = null }) {
   const theme = useTheme();

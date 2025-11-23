@@ -1,6 +1,6 @@
 import { useEffect, useContext } from 'react';
 import { Box, Typography, Paper, useTheme } from '@mui/material';
-import { I18nContext } from './i18n';
+import { I18nContext } from '../utils/i18n';
 
 export default function SessionExpired() {
   const { t } = useContext(I18nContext);

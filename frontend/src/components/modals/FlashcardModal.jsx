@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { getFlashcards, createFlashcard, deleteFlashcard } from './services/flashcardServices';
+import { getFlashcards, createFlashcard, deleteFlashcard } from '../../services/flashcardServices';
 import { 
   Dialog, 
   DialogTitle, 
@@ -16,8 +16,8 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddFlashcardModal from './AddFlashcardModal';
-import { I18nContext } from './i18n';
-import { updateFlashcard } from './services/flashcardServices';
+import { I18nContext } from '../../utils/i18n';
+import { updateFlashcard } from '../../services/flashcardServices';
 
 export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
   const theme = useTheme();
