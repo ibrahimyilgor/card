@@ -16,10 +16,11 @@ services:
       - "5000:5000"
     depends_on:
       - db
+    env_file:
+      - /backend/.env.prod
     environment:
       NPM_CONFIG_CACHE: /tmp/.npm
-    volumes:
-      - ./backend/.env.prod:/app/.env.prod:ro  # .env.prod container içine okunur şekilde mount edilir
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm start"
 
   frontend:
     image: yilgor98/frontend:latest
