@@ -20,7 +20,7 @@ services:
       - ./backend/.env.prod #burayı dev veya proda göre yap
     environment:
       NPM_CONFIG_CACHE: /tmp/.npm
-    command: sh -c "npx prisma generate & npx prisma migrate deploy && npm start"
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm start"
 
   frontend:
     image: yilgor98/frontend:latest
