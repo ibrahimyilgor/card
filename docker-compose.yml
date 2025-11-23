@@ -16,9 +16,9 @@ services:
       - "5000:5000"
     depends_on:
       - db
-    env_file:
-      - ./backend/.env.prod #burayı dev veya proda göre yap
     environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@db:5433/postgres?schema=public
       NPM_CONFIG_CACHE: /tmp/.npm
     command: sh -c "npx prisma generate && npx prisma migrate deploy && npm start"
 
