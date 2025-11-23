@@ -17,10 +17,9 @@ services:
     depends_on:
       - db
     environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@db:5433/postgres?schema=public
       NPM_CONFIG_CACHE: /tmp/.npm
-    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm start"
+    volumes:
+      - ./backend/.env.prod:/app/.env.prod:ro  # .env.prod container içine okunur şekilde mount edilir
 
   frontend:
     image: yilgor98/frontend:latest
