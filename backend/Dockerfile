@@ -12,9 +12,6 @@ RUN npm ci
 # Uygulama dosyalarını kopyala
 COPY . .
 
-# Build stage’de Prisma generate **opsiyonel** olarak kaldırıldı
-# RUN npx prisma generate  # artık build sırasında çalıştırılmıyor
-
 # --------------------------
 # Stage 2: Production
 # --------------------------
@@ -35,5 +32,5 @@ COPY --from=builder /app ./
 # Port aç
 EXPOSE 5000
 
-# Runtime: Prisma generate + migrate + start
-CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npm start"]
+# Runtime: Prisma generate + migrate + Node server start
+CMD ["sh", "-c", "npx dotenv -e /app/.env.prod -- npx prisma generate && npx dotenv -e /app/.env.prod -- npx prisma migrate deploy && npm start"]
