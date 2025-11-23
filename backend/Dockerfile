@@ -22,15 +22,15 @@ FROM node:20-bullseye-slim AS production
 
 WORKDIR /app
 
+# Optional: npm cache’i /tmp’ye yönlendir (disk tasarrufu için)
+ENV NPM_CONFIG_CACHE=/tmp/.npm
+
 # Prod-only bağımlılıkları yükle
 COPY package*.json ./
 RUN npm ci --only=production
 
 # Builder stage’den uygulama dosyalarını kopyala
 COPY --from=builder /app ./
-
-# Optional: npm cache’i /tmp’ye yönlendir (disk tasarrufu için)
-ENV NPM_CONFIG_CACHE=/tmp/.npm
 
 # Port aç
 EXPOSE 5000
