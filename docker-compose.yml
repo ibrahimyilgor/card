@@ -17,7 +17,7 @@ services:
     depends_on:
       - db
     env_file:
-      - .env.prod #burayı dev veya proda göre yap
+      - ./backend/.env.prod #burayı dev veya proda göre yap
     environment:
       NPM_CONFIG_CACHE: /tmp/.npm
     command: sh -c "npx prisma generate & npx prisma migrate deploy && npm start"
