@@ -1,7 +1,7 @@
 import { Box, Grid, Button, Divider, Paper, Typography, useTheme, Snackbar, Alert, Switch, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import { useContext, useState } from "react";
-import { I18nContext } from "./i18n";
-import { updateTheme, updateLanguage } from './services/accountServices';
+import { I18nContext } from "../utils/i18n";
+import { updateTheme, updateLanguage } from '../services/accountServices';
 import TranslateIcon from '@mui/icons-material/Translate';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';

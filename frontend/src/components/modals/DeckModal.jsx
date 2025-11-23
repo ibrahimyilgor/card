@@ -15,7 +15,7 @@ import {
   MenuItem,
   Box
 } from '@mui/material';
-import { I18nContext } from './i18n';
+import { I18nContext } from '../../utils/i18n';
 
 export default function DeckModal({ 
   open, 

@@ -1,6 +1,24 @@
-minio dockerhubdan kullanılabilir mi? avatar ve achievement için.
-dbyi bozmadan yeni column veya field ekleme işi nasıl olacak? 
-init.sql'i otomatik yollasın elle kopyalamak zorunda kalmayalım
-serverı her seferinde elle değiştirmek zorunda kalmayalım
+-minio dockerhubdan kullanılabilir mi? avatar ve achievement için. (öncelikli değil).
+
+-dbyi bozmadan yeni column veya tablo ekleme işi nasıl olacak? 
+
+-backend isteklerinde sadece tokene bakıyoruz ama bir hesap başka bir hesabın verilerini değiştirebiliyor.
+
+-token refresh olmuyor. frontendde token geçersiz hale geldiğinde ve o tokenle istek atıldıgında logout yapılıyor.
+
+-oyun modları eklenmesi
+    +default olan mod.
+    -çoktan seçmeli
+    -sadece input
+    -eşleştirme
+    
+-kayıt olurken maille dogrulama.
+
+-şifremi unuttum
+
+-statsın planlanması
+
+-achievementın planlanması
+
 
 
