@@ -22,6 +22,8 @@ FROM node:20-bullseye-slim AS production
 
 WORKDIR /app
 
+COPY .env.prod .
+
 # Optional: npm cache’i /tmp’ye yönlendir (disk tasarrufu için)
 ENV NPM_CONFIG_CACHE=/tmp/.npm
 
