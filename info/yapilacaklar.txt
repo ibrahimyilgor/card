@@ -6,6 +6,8 @@
 
 -token refresh olmuyor. frontendde token geçersiz hale geldiğinde ve o tokenle istek atıldıgında logout yapılıyor.
 
+http://16.171.139.95:3000/session-expired sayfası serverda 404not found. nginx lazım
+
 -oyun modları eklenmesi
     +default olan mod.
     -çoktan seçmeli

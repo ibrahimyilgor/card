@@ -1,27 +1,137 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { getFlashcards, createFlashcard, deleteFlashcard } from '../../services/flashcardServices';
 import { 
-  Dialog, 
-  DialogTitle, 
-  DialogContent,
   Typography,
   Box,
   CircularProgress,
-  Paper,
   IconButton,
-  Button,
   Tooltip,
+  alpha,
   useTheme
 } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import StyleIcon from '@mui/icons-material/Style';
+import AddIcon from '@mui/icons-material/Add';
 import AddFlashcardModal from './AddFlashcardModal';
 import { I18nContext } from '../../utils/i18n';
 import { updateFlashcard } from '../../services/flashcardServices';
+import { StyledModal, StyledButton, StyledCard, EmptyState } from '../ui';
 
-export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
+const MotionBox = motion.create(Box);
+
+// Flashcard Item Component
+function FlashcardItem({ flashcard, onEdit, onDelete, index }) {
   const theme = useTheme();
-  const {t} = useContext(I18nContext);
+  const { t } = useContext(I18nContext);
+
+  return (
+    <MotionBox
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
+      layout
+    >
+      <StyledCard
+        variant="default"
+        sx={{
+          p: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
+          {/* Color indicator */}
+          <Box
+            sx={{
+              width: 4,
+              background: 'linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%)',
+              flexShrink: 0,
+            }}
+          />
+          
+          {/* Content */}
+          <Box sx={{ flex: 1, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Tooltip title={flashcard.front_text} arrow>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 600,
+                    color: 'text.cardTitle',
+                    fontFamily: 'Inter, sans-serif',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {flashcard.front_text}
+                </Typography>
+              </Tooltip>
+              <Tooltip title={flashcard.back_text} arrow>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'text.cardSubtitle',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '0.85rem',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    mt: 0.5,
+                  }}
+                >
+                  {flashcard.back_text}
+                </Typography>
+              </Tooltip>
+            </Box>
+            
+            {/* Actions */}
+            <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+              <Tooltip title={t('edit') || 'Edit'} arrow>
+                <IconButton
+                  size="small"
+                  onClick={() => onEdit(flashcard)}
+                  sx={{
+                    color: 'warning.main',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      backgroundColor: (theme) => alpha(theme.palette.warning.main, 0.1),
+                      transform: 'scale(1.1)',
+                    },
+                  }}
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={t('delete') || 'Delete'} arrow>
+                <IconButton
+                  size="small"
+                  onClick={() => onDelete(flashcard.id)}
+                  sx={{
+                    color: 'error.main',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      backgroundColor: (theme) => alpha(theme.palette.error.main, 0.1),
+                      transform: 'scale(1.1)',
+                    },
+                  }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
+        </Box>
+      </StyledCard>
+    </MotionBox>
+  );
+}
+
+export default function FlashcardModal({ open, onClose, deckTitle, deckId }) {
+  const theme = useTheme();
+  const { t } = useContext(I18nContext);
 
   const [flashcards, setFlashcards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +153,6 @@ export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
     setAddLoading(true);
     setError('');
     if (editFlashcard) {
-      // Update
       try {
         const res = await updateFlashcard(editFlashcard.id, { frontText: front, backText: back });
         if (res.data && res.data.flashcard) {
@@ -59,7 +168,6 @@ export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
         setAddLoading(false);
       }
     } else {
-      // Add
       try {
         const res = await createFlashcard({ deckId, frontText: front, backText: back });
         if (res.data && res.data.flashcard) {
@@ -97,214 +205,115 @@ export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
     fetchFlashcardsList();
   }, [deckId, open]);
 
+  const handleEdit = (flashcard) => {
+    setEditFlashcard(flashcard);
+    setAddModalOpen(true);
+  };
+
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: {
-          bgcolor: theme.palette.background.paper,
-          borderRadius: 2.5,
-          boxShadow: theme.shadows[3],
-          border: `1.5px solid ${theme.palette.border.main}`,
-          overflow: 'hidden',
-          px: { xs: 0, sm: 0 },
-          minWidth: { xs: 340, sm: 480 },
-          maxWidth: { xs: 400, sm: 600 },
+    <>
+      <StyledModal
+        open={open}
+        onClose={onClose}
+        title={t('flashcards') || 'Flashcards'}
+        icon={<StyleIcon sx={{ fontSize: 24, color: 'white' }} />}
+        maxWidth="sm"
+        actions={
+          <>
+            <StyledButton variant="ghost" onClick={onClose}>
+              {t('close') || 'Close'}
+            </StyledButton>
+            <StyledButton
+              variant="success"
+              onClick={() => setAddModalOpen(true)}
+              startIcon={<AddIcon />}
+            >
+              {t('add_flashcard') || 'Add Card'}
+            </StyledButton>
+          </>
         }
-      }}
-    >
-      <DialogTitle
-        sx={{
-          bgcolor: theme.palette.primary.paper ?? theme.palette.primary.main,
-          p: 3,
-          display: 'flex',
-          alignItems: 'center',
-          borderBottom: `1px solid ${theme.palette.border.main}`,
-          '& .MuiTypography-root': {
-            color: theme.palette.text.cardTitle,
-            fontWeight: 700,
-            fontSize: 22,
-            letterSpacing: 0.5,
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            maxWidth: { xs: '180px', sm: '300px' },
-            display: 'block',
-          }
-        }}
       >
-          {t('flashcards') || 'Flashcards'}
-      </DialogTitle>
-      <DialogContent
-        sx={{
-          bgcolor: theme.palette.background.paper,
-          p: 3,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2.5,
-          minHeight: 180,
-          justifyContent: 'center',
-        }}
-      >
+        {/* Card count badge */}
+        {!loading && flashcards.length > 0 && (
+          <MotionBox
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 2,
+              py: 0.75,
+              borderRadius: 2,
+              background: (theme) =>
+                alpha(theme.palette.primary.main, 0.1),
+              border: (theme) =>
+                `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              mb: 2,
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 600,
+                color: 'primary.main',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              {flashcards.length} {flashcards.length === 1 ? 'card' : 'cards'}
+            </Typography>
+          </MotionBox>
+        )}
+
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-            <CircularProgress />
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+            <CircularProgress size={40} />
           </Box>
         ) : flashcards.length === 0 ? (
-            <Typography sx={{ textAlign: 'center', fontSize: 18, fontWeight: 500, color: theme.palette.text.cardTitle }}>
-              {t('no_flashcards') || 'No flashcards found'}
-            </Typography>
+          <EmptyState
+            icon={StyleIcon}
+            title={t('no_flashcards') || 'No flashcards yet'}
+            description="Add your first flashcard to get started learning!"
+            actionLabel={t('add_flashcard') || 'Add Flashcard'}
+            onAction={() => setAddModalOpen(true)}
+          />
         ) : (
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-            maxHeight: '60vh',
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            pr: 1,
-            mt: 1
-          }}>
-            {flashcards.map((flashcard) => (
-              <Paper
-                key={flashcard.id}
-                elevation={0}
-                sx={{
-                  p: 2,
-                  border: `1px solid ${theme.palette.border.main}`,
-                  borderRadius: 2,
-                }}
-              >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Box sx={{ flex: 1, mr: 2 }}>
-                    <Tooltip title={flashcard.front_text} arrow>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 600,
-                          mb: 1,
-                          color: theme.palette.text.cardTitle,
-                          textOverflow: 'ellipsis',
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                          maxWidth: { xs: '160px', sm: '220px' },
-                          display: 'block',
-                          wordBreak: 'break-all',
-                        }}
-                      >
-                        {flashcard.front_text}
-                      </Typography>
-                    </Tooltip>
-                    <Tooltip title={flashcard.back_text} arrow>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: theme.palette.text.cardSubtitle,
-                          textOverflow: 'ellipsis',
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                          maxWidth: { xs: '160px', sm: '220px' },
-                          display: 'block',
-                          wordBreak: 'break-all',
-                        }}
-                      >
-                        {flashcard.back_text}
-                      </Typography>
-                    </Tooltip>
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Tooltip title={t('edit') || 'Düzenle'} arrow>
-                      <IconButton
-                        size="small"
-                        onClick={() => {
-                          setEditFlashcard(flashcard);
-                          setAddModalOpen(true);
-                        }}
-                        sx={{
-                          color: '#fbbf24',
-                          transition: 'transform 0.15s',
-                          '&:hover': {
-                            color: '#f59e0b',
-                            bgcolor: 'rgba(251,191,36,0.08)',
-                            transform: 'scale(1.15)',
-                          },
-                        }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title={t('delete') || 'Sil'} arrow>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteFlashcard(flashcard.id)}
-                        sx={{
-                          color: theme.palette.error.main,
-                          transition: 'transform 0.15s',
-                          '&:hover': {
-                            color: theme.palette.error.dark,
-                            bgcolor: 'rgba(217, 125, 85, 0.1)',
-                            transform: 'scale(1.15)',
-                          }
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Box>
-              </Paper>
-            ))}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5,
+              maxHeight: '50vh',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              pr: 1,
+              '&::-webkit-scrollbar': {
+                width: 6,
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.2)'
+                    : 'rgba(0, 0, 0, 0.2)',
+                borderRadius: 3,
+              },
+            }}
+          >
+            <AnimatePresence mode="popLayout">
+              {flashcards.map((flashcard, index) => (
+                <FlashcardItem
+                  key={flashcard.id}
+                  flashcard={flashcard}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteFlashcard}
+                  index={index}
+                />
+              ))}
+            </AnimatePresence>
           </Box>
         )}
-      </DialogContent>
-      <Box sx={{ bgcolor: theme.palette.background.paper, p: 3, pt: 2, gap: 1.5, borderTop: `1px solid ${theme.palette.border.main}`, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          onClick={onClose}
-          variant="outlined"
-          sx={{
-            color: theme.palette.error.main,
-            borderColor: theme.palette.error.main,
-            fontWeight: 600,
-            fontSize: 15,
-            borderRadius: 2,
-            minWidth: 100,
-            px: 2,
-            py: 1,
-            boxShadow: 'none',
-            '&:hover': {
-              borderColor: theme.palette.error.dark,
-              backgroundColor: theme.palette.error.light,
-              color: theme.palette.error.contrastText,
-            },
-          }}
-        >
-          {t('close') || 'Close'}
-        </Button>
-        <Button
-          onClick={() => setAddModalOpen(true)}
-          variant="contained"
-          sx={{
-            bgcolor: theme.palette.success.main,
-            color: theme.palette.success.contrastText,
-            fontWeight: 700,
-            fontSize: 15,
-            borderRadius: 2,
-            minWidth: 100,
-            px: 2,
-            py: 1,
-            boxShadow: theme.shadows[1],
-            letterSpacing: 0.5,
-            '&:hover': {
-              bgcolor: theme.palette.success.dark,
-            },
-          }}
-        >
-          {t('add_flashcard') || 'Kart Ekle'}
-        </Button>
-      </Box>
+      </StyledModal>
+
       <AddFlashcardModal
         open={addModalOpen}
         onClose={() => {
@@ -317,6 +326,6 @@ export default function FlashcardModal({ open, onClose, deckTitle, deckId}) {
         error={error}
         editFlashcard={editFlashcard}
       />
-    </Dialog>
+    </>
   );
 }

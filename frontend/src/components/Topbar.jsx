@@ -1,189 +1,347 @@
 import React, { useContext, useState } from 'react';
-import { keyframes } from '@mui/system';
-import { AppBar, Toolbar, Typography, Box, IconButton, Popover, Button, useTheme } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, IconButton, Popover, Button, useTheme, Tooltip, alpha } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import HomeIcon from '@mui/icons-material/Home';
+import LogoutIcon from '@mui/icons-material/Logout';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import { I18nContext } from '../utils/i18n';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-export default function Topbar({ onLogout, onSettings, onMainPage= () => {}, onStats }) {
+const MotionBox = motion.create(Box);
+const MotionIconButton = motion.create(IconButton);
+
+function NavButton({ icon: Icon, label, isActive, onClick, tooltip }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  
+  return (
+    <Tooltip title={tooltip} arrow>
+      <MotionIconButton
+        onClick={onClick}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        sx={{
+          mx: 0.25,
+          p: 1.25,
+          borderRadius: '12px',
+          color: isActive 
+            ? (isDark ? '#ffffff' : '#1e293b')
+            : (isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(30, 41, 59, 0.6)'),
+          backgroundColor: isActive 
+            ? (isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(59, 130, 246, 0.12)')
+            : 'transparent',
+          position: 'relative',
+          transition: 'all 0.2s ease',
+          '&:hover': { 
+            color: isDark ? '#ffffff' : '#1e293b',
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+          },
+        }}
+      >
+        <Icon sx={{ fontSize: 22 }} />
+        {isActive && (
+          <MotionBox
+            layoutId="activeIndicator"
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 3,
+              borderRadius: '3px 3px 0 0',
+              background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)',
+            }}
+          />
+        )}
+      </MotionIconButton>
+    </Tooltip>
+  );
+}
+
+export default function Topbar({ onLogout, currentPath }) {
   const theme = useTheme();
   const { t } = useContext(I18nContext);
+  const navigate = useNavigate();
+  const location = useLocation();
   
   const [anchorEl, setAnchorEl] = useState(null);
-  const [clickedIcon, setClickedIcon] = useState(null);
+
+  // Use location.pathname if currentPath not provided
+  const activePath = currentPath || location.pathname;
 
   const handleProfileClick = (event) => {
     setAnchorEl(event.currentTarget);
-    setClickedIcon('profile');
-    setTimeout(() => setClickedIcon(null), 200);
   };
+
   const handlePopoverClose = () => {
     setAnchorEl(null);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('accountId');
     if (onLogout) onLogout();
     setAnchorEl(null);
-    setClickedIcon('logout');
-    setTimeout(() => setClickedIcon(null), 200);
+    navigate('/login');
   };
+
   const open = Boolean(anchorEl);
 
-  // Animations
-  const fadeIn = keyframes`
-    from { opacity: 0; transform: translateY(-10px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  `;
-  const iconClickAnim = keyframes`
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  `;
-
   return (
-    <AppBar position="static" elevation={0} sx={{ 
-      backgroundColor: theme.palette.primary.paper ?? theme.palette.primary.main,
-      color: theme.palette.text.contrastText,
-      borderTopLeftRadius: 12,
-      borderTopRightRadius: 12,
-      borderBottomLeftRadius: 0,
-      borderBottomRightRadius: 0,
-      height: '100%',
-      // boxShadow: theme.shadows[4],
-      // border: `1.5px solid ${theme.palette.border.main}`,
-      mx: 'auto',
-
-      mb: 1,
-      width: '95%',
-      // maxWidth: 900,
-      minWidth: 'auto',
-      boxSizing: 'border-box',
-      transition: 'background 0.3s',
-      overflow: 'visible',
-    }}>
+    <AppBar 
+      position="sticky"
+      elevation={0} 
+      sx={{ 
+        background: (theme) =>
+          theme.palette.mode === 'dark'
+            ? 'linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(17, 24, 39, 0.95) 100%)'
+            : 'linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: (theme) =>
+          `1px solid ${
+            theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.08)'
+              : 'rgba(0, 0, 0, 0.08)'
+          }`,
+        zIndex: 1100,
+      }}
+    >
       <Toolbar sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        px: { xs: 2, sm: 3 },
+        px: { xs: 2, sm: 4 },
         py: 1,
-        minHeight: 56,
+        minHeight: 64,
+        maxWidth: 1400,
         width: '100%',
-        boxSizing: 'border-box',
+        mx: 'auto',
       }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 700,
-            color: theme.palette.primary.contrastText,
-            letterSpacing: 1,
-            transition: 'color 0.2s',
+        {/* Logo */}
+        <MotionBox
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => navigate('/')}
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1.5,
             cursor: 'pointer',
-            fontFamily: theme.typography.fontFamily
           }}
-          onClick={onMainPage}
         >
-          {t('card')}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton
+          <Box
             sx={{
-              mx: 1,
-              color: theme.palette.text.primary,
-              transition: 'color 0.2s, transform 0.2s',
-              '&:hover': { color: theme.palette.primary.contrastText, transform: 'scale(1.1)' },
-              animation: clickedIcon === 'settings' ? `${iconClickAnim} 0.2s` : undefined,
+              width: 40,
+              height: 40,
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
             }}
-            onClick={() => { setClickedIcon('settings'); setTimeout(() => setClickedIcon(null), 200); onSettings(); }}
           >
-            <SettingsIcon />
-          </IconButton>
-          <IconButton
+            <AutoStoriesIcon sx={{ fontSize: 22, color: 'white' }} />
+          </Box>
+          <Typography
+            variant="h6"
             sx={{
-              mx: 1,
-              color: theme.palette.text.primary,
-              transition: 'color 0.2s, transform 0.2s',
-              '&:hover': { color: theme.palette.primary.contrastText, transform: 'scale(1.1)' },
-              animation: clickedIcon === 'stats' ? `${iconClickAnim} 0.2s` : undefined,
+              fontWeight: 700,
+              background: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'linear-gradient(90deg, #ffffff 0%, #94a3b8 100%)'
+                  : 'linear-gradient(90deg, #1e293b 0%, #475569 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontFamily: 'Inter, sans-serif',
+              letterSpacing: '-0.02em',
+              display: { xs: 'none', sm: 'block' },
             }}
-            onClick={() => { setClickedIcon('stats'); setTimeout(() => setClickedIcon(null), 200); if (onStats) onStats(); }}
           >
-            <BarChartIcon />
-          </IconButton>
-          <IconButton
-            sx={{
-              mx: 1,
-              color: theme.palette.text.primary,
-              transition: 'color 0.2s, transform 0.2s',
-              '&:hover': { color: theme.palette.primary.contrastText, transform: 'scale(1.1)' },
-              animation: clickedIcon === 'profile' ? `${iconClickAnim} 0.2s` : undefined,
-            }}
+            {t('card')}
+          </Typography>
+        </MotionBox>
+
+        {/* Navigation */}
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            background: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'rgba(30, 41, 59, 0.8)'
+                : 'rgba(241, 245, 249, 0.8)',
+            borderRadius: '14px',
+            p: 0.5,
+            border: (theme) =>
+              `1px solid ${
+                theme.palette.mode === 'dark'
+                  ? 'rgba(255, 255, 255, 0.08)'
+                  : 'rgba(0, 0, 0, 0.06)'
+              }`,
+          }}
+        >
+          <NavButton 
+            icon={HomeIcon} 
+            label="Home" 
+            tooltip={t('home') || 'Home'}
+            isActive={activePath === '/'} 
+            onClick={() => navigate('/')} 
+          />
+          <NavButton 
+            icon={BarChartIcon} 
+            label="Stats" 
+            tooltip={t('statistics') || 'Statistics'}
+            isActive={activePath === '/stats'} 
+            onClick={() => navigate('/stats')} 
+          />
+          <NavButton 
+            icon={SettingsIcon} 
+            label="Settings" 
+            tooltip={t('settings')}
+            isActive={activePath === '/settings'} 
+            onClick={() => navigate('/settings')} 
+          />
+        </Box>
+
+        {/* Profile */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <MotionIconButton
             onClick={handleProfileClick}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            sx={{
+              p: 0.5,
+              border: (theme) =>
+                `2px solid ${
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(59, 130, 246, 0.3)'
+                    : 'rgba(59, 130, 246, 0.2)'
+                }`,
+              borderRadius: '12px',
+              background: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)'
+                  : 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                borderColor: 'primary.main',
+              },
+            }}
           >
-            <AccountCircleIcon />
-          </IconButton>
+            <AccountCircleIcon 
+              sx={{ 
+                fontSize: 28, 
+                color: 'primary.main',
+              }} 
+            />
+          </MotionIconButton>
+
           <Popover
             open={open}
             anchorEl={anchorEl}
             onClose={handlePopoverClose}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            sx={{ mt: 1 }}
+            sx={{ mt: 1.5 }}
             PaperProps={{
               sx: {
-                bgcolor: theme.palette.background.paper,
-                color: theme.palette.text.cardTitle,
-                borderRadius: 2.5,
-                boxShadow: theme.shadows[2],
+                bgcolor: 'background.paper',
+                borderRadius: 3,
+                boxShadow: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? '0 20px 50px rgba(0, 0, 0, 0.5)'
+                    : '0 20px 50px rgba(0, 0, 0, 0.15)',
+                border: (theme) =>
+                  `1px solid ${
+                    theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : 'rgba(0, 0, 0, 0.06)'
+                  }`,
                 p: 0,
-                border: `1.5px solid ${theme.palette.border.main}`,
-                animation: `${fadeIn} 0.3s`,
-                minWidth: 200,
+                minWidth: 220,
+                overflow: 'hidden',
               }
             }}
           >
-            <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  mb: 1,
-                  fontWeight: 700,
-                  color: theme.palette.text.cardTitle,
-                  fontSize: 18,
-                  letterSpacing: 0.3,
-                  animation: `${fadeIn} 0.4s`,
-                }}
+            <AnimatePresence>
+              <MotionBox
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
               >
-                {t('profile')}
-              </Typography>
-              <Button
-                variant="contained"
-                sx={{
-                  fontWeight: 700,
-                  borderRadius: 2,
-                  bgcolor: theme.palette.error.main,
-                  color: theme.palette.secondary.contrastText,
-                  boxShadow: theme.shadows[1],
-                  fontSize: 15,
-                  py: 1.2,
-                  px: 2,
-                  letterSpacing: 0.2,
-                  transition: 'background 0.2s, transform 0.2s',
-                  '&:hover': {
-                    bgcolor: theme.palette.error.dark,
-                    color: theme.palette.secondary.contrastText,
-                    transform: 'scale(1.05)',
-                  },
-                  animation: clickedIcon === 'logout' ? `${iconClickAnim} 0.2s` : undefined,
-                }}
-                onClick={handleLogout}
-                fullWidth
-              >
-                {t('logout')}
-              </Button>
-            </Box>
+                {/* Profile Header */}
+                <Box
+                  sx={{
+                    p: 3,
+                    background: (theme) =>
+                      theme.palette.mode === 'dark'
+                        ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)'
+                        : 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)',
+                    borderBottom: (theme) =>
+                      `1px solid ${theme.palette.border.main}`,
+                    textAlign: 'center',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: '14px',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mx: 'auto',
+                      mb: 1.5,
+                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                    }}
+                  >
+                    <AccountCircleIcon sx={{ fontSize: 32, color: 'white' }} />
+                  </Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 600,
+                      color: 'text.cardTitle',
+                      fontFamily: 'Inter, sans-serif',
+                    }}
+                  >
+                    {t('profile')}
+                  </Typography>
+                </Box>
+
+                {/* Actions */}
+                <Box sx={{ p: 2 }}>
+                  <Button
+                    fullWidth
+                    startIcon={<LogoutIcon />}
+                    onClick={handleLogout}
+                    sx={{
+                      justifyContent: 'flex-start',
+                      py: 1.5,
+                      px: 2,
+                      borderRadius: 2,
+                      fontWeight: 600,
+                      fontFamily: 'Inter, sans-serif',
+                      color: 'error.main',
+                      backgroundColor: (theme) =>
+                        alpha(theme.palette.error.main, 0.08),
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.error.main, 0.15),
+                      },
+                    }}
+                  >
+                    {t('logout')}
+                  </Button>
+                </Box>
+              </MotionBox>
+            </AnimatePresence>
           </Popover>
         </Box>
       </Toolbar>
