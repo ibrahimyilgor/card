@@ -1,11 +1,114 @@
-import { Box, Grid, Button, Divider, Paper, Typography, useTheme, Snackbar, Alert, Switch, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { Box, Typography, useTheme, Snackbar, Alert, Switch, Select, MenuItem, FormControl, Divider, alpha } from "@mui/material";
 import { useContext, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { I18nContext } from "../utils/i18n";
 import { updateTheme, updateLanguage } from '../services/accountServices';
 import TranslateIcon from '@mui/icons-material/Translate';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import PaletteIcon from '@mui/icons-material/Palette';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import KeyboardIcon from '@mui/icons-material/Keyboard';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { PageContainer, StyledCard, StyledButton } from '../components/ui';
+
+const MotionBox = motion.create(Box);
+
+// Setting Card Component
+function SettingCard({ icon: Icon, title, description, children, delay = 0 }) {
+  const theme = useTheme();
+
+  return (
+    <MotionBox
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4 }}
+    >
+      <StyledCard
+        variant="default"
+        sx={{
+          p: 3,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 3,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, flex: 1 }}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.15)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+            }}
+          >
+            <Icon sx={{ fontSize: 24, color: 'primary.main' }} />
+          </Box>
+          <Box>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                color: 'text.cardTitle',
+                fontFamily: 'Inter, sans-serif',
+                mb: 0.25,
+              }}
+            >
+              {title}
+            </Typography>
+            {description && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.cardSubtitle',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '0.85rem',
+                }}
+              >
+                {description}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+        <Box sx={{ flexShrink: 0 }}>
+          {children}
+        </Box>
+      </StyledCard>
+    </MotionBox>
+  );
+}
+
+// Section Header Component
+function SectionHeader({ title, delay = 0 }) {
+  return (
+    <MotionBox
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      sx={{ mb: 2, mt: 3 }}
+    >
+      <Typography
+        variant="overline"
+        sx={{
+          color: 'text.cardSubtitle',
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          fontSize: '0.75rem',
+          fontFamily: 'Inter, sans-serif',
+        }}
+      >
+        {title}
+      </Typography>
+    </MotionBox>
+  );
+}
 
 export default function Settings({ currentTheme, onThemeChange, onLangChange }) {
   const theme = useTheme();
@@ -14,13 +117,32 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange }) 
   const [selectedLang, setSelectedLang] = useState(localStorage.getItem('lang') || 'en');
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [savedAnim, setSavedAnim] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  
+  // Local preferences (stored in localStorage only)
+  const [soundEnabled, setSoundEnabled] = useState(() => 
+    localStorage.getItem('soundEnabled') !== 'false'
+  );
+  const [keyboardShortcuts, setKeyboardShortcuts] = useState(() => 
+    localStorage.getItem('keyboardShortcuts') !== 'false'
+  );
 
   const handleThemeChangeLocal = (e) => {
     setSelectedTheme(e.target.checked ? 'light' : 'dark');
   };
+  
   const handleLangChange = (e) => {
     setSelectedLang(e.target.value);
+  };
+
+  const handleSoundChange = (e) => {
+    setSoundEnabled(e.target.checked);
+    localStorage.setItem('soundEnabled', e.target.checked);
+  };
+
+  const handleKeyboardChange = (e) => {
+    setKeyboardShortcuts(e.target.checked);
+    localStorage.setItem('keyboardShortcuts', e.target.checked);
   };
 
   const handleSave = async () => {
@@ -38,9 +160,9 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange }) 
       localStorage.setItem('lang', selectedLang);
       if (onLangChange) onLangChange(selectedLang);
 
-      setSavedAnim(true);
+      setSaveSuccess(true);
       setSnackbar({ open: true, message: t('settings_saved') || 'Settings saved successfully!', severity: 'success' });
-      setTimeout(() => setSavedAnim(false), 1200);
+      setTimeout(() => setSaveSuccess(false), 2000);
     } catch (err) {
       setSnackbar({ open: true, message: err.message || t('settings_save_error') || 'Error saving settings!', severity: 'error' });
     } finally {
@@ -48,129 +170,242 @@ export default function Settings({ currentTheme, onThemeChange, onLangChange }) 
     }
   };
 
+  const hasChanges = selectedTheme !== currentTheme || 
+    selectedLang !== (localStorage.getItem('lang') || 'en');
+
   return (
-    <Box sx={{ height: "98%", width: '95%', bgcolor: theme.palette.background.paper, p: 0, position: 'relative', mx: 'auto', display: 'flex', flexDirection: 'column', borderBottomLeftRadius: 12, borderBottomRightRadius: 12 }}>    
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          height: '100%',
-          overflow: 'auto',
-        }}
-      >
-          <Box sx={{ mb: { xs: 3, sm: 4 }, width: '100%' }}>
-            <Box sx={{ width: '100%' }}>
-              <Grid container spacing={4} justifyContent="center" alignItems="center">
-                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '45%' }, display: 'flex', alignItems: 'stretch' }}>
-                  <Paper elevation={2} sx={{ p: 3, borderRadius: 3, width: '100%', height: '100%', minHeight: 150, display: 'flex', flexDirection: 'column'}}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2 }}>
-                      <PaletteIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: theme.palette.text.cardTitle, mr: 1 }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: { xs: 16, sm: 17, md: 18 }, color: theme.palette.text.cardTitle }}>{t('theme')}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                      <DarkModeIcon sx={{ fontSize: { xs: 20, sm: 22 }, mr: 1, color: theme.palette.text.cardTitle }} />
-                      <Switch
-                        checked={selectedTheme === 'light'}
-                        onChange={handleThemeChangeLocal}
-                        color="primary"
-                        sx={{ mx: { xs: 0.5, sm: 1 } }}
-                        inputProps={{ 'aria-label': 'theme switch' }}
-                      />
-                      <LightModeIcon sx={{ fontSize: { xs: 20, sm: 22 }, ml: 1, color: theme.palette.text.cardTitle }} />
-                    </Box>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '45%' }, display: 'flex', alignItems: 'stretch' }}>
-                  <Paper elevation={2} sx={{ p: 3, borderRadius: 3, width: '100%', height: '100%', minHeight: 150, display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2 }}>
-                      <TranslateIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: theme.palette.text.cardTitle, mr: 1 }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: { xs: 16, sm: 17, md: 18 }, color: theme.palette.text.cardTitle }}>{t('language')}</Typography>
-                    </Box>
-                    <FormControl fullWidth variant="standard" sx={{ mt: 1 }}>
-                      <Select
-                        labelId="lang-select-label"
-                        value={selectedLang}
-                        onChange={handleLangChange}
-                        disableUnderline
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: { xs: 15, sm: 16 },
-                          bgcolor: theme.palette.background.paper,
-                          color: theme.palette.text.cardTitle,
-                          borderRadius: { xs: 1.5, sm: 2 },
-                          pl: { xs: 1.5, sm: 2 },
-                          height: { xs: 44, sm: 48 },
-                          minHeight: { xs: 44, sm: 48 },
-                          display: 'flex',
-                          alignItems: 'center',
-                          '& .MuiSelect-icon': {
-                            color: theme.palette.text.cardTitle,
-                          },
-                        }}
-                        MenuProps={{
-                          PaperProps: {
-                            sx: {
-                              bgcolor: theme.palette.background.paper,
-                            }
-                          }
-                        }}
-                      >
-                        <MenuItem value="en" sx={{ color: theme.palette.text.cardTitle, bgcolor: theme.palette.background.paper }}>
-                          {t('english')}
-                        </MenuItem>
-                        <MenuItem value="tr" sx={{ color: theme.palette.text.cardTitle, bgcolor: theme.palette.background.paper }}>
-                          {t('turkish')}
-                        </MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Paper>
-                </Grid>
-              </Grid>
+    <PageContainer>
+      <Box sx={{ maxWidth: 700, mx: 'auto', py: 4 }}>
+        {/* Header */}
+        <MotionBox
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          sx={{ mb: 4, textAlign: 'center' }}
+        >
+          <Box
+            sx={{
+              width: 64,
+              height: 64,
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)'
+                  : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)',
+              border: (theme) =>
+                `1px solid ${
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(59, 130, 246, 0.3)'
+                    : 'rgba(59, 130, 246, 0.2)'
+                }`,
+              mx: 'auto',
+              mb: 2,
+            }}
+          >
+            <SettingsIcon sx={{ fontSize: 32, color: 'primary.main' }} />
+          </Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              color: 'text.cardTitle',
+              fontFamily: 'Inter, sans-serif',
+              mb: 1,
+            }}
+          >
+            {t('settings')}
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              color: 'text.cardSubtitle',
+              fontFamily: 'Inter, sans-serif',
+            }}
+          >
+            Customize your learning experience
+          </Typography>
+        </MotionBox>
+
+        {/* Appearance Section */}
+        <SectionHeader title="Appearance" delay={0.1} />
+        
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <SettingCard
+            icon={PaletteIcon}
+            title={t('theme')}
+            description="Switch between dark and light mode"
+            delay={0.15}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <DarkModeIcon 
+                sx={{ 
+                  fontSize: 20, 
+                  color: selectedTheme === 'dark' ? 'primary.main' : 'text.cardSubtitle',
+                  transition: 'color 0.3s',
+                }} 
+              />
+              <Switch
+                checked={selectedTheme === 'light'}
+                onChange={handleThemeChangeLocal}
+                color="primary"
+                sx={{
+                  '& .MuiSwitch-track': {
+                    borderRadius: 20,
+                  },
+                }}
+              />
+              <LightModeIcon 
+                sx={{ 
+                  fontSize: 20, 
+                  color: selectedTheme === 'light' ? 'warning.main' : 'text.cardSubtitle',
+                  transition: 'color 0.3s',
+                }} 
+              />
             </Box>
-          </Box>
-          <Divider sx={{ mb: 3, borderColor: theme.palette.text.primary, opacity: 0.18 }} />
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-            <Button
-              variant="contained"
+          </SettingCard>
+
+          <SettingCard
+            icon={TranslateIcon}
+            title={t('language')}
+            description="Choose your preferred language"
+            delay={0.2}
+          >
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <Select
+                value={selectedLang}
+                onChange={handleLangChange}
+                sx={{
+                  fontWeight: 500,
+                  fontSize: '0.9rem',
+                  borderRadius: 2,
+                  fontFamily: 'Inter, sans-serif',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'border.main',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main',
+                  },
+                }}
+              >
+                <MenuItem value="en">{t('english')}</MenuItem>
+                <MenuItem value="tr">{t('turkish')}</MenuItem>
+              </Select>
+            </FormControl>
+          </SettingCard>
+        </Box>
+
+        {/* Preferences Section */}
+        <SectionHeader title="Preferences" delay={0.25} />
+        
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <SettingCard
+            icon={VolumeUpIcon}
+            title="Sound Effects"
+            description="Play sounds for correct/incorrect answers"
+            delay={0.3}
+          >
+            <Switch
+              checked={soundEnabled}
+              onChange={handleSoundChange}
               color="primary"
+            />
+          </SettingCard>
+
+          <SettingCard
+            icon={KeyboardIcon}
+            title="Keyboard Shortcuts"
+            description="Use arrow keys and space during games"
+            delay={0.35}
+          >
+            <Switch
+              checked={keyboardShortcuts}
+              onChange={handleKeyboardChange}
+              color="primary"
+            />
+          </SettingCard>
+        </Box>
+
+        {/* Save Button */}
+        <MotionBox
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.4 }}
+          sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}
+        >
+          <StyledButton
+            variant={saveSuccess ? 'success' : 'primary'}
+            onClick={handleSave}
+            disabled={loading || !hasChanges}
+            sx={{
+              minWidth: 200,
+              py: 1.5,
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {saveSuccess ? (
+                <MotionBox
+                  key="success"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
+                  <CheckCircleIcon sx={{ fontSize: 20 }} />
+                  {t('settings_saved') || 'Saved!'}
+                </MotionBox>
+              ) : (
+                <MotionBox
+                  key="save"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  {loading ? t('saving') : t('save')}
+                </MotionBox>
+              )}
+            </AnimatePresence>
+          </StyledButton>
+        </MotionBox>
+
+        {!hasChanges && (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            sx={{ textAlign: 'center', mt: 2 }}
+          >
+            <Typography
+              variant="caption"
               sx={{
-                mt: 2,
-                fontSize: { xs: 16, sm: 17 },
-                py: { xs: 1.2, sm: 1.4 },
-                mr: { xs: 2, sm: 3 },
-                fontWeight: 700,
-                borderRadius: 2,
-                transition: 'box-shadow 0.3s',
-                animation: savedAnim ? 'pulse 1.2s' : undefined,
-                '@keyframes pulse': {
-                  '0%': { boxShadow: '0 0 0 0 #2e4f88aa' },
-                  '70%': { boxShadow: '0 0 16px 8px #2e4f88aa' },
-                  '100%': { boxShadow: '0 0 0 0 #2e4f88aa' },
-                },
-                minWidth: 160,
-                maxWidth: 220,
+                color: 'text.cardSubtitle',
+                fontFamily: 'Inter, sans-serif',
               }}
-              onClick={handleSave}
-              disabled={loading}
             >
-              {loading ? t('saving') : t('save')}
-            </Button>
-          </Box>
+              No unsaved changes
+            </Typography>
+          </MotionBox>
+        )}
       </Box>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        sx={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1400 }}
       >
-        <Alert severity={snackbar.severity} sx={{ width: '100%' }} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert 
+          severity={snackbar.severity} 
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          sx={{ 
+            borderRadius: 2,
+            fontFamily: 'Inter, sans-serif',
+          }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </PageContainer>
   );
 }

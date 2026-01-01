@@ -1,22 +1,21 @@
 import React, { useContext, useState } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
   Box,
-  IconButton,
   Typography,
+  alpha,
   useTheme
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { motion, AnimatePresence } from 'framer-motion';
+import AddCardIcon from '@mui/icons-material/AddCard';
+import EditNoteIcon from '@mui/icons-material/EditNote';
 import { I18nContext } from '../../utils/i18n';
+import { StyledModal, StyledTextField, StyledButton } from '../ui';
+
+const MotionBox = motion.create(Box);
 
 export default function AddFlashcardModal({ open, onClose, onSave, loading, error, editFlashcard }) {
   const theme = useTheme();
-  const {t} = useContext(I18nContext);
+  const { t } = useContext(I18nContext);
 
   const [front, setFront] = useState(editFlashcard ? editFlashcard.front_text : '');
   const [back, setBack] = useState(editFlashcard ? editFlashcard.back_text : '');
@@ -40,191 +39,145 @@ export default function AddFlashcardModal({ open, onClose, onSave, loading, erro
   };
 
   return (
-    <Dialog
+    <StyledModal
       open={open}
       onClose={onClose}
-      maxWidth="xs"
-      fullWidth
-      PaperProps={{
-        sx: {
-          bgcolor: theme.palette.background.paper,
-          borderRadius: 2.5,
-          boxShadow: theme.shadows[3],
-          border: `1.5px solid ${theme.palette.border.main}`,
-          overflow: 'hidden',
-          px: { xs: 0, sm: 0 },
-        }
-      }}
+      title={editFlashcard ? (t('update_flashcard') || 'Update Card') : (t('add_flashcard') || 'Add Card')}
+      icon={editFlashcard 
+        ? <EditNoteIcon sx={{ fontSize: 24, color: 'white' }} />
+        : <AddCardIcon sx={{ fontSize: 24, color: 'white' }} />
+      }
+      maxWidth="sm"
+      actions={
+        <>
+          <StyledButton variant="ghost" onClick={onClose}>
+            {t('cancel') || 'Cancel'}
+          </StyledButton>
+          <StyledButton
+            variant="success"
+            onClick={handleSubmit}
+            disabled={loading || !front.trim() || !back.trim()}
+          >
+            {loading
+              ? (t('saving') || 'Saving...')
+              : editFlashcard
+                ? (t('update') || 'Update')
+                : (t('add') || 'Add')}
+          </StyledButton>
+        </>
+      }
     >
-      <DialogTitle
-        sx={{
-          bgcolor: theme.palette.primary.paper ?? theme.palette.primary.main,
-          p: 3,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          '& .MuiTypography-root': {
-            color: theme.palette.text.cardTitle,
-            fontWeight: 700,
-            fontSize: 22,
-            letterSpacing: 0.5,
-          }
-        }}
-      >
-          {editFlashcard ? (t('update_flashcard') || 'Kartı Güncelle') : (t('add_flashcard') || 'Kart Ekle')}
-      </DialogTitle>
-      <DialogContent
-        sx={{
-          bgcolor: theme.palette.background.paper,
-          p: 3,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2.5,
-          '& .MuiTextField-root': {
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: theme.palette.border.main,
-                transition: 'all 0.2s',
-              },
-              '&:hover fieldset': {
-                borderColor: theme.palette.text.cardTitle,
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: theme.palette.text.cardTitle,
-                borderWidth: '2px',
-              },
-              '& input': {
-                color: theme.palette.text.cardTitle,
-              }
-            },
-            '& .MuiInputLabel-root': {
-              color: theme.palette.text.cardTitle,
-            },
-            '& .MuiInputLabel-root.Mui-focused': {
-              color: theme.palette.text.cardTitle,
-            },
-            '& .MuiInputLabel-root.MuiFormLabel-filled': {
-              color: theme.palette.text.cardTitle,
-            },
-            '& .MuiInputLabel-root.MuiFormLabel-filled.Mui-focused': {
-              color: theme.palette.text.cardTitle,
-            }
-          }
-        }}
-      >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            autoFocus
-            label={t('front_side') || 'Front Side'}
-            fullWidth
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {/* Front side input */}
+        <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              mb: 1.5,
+            }}
+          >
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+              }}
+            />
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 600,
+                color: 'text.cardSubtitle',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              {t('front_side') || 'Question / Front'}
+            </Typography>
+          </Box>
+          <StyledTextField
             value={front}
             onChange={(e) => setFront(e.target.value)}
-            variant="outlined"
-            error={!!error}
-            sx={{ mt: 2, fontWeight: 600, fontSize: 16, borderRadius: 2, bgcolor: theme.palette.background.paper }}
-            InputLabelProps={{
-              sx: {
-                color: theme.palette.text.cardTitle,
-                fontWeight: 525,
-                fontSize: 15,
-              }
-            }}
-            inputProps={{
-              style: {
-                color: theme.palette.text.cardTitle,
-              }
-            }}
-          />
-          <TextField
-            label={t('back_side') || 'Back Side'}
             fullWidth
+            autoFocus
+            placeholder="Enter the question or term..."
+            error={!!error}
+          />
+        </Box>
+
+        {/* Back side input */}
+        <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              mb: 1.5,
+            }}
+          >
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)',
+              }}
+            />
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 600,
+                color: 'text.cardSubtitle',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              {t('back_side') || 'Answer / Back'}
+            </Typography>
+          </Box>
+          <StyledTextField
             value={back}
             onChange={(e) => setBack(e.target.value)}
-            variant="outlined"
-            error={!!error}
+            fullWidth
             multiline
             minRows={3}
-            sx={{ fontSize: 15, borderRadius: 2, bgcolor: theme.palette.background.paper }}
-            InputLabelProps={{
-              sx: {
-                color: theme.palette.text.cardTitle,
-                fontWeight: 525,
-                fontSize: 15,
-              }
-            }}
-            inputProps={{
-              style: {
-                color: theme.palette.text.cardTitle,
-              }
-            }}
+            placeholder="Enter the answer or definition..."
+            error={!!error}
           />
-          {error && (
-            <Typography color={theme.palette.error.main} variant="body2" sx={{ mt: 1, fontWeight: 500 }}>
-              {error}
-            </Typography>
-          )}
         </Box>
-      </DialogContent>
-      <DialogActions
-        sx={{
-          bgcolor: theme.palette.background.paper,
-          p: 3,
-          pt: 2,
-          gap: 1.5,
-          borderTop: `1px solid ${theme.palette.border.main}`,
-          display: 'flex',
-          justifyContent: 'flex-end',
-        }}
-      >
-        <Button
-          onClick={onClose}
-          variant="outlined"
-          sx={{
-            color: theme.palette.error.main,
-            borderColor: theme.palette.error.main,
-            fontWeight: 600,
-            fontSize: 15,
-            borderRadius: 2,
-            minWidth: 100,
-            px: 2,
-            py: 1,
-            boxShadow: 'none',
-            '&:hover': {
-              borderColor: theme.palette.error.dark,
-              backgroundColor: theme.palette.error.light,
-              color: theme.palette.error.contrastText,
-            },
-          }}
-        >
-          {t('cancel') || 'İptal'}
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={loading || !front.trim() || !back.trim()}
-          sx={{
-            bgcolor: theme.palette.success.main,
-            color: theme.palette.success.contrastText,
-            fontWeight: 700,
-            fontSize: 15,
-            borderRadius: 2,
-            minWidth: 100,
-            px: 2,
-            py: 1,
-            boxShadow: loading ? 'none' : theme.shadows[1],
-            letterSpacing: 0.5,
-            '&:hover': {
-              bgcolor: theme.palette.success.dark,
-            },
-          }}
-        >
-          {loading
-            ? (t('saving') || 'Saving...')
-            : editFlashcard
-              ? (t('update') || 'Güncelle')
-              : (t('add') || 'Ekle')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+
+        <AnimatePresence>
+          {error && (
+            <MotionBox
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                backgroundColor: alpha(theme.palette.error.main, 0.1),
+                border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'error.main',
+                  fontWeight: 500,
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              >
+                {error}
+              </Typography>
+            </MotionBox>
+          )}
+        </AnimatePresence>
+      </Box>
+    </StyledModal>
   );
 }
