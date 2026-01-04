@@ -7,7 +7,6 @@ import BoltIcon from "@mui/icons-material/Bolt";
 import BuildIcon from "@mui/icons-material/Build";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import SchoolIcon from "@mui/icons-material/School";
 import { StyledButton, StyledTextField, StyledCard } from "../components/ui";
 
 const MotionBox = motion.create(Box);
@@ -84,10 +83,19 @@ export default function Login({ onLogin, onSwitch }) {
 				localStorage.setItem("token", data.token);
 				onLogin();
 			} else {
-				setError(data.error || "Login failed");
+				setError(data.error || t("login_failed"));
 			}
-		} catch {
-			setError("Network error");
+		} catch (err) {
+			if (err.response?.data?.error) {
+				const errorKey = err.response.data.error;
+				if (errorKey === "Invalid credentials") {
+					setError(t("invalid_credentials"));
+				} else {
+					setError(errorKey);
+				}
+			} else {
+				setError(t("network_error"));
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -96,31 +104,23 @@ export default function Login({ onLogin, onSwitch }) {
 	const features = [
 		{
 			icon: BoltIcon,
-			title: t("adaptable_performance") || "Smart Learning",
-			description:
-				t("adaptable_performance_desc") ||
-				"Adaptive flashcard system that learns your pace and optimizes your study sessions.",
+			title: t("adaptable_performance"),
+			description: t("adaptable_performance_desc"),
 		},
 		{
 			icon: BuildIcon,
-			title: t("built_to_last") || "Track Progress",
-			description:
-				t("built_to_last_desc") ||
-				"Detailed statistics and insights to help you understand your learning patterns.",
+			title: t("built_to_last"),
+			description: t("built_to_last_desc"),
 		},
 		{
 			icon: ThumbUpAltIcon,
-			title: t("great_account_experience") || "Easy to Use",
-			description:
-				t("great_account_experience_desc") ||
-				"Clean, intuitive interface designed for focused learning without distractions.",
+			title: t("great_account_experience"),
+			description: t("great_account_experience_desc"),
 		},
 		{
 			icon: AutoAwesomeIcon,
-			title: t("innovative_functionality") || "Beautiful Design",
-			description:
-				t("innovative_functionality_desc") ||
-				"Modern, elegant design with dark and light themes for comfortable studying.",
+			title: t("innovative_functionality"),
+			description: t("innovative_functionality_desc"),
 		},
 	];
 
@@ -203,19 +203,17 @@ export default function Login({ onLogin, onSwitch }) {
 						}}
 					>
 						<Box
+							component="img"
+							src="/images/logo/flashfacts.jpg"
+							alt="Flashfacts"
 							sx={{
-								width: 56,
-								height: 56,
-								borderRadius: "16px",
-								background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center",
-								boxShadow: "0 8px 32px rgba(59, 130, 246, 0.3)",
+								width: 40,
+								height: 40,
+								borderRadius: "10px",
+								objectFit: "cover",
+								boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
 							}}
-						>
-							<SchoolIcon sx={{ color: "#fff", fontSize: 28 }} />
-						</Box>
+						/>
 						<Box>
 							<Typography
 								variant="h4"
@@ -229,7 +227,7 @@ export default function Login({ onLogin, onSwitch }) {
 									fontFamily: "Inter, sans-serif",
 								}}
 							>
-								{t("card") || "CardMaster"}
+								Flashfacts
 							</Typography>
 							<Typography
 								variant="body2"
@@ -289,19 +287,16 @@ export default function Login({ onLogin, onSwitch }) {
 							}}
 						>
 							<Box
+								component="img"
+								src="/images/logo/flashfacts.jpg"
+								alt="Flashfacts"
 								sx={{
 									width: 48,
 									height: 48,
 									borderRadius: "14px",
-									background:
-										"linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
+									objectFit: "cover",
 								}}
-							>
-								<SchoolIcon sx={{ color: "#fff", fontSize: 24 }} />
-							</Box>
+							/>
 							<Typography
 								variant="h5"
 								sx={{
@@ -313,7 +308,7 @@ export default function Login({ onLogin, onSwitch }) {
 									WebkitTextFillColor: "transparent",
 								}}
 							>
-								{t("card") || "CardMaster"}
+								Flashfacts
 							</Typography>
 						</Box>
 

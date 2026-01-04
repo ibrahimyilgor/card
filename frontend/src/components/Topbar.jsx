@@ -15,9 +15,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import EventNoteIcon from "@mui/icons-material/EventNote";
 import HomeIcon from "@mui/icons-material/Home";
 import LogoutIcon from "@mui/icons-material/Logout";
-import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { I18nContext } from "../utils/i18n";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -154,19 +154,17 @@ export default function Topbar({ onLogout, currentPath }) {
 					}}
 				>
 					<Box
+						component="img"
+						src="/images/logo/flashfacts.jpg"
+						alt="Flashfacts"
 						sx={{
 							width: 40,
 							height: 40,
 							borderRadius: "10px",
-							background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
+							objectFit: "cover",
 							boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
 						}}
-					>
-						<AutoStoriesIcon sx={{ fontSize: 22, color: "white" }} />
-					</Box>
+					/>
 					<Typography
 						variant="h6"
 						sx={{
@@ -182,7 +180,7 @@ export default function Topbar({ onLogout, currentPath }) {
 							display: { xs: "none", sm: "block" },
 						}}
 					>
-						{t("card")}
+						Flashfacts
 					</Typography>
 				</MotionBox>
 
@@ -218,6 +216,13 @@ export default function Topbar({ onLogout, currentPath }) {
 						tooltip={t("statistics") || "Statistics"}
 						isActive={activePath === "/stats"}
 						onClick={() => navigate("/stats")}
+					/>
+					<NavButton
+						icon={EventNoteIcon}
+						label="Plan"
+						tooltip={t("plan") || "Plan"}
+						isActive={activePath === "/plans"}
+						onClick={() => navigate("/plans")}
 					/>
 					<NavButton
 						icon={SettingsIcon}
@@ -338,6 +343,28 @@ export default function Topbar({ onLogout, currentPath }) {
 
 								{/* Actions */}
 								<Box sx={{ p: 2 }}>
+									<Button
+										fullWidth
+										startIcon={<AccountCircleIcon />}
+										onClick={() => {
+											navigate("/account");
+											setAnchorEl(null);
+										}}
+										sx={{
+											justifyContent: "flex-start",
+											py: 1.5,
+											px: 2,
+											borderRadius: 2,
+											fontWeight: 600,
+											fontFamily: "Inter, sans-serif",
+											transition: "all 0.2s ease",
+											"&:hover": {
+												backgroundColor: (theme) => alpha(theme.palette.action.hover, 0.06),
+											},
+										}}
+									>
+										{t("account") || "Account"}
+									</Button>
 									<Button
 										fullWidth
 										startIcon={<LogoutIcon />}

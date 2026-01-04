@@ -191,10 +191,11 @@ export default function Game({ onBackToDecks }) {
 	useEffect(() => {
 		if (gameEnded && gameStartTime) {
 			const durationSeconds = Math.round((Date.now() - gameStartTime) / 1000);
-			const cardsStudied = gameMode === "match" 
-				? flashcards.length 
-				: scores.correct + scores.incorrect;
-			
+			const cardsStudied =
+				gameMode === "match"
+					? flashcards.length
+					: scores.correct + scores.incorrect;
+
 			recordSession({
 				deckId: parseInt(deckId),
 				gameMode,

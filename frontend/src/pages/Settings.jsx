@@ -40,7 +40,8 @@ function SettingCard({ icon: Icon, title, description, children, delay = 0 }) {
 	return (
 		<MotionBox
 			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
+			whileInView={{ opacity: 1, y: 0 }}
+			viewport={{ once: true }}
 			transition={{ delay, duration: 0.4 }}
 		>
 			<StyledCard
@@ -108,7 +109,8 @@ function SectionHeader({ title, delay = 0 }) {
 	return (
 		<MotionBox
 			initial={{ opacity: 0, x: -20 }}
-			animate={{ opacity: 1, x: 0 }}
+			whileInView={{ opacity: 1, x: 0 }}
+			viewport={{ once: true }}
 			transition={{ delay, duration: 0.4 }}
 			sx={{ mb: 2, mt: 3 }}
 		>
@@ -235,11 +237,12 @@ export default function Settings({
 
 	return (
 		<PageContainer>
-			<Box sx={{ mx: "auto", py: 4 }}>
+			<Box sx={{ mx: "auto", pb: 4 }}>
 				{/* Header */}
 				<MotionBox
 					initial={{ opacity: 0, y: -10 }}
-					animate={{ opacity: 1, y: 0 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
 					sx={{ mb: 4 }}
 				>
 					<Typography
@@ -427,7 +430,7 @@ export default function Settings({
 					<MotionBox
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
-						sx={{ textAlign: "center", mt: 2 }}
+						sx={{ textAlign: "center", mt: 1 }}
 					>
 						<Typography
 							variant="caption"

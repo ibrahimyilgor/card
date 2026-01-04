@@ -64,10 +64,16 @@ function FlashcardItem({ flashcard, onEdit, onDelete, index }) {
 							justifyContent: "space-between",
 							alignItems: "center",
 							gap: 2,
+							overflow: "hidden",
 						}}
 					>
-						<Box sx={{ flex: 1, minWidth: 0 }}>
-							<Tooltip title={flashcard.front_text} arrow>
+						<Box sx={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+							<Tooltip
+								title={
+									flashcard.front_text.length > 50 ? flashcard.front_text : ""
+								}
+								arrow
+							>
 								<Typography
 									variant="subtitle2"
 									sx={{
@@ -82,7 +88,12 @@ function FlashcardItem({ flashcard, onEdit, onDelete, index }) {
 									{flashcard.front_text}
 								</Typography>
 							</Tooltip>
-							<Tooltip title={flashcard.back_text} arrow>
+							<Tooltip
+								title={
+									flashcard.back_text.length > 50 ? flashcard.back_text : ""
+								}
+								arrow
+							>
 								<Typography
 									variant="body2"
 									sx={{

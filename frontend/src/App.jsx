@@ -15,6 +15,8 @@ import Info from "./pages/Info";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 import Game from "./pages/Game";
+import Plans from "./pages/Plans";
+import Account from "./pages/Account";
 import SessionExpired from "./pages/SessionExpired";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -283,6 +285,26 @@ const AppContent = () => {
 									<ProtectedRoute>
 										<AnimatedPage>
 											<Stats accountId={accountId} />
+										</AnimatedPage>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/plans"
+								element={
+									<ProtectedRoute>
+										<AnimatedPage>
+											<Plans />
+										</AnimatedPage>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/account"
+								element={
+									<ProtectedRoute>
+										<AnimatedPage>
+											<Account />
 										</AnimatedPage>
 									</ProtectedRoute>
 								}
