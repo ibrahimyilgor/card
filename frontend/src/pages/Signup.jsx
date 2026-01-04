@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { register } from "../services/authServices";
 import { I18nContext } from "../utils/i18n";
 import { Box, Typography, Alert, Link } from "@mui/material";
-import SchoolIcon from "@mui/icons-material/School";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { StyledButton, StyledTextField, StyledCard } from "../components/ui";
 
@@ -39,16 +38,25 @@ export default function Signup({ onSignup, onSwitch }) {
 		try {
 			const res = await register(accountname, password);
 			const data = res.data;
-			if (res.status === 200) {
+			if (res.status === 200 || res.status === 201) {
 				setSuccess(true);
 				setTimeout(() => {
 					onSignup && onSignup(accountname);
 				}, 2000);
 			} else {
-				setError(data.error || "Signup failed");
+				setError(data.error || t("signup_failed"));
 			}
-		} catch {
-			setError("Network error");
+		} catch (err) {
+			if (err.response?.data?.error) {
+				const errorKey = err.response.data.error;
+				if (errorKey === "accountname already exists") {
+					setError(t("accountname_exists"));
+				} else {
+					setError(errorKey);
+				}
+			} else {
+				setError(t("network_error"));
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -129,19 +137,17 @@ export default function Signup({ onSignup, onSwitch }) {
 						}}
 					>
 						<Box
+							component="img"
+							src="/images/logo/flashfacts.jpg"
+							alt="Flashfacts"
 							sx={{
 								width: 52,
 								height: 52,
 								borderRadius: "14px",
-								background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center",
+								objectFit: "cover",
 								boxShadow: "0 8px 32px rgba(59, 130, 246, 0.3)",
 							}}
-						>
-							<SchoolIcon sx={{ color: "#fff", fontSize: 26 }} />
-						</Box>
+						/>
 						<Typography
 							variant="h5"
 							sx={{
@@ -153,7 +159,7 @@ export default function Signup({ onSignup, onSwitch }) {
 								fontFamily: "Inter, sans-serif",
 							}}
 						>
-							{t("card") || "CardMaster"}
+							Flashfacts
 						</Typography>
 					</MotionBox>
 

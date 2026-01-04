@@ -20,6 +20,7 @@ import {
 	TableRow,
 	Chip,
 	LinearProgress,
+	Tooltip,
 } from "@mui/material";
 import {
 	Chart as ChartJS,
@@ -699,7 +700,10 @@ export default function Stats() {
 								<InsightCard
 									icon={CalendarTodayIcon}
 									title={t("best_study_day") || "Best Study Day"}
-									value={`${insights.bestDay.day} (${insights.bestDay.accuracy}%)`}
+									value={`${
+										t(`day_${insights.bestDay.day.toLowerCase()}`) ||
+										insights.bestDay.day
+									} (${insights.bestDay.accuracy}%)`}
 									color="#8b5cf6"
 								/>
 							)}
@@ -707,7 +711,9 @@ export default function Stats() {
 								<InsightCard
 									icon={StarIcon}
 									title={t("favorite_mode") || "Favorite Mode"}
-									value={insights.mostActiveMode.game_mode || "Standard"}
+									value={
+										t("mode_" + insights.mostActiveMode.game_mode) || "Standard"
+									}
 									color="#22c55e"
 								/>
 							)}
@@ -715,7 +721,11 @@ export default function Stats() {
 								<InsightCard
 									icon={FolderIcon}
 									title={t("best_deck") || "Best Deck"}
-									value={`${overview.bestDeck.title} (${overview.bestDeck.accuracy}%)`}
+									value={`${
+										overview.bestDeck.title.length > 20
+											? overview.bestDeck.title.substring(0, 20) + "..."
+											: overview.bestDeck.title
+									} (${overview.bestDeck.accuracy}%)`}
 									color="#3b82f6"
 								/>
 							)}
@@ -1010,7 +1020,15 @@ export default function Stats() {
 												onClick={() => setSelectedDeck(deck.id)}
 												sx={{ cursor: "pointer" }}
 											>
-												<TableCell sx={{ color: "text.cardTitle" }}>
+												<TableCell
+													sx={{
+														color: "text.cardTitle",
+														maxWidth: 200,
+														overflow: "hidden",
+														textOverflow: "ellipsis",
+														whiteSpace: "nowrap",
+													}}
+												>
 													{deck.title}
 												</TableCell>
 												<TableCell
@@ -1100,6 +1118,9 @@ export default function Stats() {
 											color: "text.cardTitle",
 											fontFamily: "Inter",
 											mb: 1,
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
 										}}
 									>
 										{deckDetail.deck?.title}
@@ -1280,18 +1301,37 @@ export default function Stats() {
 															alignItems: "center",
 														}}
 													>
-														<Typography
-															variant="body2"
-															sx={{
-																color: "text.cardTitle",
-																flex: 1,
-																overflow: "hidden",
-																textOverflow: "ellipsis",
-																whiteSpace: "nowrap",
-															}}
-														>
-															{card.front_text}
-														</Typography>
+														{card.front_text && card.front_text.length > 50 ? (
+															<Tooltip title={card.front_text} arrow>
+																<Typography
+																	variant="body2"
+																	sx={{
+																		color: "text.cardTitle",
+																		flex: 1,
+																		overflow: "hidden",
+																		textOverflow: "ellipsis",
+																		whiteSpace: "nowrap",
+																		maxWidth: 420,
+																	}}
+																>
+																	{card.front_text}
+																</Typography>
+															</Tooltip>
+														) : (
+															<Typography
+																variant="body2"
+																sx={{
+																	color: "text.cardTitle",
+																	flex: 1,
+																	overflow: "hidden",
+																	textOverflow: "ellipsis",
+																	whiteSpace: "nowrap",
+																	maxWidth: 420,
+																}}
+															>
+																{card.front_text}
+															</Typography>
+														)}
 														<Chip
 															size="small"
 															label={`${card.error_rate}% ${
@@ -1352,18 +1392,37 @@ export default function Stats() {
 															alignItems: "center",
 														}}
 													>
-														<Typography
-															variant="body2"
-															sx={{
-																color: "text.cardTitle",
-																flex: 1,
-																overflow: "hidden",
-																textOverflow: "ellipsis",
-																whiteSpace: "nowrap",
-															}}
-														>
-															{card.front_text}
-														</Typography>
+														{card.front_text && card.front_text.length > 50 ? (
+															<Tooltip title={card.front_text} arrow>
+																<Typography
+																	variant="body2"
+																	sx={{
+																		color: "text.cardTitle",
+																		flex: 1,
+																		overflow: "hidden",
+																		textOverflow: "ellipsis",
+																		whiteSpace: "nowrap",
+																		maxWidth: 420,
+																	}}
+																>
+																	{card.front_text}
+																</Typography>
+															</Tooltip>
+														) : (
+															<Typography
+																variant="body2"
+																sx={{
+																	color: "text.cardTitle",
+																	flex: 1,
+																	overflow: "hidden",
+																	textOverflow: "ellipsis",
+																	whiteSpace: "nowrap",
+																	maxWidth: 420,
+																}}
+															>
+																{card.front_text}
+															</Typography>
+														)}
 														<Chip
 															size="small"
 															label={`${card.success_rate}%`}
