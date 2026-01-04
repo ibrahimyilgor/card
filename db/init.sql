@@ -11,14 +11,9 @@ CREATE TABLE IF NOT EXISTS account_preferences (
   account_id INT PRIMARY KEY REFERENCES account(id) ON DELETE CASCADE,
   language VARCHAR(10) DEFAULT 'en',
   theme_preference VARCHAR(10) DEFAULT 'light', 
+  sound_effects_enabled BOOLEAN DEFAULT TRUE,
+  keyboard_shortcuts_enabled BOOLEAN DEFAULT TRUE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS account_daily_stats (
-  account_id INT REFERENCES account(id) ON DELETE CASCADE,
-  review_date TIMESTAMP NOT NULL,
-  total_decks_review_done INT DEFAULT 0,
-  PRIMARY KEY (account_id, review_date)
 );
 
 CREATE TABLE IF NOT EXISTS deck (
@@ -57,3 +52,19 @@ CREATE TABLE IF NOT EXISTS account_achievements (
   earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (account_id, achievement_id)
 );
+
+CREATE TABLE IF NOT EXISTS study_session (
+  id SERIAL PRIMARY KEY,
+  account_id INT REFERENCES account(id) ON DELETE CASCADE,
+  deck_id INT REFERENCES deck(id) ON DELETE CASCADE,
+  game_mode VARCHAR(50),
+  cards_studied INT DEFAULT 0,
+  correct_answers INT DEFAULT 0,
+  wrong_answers INT DEFAULT 0,
+  duration_seconds INT DEFAULT 0,
+  session_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_study_session_account ON study_session(account_id);
+CREATE INDEX IF NOT EXISTS idx_study_session_deck ON study_session(deck_id);
+CREATE INDEX IF NOT EXISTS idx_study_session_date ON study_session(session_date);
