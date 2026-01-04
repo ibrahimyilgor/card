@@ -17,10 +17,10 @@ services:
     depends_on:
       - db
     env_file:
-      - ./backend/.env.prod  # sunucuda bu dosya olacak
+      - ./backend/.env.prod
     environment:
       NPM_CONFIG_CACHE: /tmp/.npm
-    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm start"
+    command: sh -c "npm start"
 
   frontend:
     image: yilgor98/frontend:latest

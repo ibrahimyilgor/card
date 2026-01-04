@@ -302,7 +302,10 @@ export default function Stats() {
 	const formatDate = (dateStr) => {
 		if (!dateStr) return "-";
 		const date = new Date(dateStr);
-		return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+		return date.toLocaleDateString(undefined, {
+			month: "short",
+			day: "numeric",
+		});
 	};
 
 	// Line chart options
@@ -542,7 +545,9 @@ export default function Stats() {
 						<ToggleButton value="30d">{t("30_days") || "30D"}</ToggleButton>
 						<ToggleButton value="90d">{t("90_days") || "90D"}</ToggleButton>
 						<ToggleButton value="365d">{t("1_year") || "1Y"}</ToggleButton>
-						<ToggleButton value="all">{t("all_time_short") || "All"}</ToggleButton>
+						<ToggleButton value="all">
+							{t("all_time_short") || "All"}
+						</ToggleButton>
 					</ToggleButtonGroup>
 				</Box>
 			</MotionBox>
@@ -572,7 +577,9 @@ export default function Stats() {
 					icon={SchoolIcon}
 					title={t("cards_studied") || "Cards Studied"}
 					value={overview?.totalCardsStudied || 0}
-					subtitle={`${overview?.totalSessions || 0} ${t("sessions") || "sessions"}`}
+					subtitle={`${overview?.totalSessions || 0} ${
+						t("sessions") || "sessions"
+					}`}
 					color={chartColors.success}
 					delay={0.1}
 					trend={weeklyTrend}
@@ -581,7 +588,9 @@ export default function Stats() {
 					icon={EmojiEventsIcon}
 					title={t("accuracy") || "Accuracy"}
 					value={`${overview?.accuracy || 0}%`}
-					subtitle={`${overview?.totalCorrect || 0}/${(overview?.totalCorrect || 0) + (overview?.totalWrong || 0)}`}
+					subtitle={`${overview?.totalCorrect || 0}/${
+						(overview?.totalCorrect || 0) + (overview?.totalWrong || 0)
+					}`}
 					color={chartColors.secondary}
 					delay={0.2}
 				/>
@@ -589,7 +598,9 @@ export default function Stats() {
 					icon={WhatshotIcon}
 					title={t("current_streak") || "Current Streak"}
 					value={`${overview?.currentStreak || 0} ${t("days") || "days"}`}
-					subtitle={`${t("best") || "Best"}: ${overview?.longestStreak || 0} ${t("days") || "days"}`}
+					subtitle={`${t("best") || "Best"}: ${overview?.longestStreak || 0} ${
+						t("days") || "days"
+					}`}
 					color="#f59e0b"
 					delay={0.3}
 				/>
@@ -612,7 +623,6 @@ export default function Stats() {
 					icon={AccessTimeIcon}
 					title={t("study_time") || "Study Time"}
 					value={formatDuration(overview?.totalStudyTime)}
-					subtitle={t("total") || "Total"}
 					color="#06b6d4"
 					delay={0.4}
 				/>
@@ -620,6 +630,7 @@ export default function Stats() {
 					icon={CheckCircleIcon}
 					title={t("correct_answers") || "Correct Answers"}
 					value={overview?.totalCorrect || 0}
+					subtitle=" "
 					color={chartColors.success}
 					delay={0.5}
 				/>
@@ -627,6 +638,7 @@ export default function Stats() {
 					icon={ErrorIcon}
 					title={t("wrong_answers") || "Wrong Answers"}
 					value={overview?.totalWrong || 0}
+					subtitle=" "
 					color={chartColors.error}
 					delay={0.6}
 				/>
@@ -634,6 +646,7 @@ export default function Stats() {
 					icon={CalendarTodayIcon}
 					title={t("avg_session") || "Avg Session"}
 					value={formatDuration(overview?.avgSessionDuration)}
+					subtitle=" "
 					color="#ec4899"
 					delay={0.7}
 				/>
@@ -920,9 +933,7 @@ export default function Stats() {
 								label={t("select_deck") || "Select Deck"}
 								onChange={(e) => setSelectedDeck(e.target.value)}
 							>
-								<MenuItem value="all">
-									{t("all_decks") || "All Decks"}
-								</MenuItem>
+								<MenuItem value="all">{t("all_decks") || "All Decks"}</MenuItem>
 								{decksData.map((deck) => (
 									<MenuItem key={deck.id} value={deck.id}>
 										{deck.title}
@@ -1002,10 +1013,16 @@ export default function Stats() {
 												<TableCell sx={{ color: "text.cardTitle" }}>
 													{deck.title}
 												</TableCell>
-												<TableCell align="center" sx={{ color: "text.cardTitle" }}>
+												<TableCell
+													align="center"
+													sx={{ color: "text.cardTitle" }}
+												>
 													{deck.card_count}
 												</TableCell>
-												<TableCell align="center" sx={{ color: "text.cardTitle" }}>
+												<TableCell
+													align="center"
+													sx={{ color: "text.cardTitle" }}
+												>
 													{deck.session_count || 0}
 												</TableCell>
 												<TableCell align="center">
@@ -1023,7 +1040,13 @@ export default function Stats() {
 													/>
 												</TableCell>
 												<TableCell align="center">
-													<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+													<Box
+														sx={{
+															display: "flex",
+															alignItems: "center",
+															gap: 1,
+														}}
+													>
 														<LinearProgress
 															variant="determinate"
 															value={parseFloat(deck.accuracy) || 0}
@@ -1091,7 +1114,8 @@ export default function Stats() {
 									<Box
 										sx={{
 											display: "grid",
-											gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+											gridTemplateColumns:
+												"repeat(auto-fit, minmax(120px, 1fr))",
 											gap: 2,
 										}}
 									>
@@ -1237,7 +1261,13 @@ export default function Stats() {
 											{t("hardest_cards") || "Hardest Cards"}
 										</Typography>
 										{deckDetail.hardestCards?.length > 0 ? (
-											<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+											<Box
+												sx={{
+													display: "flex",
+													flexDirection: "column",
+													gap: 1,
+												}}
+											>
 												{deckDetail.hardestCards.map((card) => (
 													<Box
 														key={card.id}
@@ -1264,8 +1294,14 @@ export default function Stats() {
 														</Typography>
 														<Chip
 															size="small"
-															label={`${card.error_rate}% ${t("error_rate") || "errors"}`}
-															sx={{ bgcolor: "error.main", color: "white", ml: 1 }}
+															label={`${card.error_rate}% ${
+																t("error_rate") || "errors"
+															}`}
+															sx={{
+																bgcolor: "error.main",
+																color: "white",
+																ml: 1,
+															}}
 														/>
 													</Box>
 												))}
@@ -1297,7 +1333,13 @@ export default function Stats() {
 											{t("easiest_cards") || "Easiest Cards"}
 										</Typography>
 										{deckDetail.easiestCards?.length > 0 ? (
-											<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+											<Box
+												sx={{
+													display: "flex",
+													flexDirection: "column",
+													gap: 1,
+												}}
+											>
 												{deckDetail.easiestCards.map((card) => (
 													<Box
 														key={card.id}
@@ -1325,7 +1367,11 @@ export default function Stats() {
 														<Chip
 															size="small"
 															label={`${card.success_rate}%`}
-															sx={{ bgcolor: "success.main", color: "white", ml: 1 }}
+															sx={{
+																bgcolor: "success.main",
+																color: "white",
+																ml: 1,
+															}}
 														/>
 													</Box>
 												))}

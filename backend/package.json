@@ -1,25 +1,21 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "dev:migrate": "dotenv -e .env.dev -- npx prisma migrate dev",
-    "prod:migrate": "dotenv -e .env.prod -- npx prisma migrate deploy",
-    "start": "node server.js",
-    "test": "jest"
-  },
-  "dependencies": {
-    "prisma": "^7.0.0",
-    "@prisma/client": "^7.0.0",
-    "bcrypt": "^6.0.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "node-fetch": "^2.6.7",
-    "pg": "^8.11.3"
-  },
-  "devDependencies": {
-    "jest": "^30.1.3"
-  }
+	"name": "backend",
+	"version": "1.0.0",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js",
+		"test": "jest"
+	},
+	"dependencies": {
+		"bcrypt": "^6.0.0",
+		"cors": "^2.8.5",
+		"dotenv": "^17.2.3",
+		"express": "^4.18.2",
+		"jsonwebtoken": "^9.0.2",
+		"node-fetch": "^2.6.7",
+		"pg": "^8.11.3"
+	},
+	"devDependencies": {
+		"jest": "^30.1.3"
+	}
 }

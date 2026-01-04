@@ -32,5 +32,5 @@ COPY --from=builder /app ./
 # Port aç
 EXPOSE 5000
 
-# Runtime: Prisma generate + migrate + Node server start
-CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npm start"]
+# Runtime: Node server start
+CMD ["sh", "-c", "npm start"]
