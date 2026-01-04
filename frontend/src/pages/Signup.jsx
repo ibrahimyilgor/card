@@ -338,6 +338,7 @@ export default function Signup({ onSignup, onSwitch }) {
 											"&:hover": {
 												color: "primary.main",
 											},
+											verticalAlign: "unset",
 										}}
 									>
 										{t("login") || "Sign in"}
