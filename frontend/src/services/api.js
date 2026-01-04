@@ -1,14 +1,11 @@
 import axios from "axios";
 
 const baseURL =
-	process.env.NODE_ENV === "production"
-		? "/api"
-		: window.location.protocol + "//" + window.location.hostname + ":5000";
+	window.location.protocol + "//" + window.location.hostname + ":5000";
 
 const api = axios.create({
 	baseURL: baseURL,
 });
-
 // Add token
 api.interceptors.request.use((config) => {
 	const token = localStorage.getItem("token");
