@@ -68,3 +68,41 @@ CREATE TABLE IF NOT EXISTS study_session (
 CREATE INDEX IF NOT EXISTS idx_study_session_account ON study_session(account_id);
 CREATE INDEX IF NOT EXISTS idx_study_session_deck ON study_session(deck_id);
 CREATE INDEX IF NOT EXISTS idx_study_session_date ON study_session(session_date);
+
+CREATE TABLE IF NOT EXISTS plan (
+  id SERIAL PRIMARY KEY,
+  code VARCHAR(50) UNIQUE NOT NULL,        -- free, pro, premium
+  name VARCHAR(100) NOT NULL,              -- Free, Pro, Premium
+  description TEXT,
+  price_monthly NUMERIC(10,2) DEFAULT 0,   -- ileride ödeme eklemek için
+  max_decks INT,
+  max_flashcards INT,
+  advanced_stats BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO plan (code, name, description, price_monthly, max_decks, max_flashcards, advanced_stats)
+VALUES
+('free', 'Free', 'Basic features for getting started', 0, 5, 100, false),
+('pro', 'Pro', 'Advanced features for regular learners', 9.99, 50, 5000, true),
+('premium', 'Premium', 'Unlimited access to all features', 19.99, NULL, NULL, true);
+
+CREATE TABLE IF NOT EXISTS account_plan (
+  account_id INT PRIMARY KEY REFERENCES account(id) ON DELETE CASCADE,
+  plan_id INT REFERENCES plan(id),
+  started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ends_at TIMESTAMP,
+  is_active BOOLEAN DEFAULT TRUE,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS account_plan_history (
+  id SERIAL PRIMARY KEY,
+  account_id INT REFERENCES account(id) ON DELETE CASCADE,
+  plan_id INT REFERENCES plan(id),
+  started_at TIMESTAMP NOT NULL,
+  ended_at TIMESTAMP,
+  change_reason VARCHAR(50), 
+  -- upgrade, downgrade, cancel, expired, trial_end vb.
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

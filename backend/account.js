@@ -2,14 +2,16 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const authenticateToken = require("./middleware/authenticateToken");
 
+const bcrypt = require("bcrypt");
+
 module.exports = (pool) => {
 	const router = express.Router();
 
-	// Account info endpoint
-	router.get("/info", authenticateToken, async (req, res) => {
+	// Account info endpoint (name and created_at)
+	router.get("/me", authenticateToken, async (req, res) => {
 		try {
 			const result = await pool.query(
-				"SELECT id, accountname FROM account WHERE id = $1",
+				"SELECT accountname, created_at FROM account WHERE id = $1",
 				[req.user.accountId]
 			);
 			if (result.rows.length === 0)
@@ -17,6 +19,50 @@ module.exports = (pool) => {
 			res.json({ account: result.rows[0] });
 		} catch (err) {
 			res.status(500).json({ error: "Failed to fetch account info" });
+		}
+	});
+
+	// Change password endpoint
+	router.post("/change-password", authenticateToken, async (req, res) => {
+		const { oldPassword, newPassword, newPasswordRepeat } = req.body;
+		if (!oldPassword || !newPassword || !newPasswordRepeat) {
+			return res.status(400).json({ error: "All fields are required" });
+		}
+		if (newPassword !== newPasswordRepeat) {
+			return res.status(400).json({ error: "New passwords do not match" });
+		}
+		// Password rules (same as signup): min 8 characters, must contain letters and numbers
+		if (
+			newPassword.length < 8 ||
+			!/[A-Za-z]/.test(newPassword) ||
+			!/[0-9]/.test(newPassword)
+		) {
+			return res.status(400).json({
+				error:
+					"Password must be at least 8 characters and contain both letters and numbers",
+			});
+		}
+		try {
+			const result = await pool.query(
+				"SELECT password_hash FROM account WHERE id = $1",
+				[req.user.accountId]
+			);
+			if (result.rows.length === 0)
+				return res.status(404).json({ error: "Account not found" });
+			const valid = await bcrypt.compare(
+				oldPassword,
+				result.rows[0].password_hash
+			);
+			if (!valid)
+				return res.status(401).json({ error: "Old password is incorrect" });
+			const hash = await bcrypt.hash(newPassword, 10);
+			await pool.query("UPDATE account SET password_hash = $1 WHERE id = $2", [
+				hash,
+				req.user.accountId,
+			]);
+			res.json({ success: true, message: "Password changed successfully" });
+		} catch (err) {
+			res.status(500).json({ error: "Failed to change password" });
 		}
 	});
 
@@ -88,6 +134,7 @@ module.exports = (pool) => {
 			res
 				.status(500)
 				.json({ error: "Failed to update sound effects preference" });
+			console.error(err);
 		}
 	});
 
@@ -124,6 +171,47 @@ module.exports = (pool) => {
 			res.json({ stats: result.rows[0] });
 		} catch (err) {
 			res.status(500).json({ error: "Failed to fetch account stats" });
+		}
+	});
+
+	// Get all plans
+	router.get("/plans", authenticateToken, async (req, res) => {
+		try {
+			const result = await pool.query(
+				"SELECT id, code, name, description, price_monthly, max_decks, max_flashcards, advanced_stats FROM plan ORDER BY price_monthly ASC"
+			);
+			res.json({ plans: result.rows });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Failed to fetch plans" });
+		}
+	});
+
+	// Get current user's plan
+	router.get("/my-plan", authenticateToken, async (req, res) => {
+		try {
+			const accountId = req.user.accountId;
+			const result = await pool.query(
+				`SELECT ap.*, p.code, p.name, p.description, p.price_monthly, p.max_decks, p.max_flashcards, p.advanced_stats
+				 FROM account_plan ap
+				 JOIN plan p ON ap.plan_id = p.id
+				 WHERE ap.account_id = $1 AND ap.is_active = TRUE`,
+				[accountId]
+			);
+			if (result.rows.length === 0) {
+				// If no plan found, assign free plan
+				const freePlan = await pool.query(
+					"SELECT * FROM plan WHERE code = 'free'"
+				);
+				return res.json({
+					plan: freePlan.rows[0] || null,
+					hasActivePlan: false,
+				});
+			}
+			res.json({ plan: result.rows[0], hasActivePlan: true });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Failed to fetch user plan" });
 		}
 	});
 
