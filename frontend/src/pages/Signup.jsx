@@ -27,9 +27,14 @@ export default function Signup({ onSignup, onSwitch }) {
 			return;
 		}
 
-		if (password.length < 6) {
+		if (
+			password.length < 8 ||
+			!/[A-Za-z]/.test(password) ||
+			!/[0-9]/.test(password)
+		) {
 			setError(
-				t("password_too_short") || "Password must be at least 6 characters"
+				t("password_too_short") ||
+					"Password must be at least 8 characters and include letters and numbers."
 			);
 			return;
 		}
@@ -268,6 +273,10 @@ export default function Signup({ onSignup, onSwitch }) {
 									onChange={(e) => setPassword(e.target.value)}
 									fullWidth
 									autoComplete="new-password"
+									helperText={
+										t("password_rule_helper_text") ||
+										"At least 8 characters, must include letters and numbers"
+									}
 								/>
 
 								<StyledTextField

@@ -359,7 +359,8 @@ export default function Topbar({ onLogout, currentPath }) {
 											fontFamily: "Inter, sans-serif",
 											transition: "all 0.2s ease",
 											"&:hover": {
-												backgroundColor: (theme) => alpha(theme.palette.action.hover, 0.06),
+												backgroundColor: (theme) =>
+													alpha(theme.palette.action.hover, 0.06),
 											},
 										}}
 									>
