@@ -117,7 +117,9 @@ export default function AddFlashcardModal({
 						onChange={(e) => setFront(e.target.value)}
 						fullWidth
 						autoFocus
-						placeholder="Enter the question or term..."
+						placeholder={
+							t("enter_the_question_or_term") || "Enter the question or term..."
+						}
 						error={!!error}
 					/>
 				</Box>
@@ -159,7 +161,10 @@ export default function AddFlashcardModal({
 						fullWidth
 						multiline
 						minRows={3}
-						placeholder="Enter the answer or definition..."
+						placeholder={
+							t("enter_the_answer_or_definition") ||
+							"Enter the answer or definition..."
+						}
 						error={!!error}
 					/>
 				</Box>

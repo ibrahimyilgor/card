@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const baseURL =
-	window.location.protocol + "//" + window.location.hostname + ":5000";
+	window.location.protocol + "//" + window.location.hostname + "/auth";
 
 const api = axios.create({
 	baseURL: baseURL,
@@ -17,7 +17,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
 	(response) => response,
 	(error) => {
-		const isAuthRequest = error.config?.url?.includes('/auth/');
+		const isAuthRequest = error.config?.url?.includes("/auth/");
 		if (error.response && error.response.status === 401 && !isAuthRequest) {
 			localStorage.removeItem("token");
 			window.location.href = "/session-expired";

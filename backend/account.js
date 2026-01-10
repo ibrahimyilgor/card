@@ -215,5 +215,27 @@ module.exports = (pool) => {
 		}
 	});
 
+	// Delete account endpoint - deletes account and all related data (CASCADE)
+	router.delete("/delete", authenticateToken, async (req, res) => {
+		try {
+			const accountId = req.user.accountId;
+
+			// Delete account - all related data will be deleted due to ON DELETE CASCADE
+			const result = await pool.query(
+				"DELETE FROM account WHERE id = $1 RETURNING id",
+				[accountId]
+			);
+
+			if (result.rows.length === 0) {
+				return res.status(404).json({ error: "Account not found" });
+			}
+
+			res.json({ success: true, message: "Account deleted successfully" });
+		} catch (err) {
+			console.error("Delete account error:", err);
+			res.status(500).json({ error: "Failed to delete account" });
+		}
+	});
+
 	return router;
 };

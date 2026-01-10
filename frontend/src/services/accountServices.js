@@ -34,3 +34,6 @@ export const updateKeyboardShortcuts = (
 // Plans
 export const getAllPlans = () => api.get("/account/plans");
 export const getMyPlan = () => api.get("/account/my-plan");
+
+// Delete account
+export const deleteAccount = () => api.delete("/account/delete");

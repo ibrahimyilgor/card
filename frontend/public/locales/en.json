@@ -264,5 +264,15 @@
 	"front": "Front",
 	"back": "Back",
 	"deck_description_placeholder": "Optional description for your deck...",
-	"deck_title_placeholder": "e.g., Spanish Vocabulary"
+	"deck_title_placeholder": "e.g., Spanish Vocabulary",
+	"delete_account": "Delete Account",
+	"delete_account_title": "Delete Account",
+	"delete_account_message": "This action cannot be undone and all your data including decks, flashcards, and statistics will be permanently deleted.",
+	"delete_account_confirm": "Delete Account",
+	"delete_account_success": "Your account has been deleted successfully",
+	"delete_account_error": "Failed to delete account",
+	"danger_zone": "Danger Zone",
+	"deleting": "Deleting...",
+	"enter_the_question_or_term": "Enter the question or term...",
+	"enter_the_answer_or_definition": "Enter the answer or definition..."
 }

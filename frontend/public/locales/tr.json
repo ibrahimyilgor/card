@@ -264,5 +264,15 @@
 	"front": "Ön",
 	"back": "Arka",
 	"deck_description_placeholder": "Desteniz için isteğe bağlı açıklama...",
-	"deck_title_placeholder": "örneğin, İspanyolca Kelime Bilgisi"
+	"deck_title_placeholder": "örneğin, İspanyolca Kelime Bilgisi",
+	"delete_account": "Hesabı Sil",
+	"delete_account_title": "Hesabı Sil",
+	"delete_account_message": "Bu işlem geri alınamaz ve desteler, kartlar ve istatistikler dahil tüm verileriniz kalıcı olarak silinecektir.",
+	"delete_account_confirm": "Hesabı Sil",
+	"delete_account_success": "Hesabınız başarıyla silindi",
+	"delete_account_error": "Hesap silinemedi",
+	"danger_zone": "Tehlikeli Bölge",
+	"deleting": "Siliniyor...",
+	"enter_the_question_or_term": "Soruyu veya terimi girin...",
+	"enter_the_answer_or_definition": "Cevabı veya tanımı girin..."
 }
