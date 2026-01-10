@@ -29,7 +29,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
 
-
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
         with:
@@ -46,27 +45,27 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/db:latest
 
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /home/ubuntu
-            # .env.prod dosyasını oluştur
-            cat > ./backend/.env.prod <<EOL
-            DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres?schema=public
-            NODE_ENV=production
-            EOL
-            docker-compose down
-            # Force remove all images related to the compose file
-            docker-compose rm -f
-            docker rmi -f $(docker images -q yilgor98/frontend:latest)
-            docker rmi -f $(docker images -q yilgor98/backend:latest)
-            docker rmi -f $(docker images -q yilgor98/db:latest)
-            # Clean up any dangling images
-            docker image prune -f
-            # Pull and start new images
-            docker-compose pull
-            docker-compose up -d
+      # - name: Deploy to Server
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ secrets.SERVER_IP }}
+      #     username: ubuntu
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     script: |
+      #       cd /home/ubuntu
+      #       # .env.prod dosyasını oluştur
+      #       cat > ./backend/.env.prod <<EOL
+      #       DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres?schema=public
+      #       NODE_ENV=production
+      #       EOL
+      #       docker-compose down
+      #       # Force remove all images related to the compose file
+      #       docker-compose rm -f
+      #       docker rmi -f $(docker images -q yilgor98/frontend:latest)
+      #       docker rmi -f $(docker images -q yilgor98/backend:latest)
+      #       docker rmi -f $(docker images -q yilgor98/db:latest)
+      #       # Clean up any dangling images
+      #       docker image prune -f
+      #       # Pull and start new images
+      #       docker-compose pull
+      #       docker-compose up -d
