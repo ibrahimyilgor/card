@@ -57,7 +57,7 @@ module.exports = (pool) => {
 		}
 	});
 
-	// Get hard cards only (cards with wrong_count > 0)
+	// Get hard cards only (cards with accuracy below 50%)
 	router.get("/:deckId/hard", authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
 		try {
@@ -69,8 +69,13 @@ module.exports = (pool) => {
 			if (!exists) return res.status(404).json({ error: "Deck not found" });
 			if (!isOwner) return res.status(403).json({ error: "Access denied" });
 
+			// Get cards where accuracy is below 50% (and have been answered at least once)
 			const result = await pool.query(
-				"SELECT * FROM flashcard WHERE deck_id = $1 AND wrong_count > 0 ORDER BY wrong_count DESC",
+				`SELECT * FROM flashcard 
+				 WHERE deck_id = $1 
+				 AND (correct_count + wrong_count) > 0 
+				 AND (correct_count::float / (correct_count + wrong_count)::float) < 0.5 
+				 ORDER BY (correct_count::float / (correct_count + wrong_count)::float) ASC`,
 				[deckId]
 			);
 			res.json({ flashcards: result.rows });

@@ -6,6 +6,7 @@ import {
 	updateDeck,
 	deleteDeck,
 } from "../services/deckServices";
+import { getFlashcards } from "../services/flashcardServices";
 import {
 	Box,
 	Typography,
@@ -17,6 +18,8 @@ import {
 	MenuItem,
 	FormControl,
 	Chip,
+	Snackbar,
+	Alert,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -26,6 +29,9 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
 import LayersIcon from "@mui/icons-material/Layers";
+import WhatshotIcon from "@mui/icons-material/Whatshot";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import DownloadIcon from "@mui/icons-material/Download";
 import { I18nContext } from "../utils/i18n";
 import DeckModal from "../components/modals/DeckModal";
 import FlashcardModal from "../components/modals/FlashcardModal";
@@ -43,7 +49,16 @@ import {
 const MotionBox = motion.create(Box);
 
 // Deck card component with animation
-const DeckCard = ({ deck, index, onEdit, onCards, onPlay, onDelete, t }) => {
+const DeckCard = ({
+	deck,
+	index,
+	onEdit,
+	onCards,
+	onPlay,
+	onDelete,
+	onDownload,
+	t,
+}) => {
 	const theme = useTheme();
 	const titleRef = useRef(null);
 	const descRef = useRef(null);
@@ -180,7 +195,15 @@ const DeckCard = ({ deck, index, onEdit, onCards, onPlay, onDelete, t }) => {
 					</Tooltip>
 
 					{/* Card count chip */}
-					<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							gap: 1,
+							mb: 2,
+							flexWrap: "nowrap",
+						}}
+					>
 						<Chip
 							icon={<StyleIcon sx={{ fontSize: 16 }} />}
 							label={`${deck.flashcard_count || 0} ${t("cards") || "cards"}`}
@@ -199,19 +222,46 @@ const DeckCard = ({ deck, index, onEdit, onCards, onPlay, onDelete, t }) => {
 							}}
 						/>
 						{deck.difficulty_enabled && (
-							<Chip
-								label={t("difficulty_mode") || "Difficulty"}
-								size="small"
-								sx={{
-									bgcolor: (theme) =>
-										theme.palette.mode === "dark"
-											? "rgba(139, 92, 246, 0.15)"
-											: "rgba(139, 92, 246, 0.1)",
-									color: "secondary.light",
-									fontWeight: 500,
-									fontFamily: "Inter, sans-serif",
-								}}
-							/>
+							<Tooltip title={t("hard_mode") || "Hard Mode"} arrow>
+								<Box
+									sx={{
+										width: 28,
+										height: 28,
+										borderRadius: "8px",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										bgcolor: (theme) =>
+											theme.palette.mode === "dark"
+												? "rgba(249, 115, 22, 0.15)"
+												: "rgba(249, 115, 22, 0.1)",
+										cursor: "default",
+									}}
+								>
+									<WhatshotIcon sx={{ fontSize: 16, color: "#f97316" }} />
+								</Box>
+							</Tooltip>
+						)}
+						{deck.card_direction === "reverse" && (
+							<Tooltip title={t("direction_reverse") || "Reverse"} arrow>
+								<Box
+									sx={{
+										width: 28,
+										height: 28,
+										borderRadius: "8px",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										bgcolor: (theme) =>
+											theme.palette.mode === "dark"
+												? "rgba(6, 182, 212, 0.15)"
+												: "rgba(6, 182, 212, 0.1)",
+										cursor: "default",
+									}}
+								>
+									<SwapHorizIcon sx={{ fontSize: 16, color: "#06b6d4" }} />
+								</Box>
+							</Tooltip>
 						)}
 					</Box>
 
@@ -250,6 +300,20 @@ const DeckCard = ({ deck, index, onEdit, onCards, onPlay, onDelete, t }) => {
 								}}
 							>
 								<StyleIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+						<Tooltip title={t("download_csv") || "Download CSV"} arrow>
+							<IconButton
+								onClick={() => onDownload(deck)}
+								size="small"
+								sx={{
+									color: "success.main",
+									"&:hover": {
+										bgcolor: "rgba(34, 197, 94, 0.1)",
+									},
+								}}
+							>
+								<DownloadIcon fontSize="small" />
 							</IconButton>
 						</Tooltip>
 						<Box sx={{ flex: 1 }} />
@@ -296,6 +360,17 @@ export default function Info({ accountId, onStartGame }) {
 	// Search and filter state
 	const [searchQuery, setSearchQuery] = useState("");
 	const [sortBy, setSortBy] = useState("newest");
+
+	// Snackbar state
+	const [snackbar, setSnackbar] = useState({
+		open: false,
+		message: "",
+		severity: "info",
+	});
+
+	const handleCloseSnackbar = () => {
+		setSnackbar((prev) => ({ ...prev, open: false }));
+	};
 
 	// Filter and sort decks
 	const filteredDecks = useMemo(() => {
@@ -354,8 +429,17 @@ export default function Info({ accountId, onStartGame }) {
 			);
 			setDeleteModalOpen(false);
 			setDeckToDelete(null);
+			setSnackbar({
+				open: true,
+				message: t("deck_deleted") || "Deck deleted successfully",
+				severity: "success",
+			});
 		} catch (err) {
-			alert(t("delete_deck_error") || "Error deleting deck");
+			setSnackbar({
+				open: true,
+				message: t("delete_deck_error") || "Error deleting deck",
+				severity: "error",
+			});
 		} finally {
 			setDeleteLoading(false);
 		}
@@ -365,6 +449,62 @@ export default function Info({ accountId, onStartGame }) {
 	const handleCancelDelete = () => {
 		setDeleteModalOpen(false);
 		setDeckToDelete(null);
+	};
+
+	// Download deck as CSV
+	const handleDownloadCSV = async (deck) => {
+		try {
+			const res = await getFlashcards(deck.id);
+			const flashcards = res.data?.flashcards || [];
+
+			if (flashcards.length === 0) {
+				setSnackbar({
+					open: true,
+					message: t("no_flashcards") || "No flashcards to download",
+					severity: "warning",
+				});
+				return;
+			}
+
+			// Create CSV content with BOM for Excel UTF-8 support
+			const BOM = "\uFEFF";
+			const frontHeader = (t("front") || "Front").toUpperCase();
+			const backHeader = (t("back") || "Back").toUpperCase();
+			const header = `${frontHeader},${backHeader}\n`;
+			const rows = flashcards
+				.map((card) => {
+					// Escape quotes and wrap in quotes
+					const front = `"${(card.front_text || "").replace(/"/g, '""')}"`;
+					const back = `"${(card.back_text || "").replace(/"/g, '""')}"`;
+					return `${front},${back}`;
+				})
+				.join("\n");
+
+			const csvContent = BOM + header + rows;
+
+			// Create download link
+			const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = `${deck.title.replace(/[^a-zA-Z0-9]/g, "_")}.csv`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+			setSnackbar({
+				open: true,
+				message: t("download_success") || "File downloaded successfully",
+				severity: "success",
+			});
+		} catch (err) {
+			console.error("Error downloading CSV:", err);
+			setSnackbar({
+				open: true,
+				message: t("download_error") || "Error downloading file",
+				severity: "error",
+			});
+		}
 	};
 
 	useEffect(() => {
@@ -612,6 +752,7 @@ export default function Info({ accountId, onStartGame }) {
 										setGameSettingsModalOpen(true);
 									}}
 									onDelete={handleDeleteClick}
+									onDownload={handleDownloadCSV}
 									t={t}
 								/>
 							))}
@@ -655,11 +796,18 @@ export default function Info({ accountId, onStartGame }) {
 							setLoading(true);
 							const decksRes = await getDecks(accountId);
 							setDecks(decksRes.data.decks || []);
+							setSnackbar({
+								open: true,
+								message: editDeck
+									? t("deck_updated") || "Deck updated successfully"
+									: t("deck_created") || "Deck created successfully",
+								severity: "success",
+							});
 						} else {
-							setModalError("Error saving deck");
+							setModalError(t("save_deck_error") || "Error saving deck");
 						}
 					} catch (err) {
-						setModalError("Network error");
+						setModalError(t("network_error") || "Network error");
 					} finally {
 						setModalLoading(false);
 						setLoading(false);
@@ -719,6 +867,23 @@ export default function Info({ accountId, onStartGame }) {
 				variant="danger"
 				loading={deleteLoading}
 			/>
+
+			{/* Snackbar for notifications */}
+			<Snackbar
+				open={snackbar.open}
+				autoHideDuration={4000}
+				onClose={handleCloseSnackbar}
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+			>
+				<Alert
+					onClose={handleCloseSnackbar}
+					severity={snackbar.severity}
+					variant="filled"
+					sx={{ width: "100%" }}
+				>
+					{snackbar.message}
+				</Alert>
+			</Snackbar>
 		</PageContainer>
 	);
 }

@@ -46,7 +46,7 @@ module.exports = (pool) => {
 
 	// Create a new deck
 	router.post("/create", authenticateToken, async (req, res) => {
-		const { title, description, difficulty_enabled, mode } = req.body;
+		const { title, description, difficulty_enabled, mode, card_direction } = req.body;
 		// Use accountId from token, not from body
 		const accountId = req.user.accountId;
 		if (!title) {
@@ -54,13 +54,14 @@ module.exports = (pool) => {
 		}
 		try {
 			const result = await pool.query(
-				"INSERT INTO deck (account_id, title, description, difficulty_enabled, mode) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+				"INSERT INTO deck (account_id, title, description, difficulty_enabled, mode, card_direction) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
 				[
 					accountId,
 					title,
 					description || "",
 					difficulty_enabled || false,
 					mode || "standard",
+					card_direction || "normal",
 				]
 			);
 			res.status(201).json({ deck: result.rows[0] });
@@ -72,7 +73,7 @@ module.exports = (pool) => {
 	// Update an existing deck
 	router.put("/:deckId", authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
-		const { title, description, difficulty_enabled, mode } = req.body;
+		const { title, description, difficulty_enabled, mode, card_direction } = req.body;
 		if (!title) {
 			return res.status(400).json({ error: "title required" });
 		}
@@ -87,12 +88,13 @@ module.exports = (pool) => {
 			}
 
 			const result = await pool.query(
-				"UPDATE deck SET title = $1, description = $2, difficulty_enabled = $3, mode = $4 WHERE id = $5 RETURNING *",
+				"UPDATE deck SET title = $1, description = $2, difficulty_enabled = $3, mode = $4, card_direction = $5 WHERE id = $6 RETURNING *",
 				[
 					title,
 					description || "",
 					difficulty_enabled || false,
 					mode || "standard",
+					card_direction || "normal",
 					deckId,
 				]
 			);
@@ -116,7 +118,7 @@ module.exports = (pool) => {
 			}
 
 			const result = await pool.query(
-				"SELECT difficulty_enabled, mode FROM deck WHERE id = $1",
+				"SELECT difficulty_enabled, mode, card_direction FROM deck WHERE id = $1",
 				[deckId]
 			);
 			res.json({ settings: result.rows[0] });
@@ -128,7 +130,7 @@ module.exports = (pool) => {
 	// Update deck settings
 	router.put("/settings/:deckId", authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
-		const { difficulty_enabled, mode } = req.body;
+		const { difficulty_enabled, mode, card_direction } = req.body;
 		try {
 			// Verify ownership
 			const ownership = await verifyDeckOwnership(deckId, req.user.accountId);
@@ -140,8 +142,8 @@ module.exports = (pool) => {
 			}
 
 			const result = await pool.query(
-				"UPDATE deck SET difficulty_enabled = $1, mode = $2 WHERE id = $3 RETURNING *",
-				[difficulty_enabled, mode, deckId]
+				"UPDATE deck SET difficulty_enabled = $1, mode = $2, card_direction = $3 WHERE id = $4 RETURNING *",
+				[difficulty_enabled, mode, card_direction || "normal", deckId]
 			);
 			res.json({ settings: result.rows[0] });
 		} catch (err) {
