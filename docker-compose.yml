@@ -38,9 +38,9 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/cert.pem:/etc/ssl/certs/cert.pem:ro
       - ./nginx/key.pem:/etc/ssl/private/key.pem:ro
-    depends_on:
-      - frontend
-      - backend
+    # depends_on:
+    #   - frontend
+    #   - backend
 
   pgadmin:
     image: dpage/pgadmin4

@@ -19,8 +19,19 @@ import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { getAccountInfo, changePassword } from "../services/accountServices";
-import { PageContainer, StyledCard, StyledButton } from "../components/ui";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import {
+	getAccountInfo,
+	changePassword,
+	deleteAccount,
+} from "../services/accountServices";
+import { useNavigate } from "react-router-dom";
+import {
+	PageContainer,
+	StyledCard,
+	StyledButton,
+	ConfirmModal,
+} from "../components/ui";
 import { I18nContext } from "../utils/i18n";
 
 const MotionBox = motion.create(Box);
@@ -116,6 +127,7 @@ function SectionHeader({ title, delay = 0 }) {
 
 export default function Account() {
 	const theme = useTheme();
+	const navigate = useNavigate();
 	const { t, lang } = useContext(I18nContext);
 	const [account, setAccount] = useState(null);
 	const [loading, setLoading] = useState(true);
@@ -135,6 +147,10 @@ export default function Account() {
 		message: "",
 		severity: "success",
 	});
+
+	// Delete account states
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [deleteLoading, setDeleteLoading] = useState(false);
 
 	useEffect(() => {
 		setLoading(true);
@@ -182,6 +198,24 @@ export default function Account() {
 			setPwError(err?.response?.data?.error || t("password_change_failed"));
 		}
 		setPwLoading(false);
+	};
+
+	const handleDeleteAccount = async () => {
+		setDeleteLoading(true);
+		try {
+			await deleteAccount();
+			// Clear token and redirect to login
+			localStorage.removeItem("token");
+			navigate("/login");
+		} catch (err) {
+			setSnackbar({
+				open: true,
+				message: err?.response?.data?.error || t("delete_account_error"),
+				severity: "error",
+			});
+			setDeleteLoading(false);
+			setDeleteModalOpen(false);
+		}
 	};
 
 	const formatDate = (dateStr) => {
@@ -449,7 +483,85 @@ export default function Account() {
 						</Box>
 					</StyledCard>
 				</MotionBox>
+
+				{/* Danger Zone - Delete Account */}
+				<SectionHeader title={t("danger_zone")} delay={0.5} />
+				<MotionBox
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ delay: 0.6, duration: 0.4 }}
+				>
+					<StyledCard
+						variant="default"
+						sx={{
+							p: 3,
+							border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+							background: alpha(theme.palette.error.main, 0.02),
+						}}
+					>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+							<Box
+								sx={{
+									width: 48,
+									height: 48,
+									borderRadius: "12px",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									background: alpha(theme.palette.error.main, 0.15),
+									border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+								}}
+							>
+								<DeleteForeverIcon sx={{ fontSize: 24, color: "error.main" }} />
+							</Box>
+							<Box sx={{ flex: 1 }}>
+								<Typography
+									variant="subtitle1"
+									sx={{
+										fontWeight: 600,
+										color: "text.cardTitle",
+										fontFamily: "Inter, sans-serif",
+									}}
+								>
+									{t("delete_account_title")}
+								</Typography>
+								<Typography
+									variant="body2"
+									sx={{
+										color: "text.cardSubtitle",
+										fontFamily: "Inter, sans-serif",
+									}}
+								>
+									{t("delete_account_message")}
+								</Typography>
+							</Box>
+						</Box>
+						<StyledButton
+							variant="danger"
+							onClick={() => setDeleteModalOpen(true)}
+							startIcon={<DeleteForeverIcon sx={{ fontSize: 20 }} />}
+						>
+							{t("delete_account")}
+						</StyledButton>
+					</StyledCard>
+				</MotionBox>
 			</Box>
+
+			{/* Delete Account Confirmation Modal */}
+			<ConfirmModal
+				open={deleteModalOpen}
+				onClose={() => setDeleteModalOpen(false)}
+				onConfirm={handleDeleteAccount}
+				title={t("delete_account_title")}
+				message={t("delete_account_message")}
+				confirmText={
+					deleteLoading ? t("deleting") : t("delete_account_confirm")
+				}
+				cancelText={t("cancel")}
+				variant="danger"
+				icon={DeleteForeverIcon}
+				loading={deleteLoading}
+			/>
 
 			{/* Snackbar */}
 			<Snackbar
