@@ -13,11 +13,12 @@ api.interceptors.request.use((config) => {
 	return config;
 });
 
-// Logout if token is invalid
+// Logout if token is invalid (but not for login/register requests)
 api.interceptors.response.use(
 	(response) => response,
 	(error) => {
-		if (error.response && error.response.status === 401) {
+		const isAuthRequest = error.config?.url?.includes('/auth/');
+		if (error.response && error.response.status === 401 && !isAuthRequest) {
 			localStorage.removeItem("token");
 			window.location.href = "/session-expired";
 		}

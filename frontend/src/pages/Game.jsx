@@ -94,8 +94,12 @@ export default function Game({ onBackToDecks }) {
 		mode: "standard",
 		timeLimit: 10,
 		lives: 3,
+		cardDirection: "normal",
+		hardModeEnabled: false,
 	};
 	const gameMode = settings.mode || "standard";
+	const cardDirection = settings.cardDirection || "normal";
+	const hardModeEnabled = settings.hardModeEnabled || false;
 
 	// Core game state
 	const [flashcards, setFlashcards] = useState([]);
@@ -125,8 +129,9 @@ export default function Game({ onBackToDecks }) {
 		try {
 			let res;
 
-			// Choose endpoint based on game mode
-			if (gameMode === "hard_cards") {
+			// Choose endpoint based on game mode and settings
+			if (hardModeEnabled) {
+				// Hard mode: only study hard cards
 				res = await getHardFlashcards(deckId);
 			} else if (gameMode === "multiple_choice") {
 				res = await getFlashcardsWithOptions(deckId);
@@ -152,7 +157,7 @@ export default function Game({ onBackToDecks }) {
 		} finally {
 			setLoading(false);
 		}
-	}, [deckId, gameMode]);
+	}, [deckId, gameMode, hardModeEnabled]);
 
 	useEffect(() => {
 		fetchFlashcards();
@@ -209,6 +214,9 @@ export default function Game({ onBackToDecks }) {
 
 	const handleAnswer = useCallback(
 		async (isCorrect) => {
+			// Prevent action if game already ended
+			if (gameEnded) return;
+
 			setDirection(isCorrect ? 1 : -1);
 
 			// Play sound effect
@@ -254,10 +262,22 @@ export default function Game({ onBackToDecks }) {
 			} else {
 				// Game completed - play success sound
 				playSound(SOUNDS.SUCCESS);
+				// Stop timer before ending game
+				if (gameMode === "timed") {
+					timer.pause();
+				}
 				setGameEnded(true);
 			}
 		},
-		[currentCardIndex, flashcards, gameMode, lives, timer, settings.timeLimit]
+		[
+			currentCardIndex,
+			flashcards,
+			gameMode,
+			lives,
+			timer,
+			settings.timeLimit,
+			gameEnded,
+		]
 	);
 
 	const handleCardFlip = useCallback(() => {
@@ -378,12 +398,13 @@ export default function Game({ onBackToDecks }) {
 			? ((currentCardIndex + 1) / flashcards.length) * 100
 			: 0;
 
-	// Get current card with reverse mode handling
+	// Get current card with card direction handling
 	const getCurrentCard = () => {
 		const card = flashcards[currentCardIndex];
 		if (!card) return { front: "", back: "" };
 
-		if (gameMode === "reverse") {
+		// Reverse card direction if setting is "reverse"
+		if (cardDirection === "reverse") {
 			return { front: card.back_text, back: card.front_text };
 		}
 		return { front: card.front_text, back: card.back_text };
@@ -439,12 +460,12 @@ export default function Game({ onBackToDecks }) {
 				<EmptyState
 					icon={StyleIcon}
 					title={
-						gameMode === "hard_cards"
+						hardModeEnabled
 							? t("no_hard_cards") || "No hard cards found"
 							: t("no_flashcards") || "No flashcards found"
 					}
 					description={
-						gameMode === "hard_cards"
+						hardModeEnabled
 							? t("no_hard_cards_desc") ||
 							  "Great job! You have no cards marked as difficult."
 							: t("no_flashcards_desc") ||

@@ -26,21 +26,21 @@ import QuizIcon from "@mui/icons-material/Quiz";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import GridViewIcon from "@mui/icons-material/GridView";
 import WhatshotIcon from "@mui/icons-material/Whatshot";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import ToggleButton from "@mui/material/ToggleButton";
 import { I18nContext } from "../../utils/i18n";
 import { StyledModal, StyledButton } from "../ui";
 
 const MotionBox = motion.create(Box);
 
-// Game mode definitions
+// Game mode definitions (reverse and hard_cards removed - they are now separate options)
 const GAME_MODES = [
 	{ value: "standard", icon: TuneIcon, color: "#3b82f6" },
 	{ value: "timed", icon: TimerIcon, color: "#f59e0b" },
 	{ value: "survival", icon: FavoriteIcon, color: "#ef4444" },
 	{ value: "write", icon: EditIcon, color: "#22c55e" },
 	{ value: "multiple_choice", icon: QuizIcon, color: "#8b5cf6" },
-	{ value: "reverse", icon: SwapHorizIcon, color: "#06b6d4" },
 	{ value: "match", icon: GridViewIcon, color: "#ec4899" },
-	{ value: "hard_cards", icon: WhatshotIcon, color: "#f97316" },
 ];
 
 // Setting Option Component
@@ -208,10 +208,11 @@ export default function GameSettingsModal({
 	const { t } = useContext(I18nContext);
 
 	const [settings, setSettings] = useState({
-		difficulty_enabled: false,
 		mode: "standard",
 		timeLimit: 10,
 		lives: 3,
+		cardDirection: "normal", // "normal" or "reverse"
+		hardModeEnabled: false, // only study hard cards (saved as difficulty_enabled in db)
 	});
 	const [loading, setLoading] = useState(false);
 
@@ -223,8 +224,9 @@ export default function GameSettingsModal({
 				if (res.data && res.data.settings) {
 					setSettings((prev) => ({
 						...prev,
-						difficulty_enabled: res.data.settings.difficulty_enabled,
+						hardModeEnabled: res.data.settings.difficulty_enabled || false,
 						mode: res.data.settings.mode || "standard",
+						cardDirection: res.data.settings.card_direction || "normal",
 					}));
 				}
 			} catch (err) {
@@ -238,8 +240,9 @@ export default function GameSettingsModal({
 		setLoading(true);
 		try {
 			await updateDeckSettings(deckId, {
-				difficulty_enabled: settings.difficulty_enabled,
+				difficulty_enabled: settings.hardModeEnabled,
 				mode: settings.mode,
+				card_direction: settings.cardDirection,
 			});
 			onStart(settings);
 		} catch (err) {
@@ -263,12 +266,8 @@ export default function GameSettingsModal({
 				return t("mode_write_desc") || "Type the answer yourself";
 			case "multiple_choice":
 				return t("mode_multiple_choice_desc") || "Choose from 4 options";
-			case "reverse":
-				return t("mode_reverse_desc") || "See answer, guess the question";
 			case "match":
 				return t("mode_match_desc") || "Memory matching game";
-			case "hard_cards":
-				return t("mode_hard_cards_desc") || "Focus on cards you got wrong";
 			default:
 				return "";
 		}
@@ -435,27 +434,74 @@ export default function GameSettingsModal({
 					</MotionBox>
 				)}
 
-				{/* Difficulty Tracking */}
+				{/* Card Direction Option */}
 				<SettingOption
-					icon={SpeedIcon}
-					title={t("enable_difficulty") || "Difficulty Tracking"}
+					icon={SwapHorizIcon}
+					title={t("card_direction") || "Card Direction"}
 					description={
-						t("track_difficulty_desc") || "Track which cards you find harder"
+						t("card_direction_desc") || "Choose which side to show first"
 					}
+					iconColor="#06b6d4"
 					delay={0.1}
 				>
+					<ToggleButtonGroup
+						value={settings.cardDirection}
+						exclusive
+						onChange={(e, value) => {
+							if (value !== null) {
+								setSettings((prev) => ({ ...prev, cardDirection: value }));
+							}
+						}}
+						size="small"
+						sx={{
+							"& .MuiToggleButton-root": {
+								px: 2,
+								py: 0.5,
+								fontFamily: "Inter, sans-serif",
+								fontSize: "0.75rem",
+								fontWeight: 500,
+								textTransform: "none",
+								border: (theme) => `1px solid ${theme.palette.border.main}`,
+								"&.Mui-selected": {
+									backgroundColor: alpha("#06b6d4", 0.15),
+									color: "#06b6d4",
+									borderColor: "#06b6d4",
+									"&:hover": {
+										backgroundColor: alpha("#06b6d4", 0.25),
+									},
+								},
+							},
+						}}
+					>
+						<ToggleButton value="normal">
+							{t("direction_normal") || "Normal"}
+						</ToggleButton>
+						<ToggleButton value="reverse">
+							{t("direction_reverse") || "Reverse"}
+						</ToggleButton>
+					</ToggleButtonGroup>
+				</SettingOption>
+
+				{/* Hard Mode Option */}
+				<SettingOption
+					icon={WhatshotIcon}
+					title={t("hard_mode") || "Hard Mode"}
+					description={t("hard_mode_desc") || "Only study cards you got wrong"}
+					iconColor="#f97316"
+					delay={0.15}
+				>
 					<Checkbox
-						checked={settings.difficulty_enabled}
+						checked={settings.hardModeEnabled}
 						onChange={(e) =>
 							setSettings((prev) => ({
 								...prev,
-								difficulty_enabled: e.target.checked,
+								hardModeEnabled: e.target.checked,
 							}))
 						}
 						sx={{
-							color: "primary.main",
+							color: "#f97316",
 							"&.Mui-checked": {
-								color: "primary.main",
+								color: "#f97316",
 							},
 						}}
 					/>

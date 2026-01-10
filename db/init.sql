@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS account_preferences (
   language VARCHAR(10) DEFAULT 'en',
   theme_preference VARCHAR(10) DEFAULT 'light', 
   sound_effects_enabled BOOLEAN DEFAULT TRUE,
-  keyboard_shortcuts_enabled BOOLEAN DEFAULT TRUE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -23,6 +22,7 @@ CREATE TABLE IF NOT EXISTS deck (
   description TEXT,
   mode VARCHAR(50) DEFAULT 'standard',
   difficulty_enabled BOOLEAN DEFAULT FALSE,
+  card_direction VARCHAR(20) DEFAULT 'normal',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

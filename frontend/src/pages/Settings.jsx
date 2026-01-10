@@ -18,7 +18,6 @@ import {
 	updateTheme,
 	updateLanguage,
 	updateSoundEffects,
-	updateKeyboardShortcuts,
 } from "../services/accountServices";
 import TranslateIcon from "@mui/icons-material/Translate";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
@@ -26,7 +25,6 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import PaletteIcon from "@mui/icons-material/Palette";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
-import KeyboardIcon from "@mui/icons-material/Keyboard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { PageContainer, StyledCard, StyledButton } from "../components/ui";
@@ -153,9 +151,6 @@ export default function Settings({
 	const [soundEnabled, setSoundEnabled] = useState(
 		() => localStorage.getItem("soundEnabled") !== "false"
 	);
-	const [keyboardShortcuts, setKeyboardShortcuts] = useState(
-		() => localStorage.getItem("keyboardShortcuts") !== "false"
-	);
 
 	const handleThemeChangeLocal = (e) => {
 		setSelectedTheme(e.target.checked ? "light" : "dark");
@@ -167,10 +162,6 @@ export default function Settings({
 
 	const handleSoundChange = (e) => {
 		setSoundEnabled(e.target.checked);
-	};
-
-	const handleKeyboardChange = (e) => {
-		setKeyboardShortcuts(e.target.checked);
 	};
 
 	const handleSave = async () => {
@@ -198,17 +189,6 @@ export default function Settings({
 				);
 			localStorage.setItem("soundEnabled", soundEnabled);
 
-			// Update keyboard shortcuts
-			const keyboardRes = await updateKeyboardShortcuts(
-				keyboardShortcuts,
-				accountId
-			);
-			if (keyboardRes.status !== 200)
-				throw new Error(
-					keyboardRes.data?.error || "Failed to update keyboard shortcuts"
-				);
-			localStorage.setItem("keyboardShortcuts", keyboardShortcuts);
-
 			setSaveSuccess(true);
 			setSnackbar({
 				open: true,
@@ -231,9 +211,7 @@ export default function Settings({
 	const hasChanges =
 		selectedTheme !== currentTheme ||
 		selectedLang !== (localStorage.getItem("lang") || "en") ||
-		soundEnabled !== (localStorage.getItem("soundEnabled") !== "false") ||
-		keyboardShortcuts !==
-			(localStorage.getItem("keyboardShortcuts") !== "false");
+		soundEnabled !== (localStorage.getItem("soundEnabled") !== "false");
 
 	return (
 		<PageContainer>
@@ -363,22 +341,6 @@ export default function Settings({
 						<Switch
 							checked={soundEnabled}
 							onChange={handleSoundChange}
-							color="primary"
-						/>
-					</SettingCard>
-
-					<SettingCard
-						icon={KeyboardIcon}
-						title={t("keyboard_shortcuts") || "Keyboard Shortcuts"}
-						description={
-							t("keyboard_shortcuts_desc") ||
-							"Use arrow keys and space during games"
-						}
-						delay={0.35}
-					>
-						<Switch
-							checked={keyboardShortcuts}
-							onChange={handleKeyboardChange}
 							color="primary"
 						/>
 					</SettingCard>

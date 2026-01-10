@@ -522,34 +522,6 @@ export default function Stats() {
 							{t("stats_subtitle") || "Track your learning progress"}
 						</Typography>
 					</Box>
-
-					{/* Period Filter */}
-					<ToggleButtonGroup
-						value={period}
-						exclusive
-						onChange={(e, val) => val && setPeriod(val)}
-						size="small"
-						sx={{
-							"& .MuiToggleButton-root": {
-								border: "1px solid",
-								borderColor: "divider",
-								color: "text.cardSubtitle",
-								"&.Mui-selected": {
-									bgcolor: "primary.main",
-									color: "white",
-									"&:hover": { bgcolor: "primary.dark" },
-								},
-							},
-						}}
-					>
-						<ToggleButton value="7d">{t("7_days") || "7D"}</ToggleButton>
-						<ToggleButton value="30d">{t("30_days") || "30D"}</ToggleButton>
-						<ToggleButton value="90d">{t("90_days") || "90D"}</ToggleButton>
-						<ToggleButton value="365d">{t("1_year") || "1Y"}</ToggleButton>
-						<ToggleButton value="all">
-							{t("all_time_short") || "All"}
-						</ToggleButton>
-					</ToggleButtonGroup>
 				</Box>
 			</MotionBox>
 
@@ -733,6 +705,36 @@ export default function Stats() {
 					</StyledCard>
 				</MotionBox>
 			)}
+
+			{/* Period Filter */}
+			<Box sx={{ mb: 3, display: "flex", justifyContent: "flex-start" }}>
+				<ToggleButtonGroup
+					value={period}
+					exclusive
+					onChange={(e, val) => val && setPeriod(val)}
+					size="small"
+					sx={{
+						"& .MuiToggleButton-root": {
+							border: "1px solid",
+							borderColor: "divider",
+							color: "text.cardSubtitle",
+							"&.Mui-selected": {
+								bgcolor: "primary.main",
+								color: "white",
+								"&:hover": { bgcolor: "primary.dark" },
+							},
+						},
+					}}
+				>
+					<ToggleButton value="7d">{t("7_days") || "7D"}</ToggleButton>
+					<ToggleButton value="30d">{t("30_days") || "30D"}</ToggleButton>
+					<ToggleButton value="90d">{t("90_days") || "90D"}</ToggleButton>
+					<ToggleButton value="365d">{t("1_year") || "1Y"}</ToggleButton>
+					<ToggleButton value="all">
+						{t("all_time_short") || "All"}
+					</ToggleButton>
+				</ToggleButtonGroup>
+			</Box>
 
 			{/* Tabs */}
 			<Box sx={{ mb: 3 }}>
@@ -936,16 +938,32 @@ export default function Stats() {
 				<>
 					{/* Deck Selector */}
 					<Box sx={{ mb: 3 }}>
-						<FormControl size="small" sx={{ minWidth: 200 }}>
+						<FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>
 							<InputLabel>{t("select_deck") || "Select Deck"}</InputLabel>
 							<Select
 								value={selectedDeck}
 								label={t("select_deck") || "Select Deck"}
 								onChange={(e) => setSelectedDeck(e.target.value)}
+								sx={{
+									"& .MuiSelect-select": {
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									},
+								}}
 							>
 								<MenuItem value="all">{t("all_decks") || "All Decks"}</MenuItem>
 								{decksData.map((deck) => (
-									<MenuItem key={deck.id} value={deck.id}>
+									<MenuItem
+										key={deck.id}
+										value={deck.id}
+										sx={{
+											maxWidth: 300,
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
+										}}
+									>
 										{deck.title}
 									</MenuItem>
 								))}

@@ -2,7 +2,6 @@ import { useState, useEffect, useContext } from "react";
 import {
 	Box,
 	Typography,
-	FormControlLabel,
 	Checkbox,
 	FormControl,
 	Select,
@@ -47,7 +46,10 @@ export default function DeckModal({
 
 	const handleSave = () => {
 		if (title.trim()) {
-			onSave(title, desc, { difficulty_enabled: difficultyEnabled, mode });
+			onSave(title, desc, {
+				difficulty_enabled: difficultyEnabled,
+				mode,
+			});
 		}
 	};
 
@@ -84,7 +86,9 @@ export default function DeckModal({
 					onChange={(e) => setTitle(e.target.value)}
 					fullWidth
 					autoFocus
-					placeholder="e.g., Spanish Vocabulary"
+					placeholder={
+						t("deck_title_placeholder") || "e.g., Spanish Vocabulary"
+					}
 				/>
 
 				<StyledTextField
@@ -94,7 +98,10 @@ export default function DeckModal({
 					fullWidth
 					multiline
 					minRows={3}
-					placeholder="Optional description for your deck..."
+					placeholder={
+						t("deck_description_placeholder") ||
+						"Optional description for your deck..."
+					}
 				/>
 
 				<MotionBox
@@ -115,7 +122,7 @@ export default function DeckModal({
 						}}
 					>
 						<Box
-							sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}
+							sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}
 						>
 							<TuneIcon sx={{ fontSize: 20, color: "primary.main" }} />
 							<Typography
@@ -126,73 +133,60 @@ export default function DeckModal({
 									fontFamily: "Inter, sans-serif",
 								}}
 							>
-								Game Options
+								{t("game_options") || "Game Options"}
 							</Typography>
 						</Box>
 
-						<FormControlLabel
-							control={
-								<Checkbox
-									checked={difficultyEnabled}
-									onChange={(e) => setDifficultyEnabled(e.target.checked)}
-									sx={{
-										color: "primary.main",
-										"&.Mui-checked": {
-											color: "primary.main",
-										},
-									}}
-								/>
-							}
-							label={
-								<Typography
-									variant="body2"
-									sx={{
-										color: "text.cardTitle",
-										fontFamily: "Inter, sans-serif",
-									}}
-								>
-									{t("enable_difficulty") || "Enable Difficulty Tracking"}
-								</Typography>
-							}
-							sx={{ mb: 2 }}
-						/>
-
-						<FormControl fullWidth size="small">
-							<Select
-								value={mode}
-								onChange={(e) => setMode(e.target.value)}
+						{/* Game Mode Selector */}
+						<Box sx={{ mt: 2 }}>
+							<Typography
+								variant="body2"
 								sx={{
 									fontWeight: 500,
+									color: "text.cardSubtitle",
 									fontFamily: "Inter, sans-serif",
-									borderRadius: 2,
-									"& .MuiOutlinedInput-notchedOutline": {
-										borderColor: "border.main",
-									},
-									"&:hover .MuiOutlinedInput-notchedOutline": {
-										borderColor: "primary.main",
-									},
+									mb: 1,
 								}}
 							>
-								<MenuItem value="standard">
-									{t("mode_standard") || "Standard Mode"}
-								</MenuItem>
-								<MenuItem value="timed">
-									{t("mode_timed") || "Timed Mode"}
-								</MenuItem>
-								<MenuItem value="survival">
-									{t("mode_survival") || "Survival Mode"}
-								</MenuItem>
-								<MenuItem value="write">
-									{t("mode_write") || "Write Mode"}
-								</MenuItem>
-								<MenuItem value="multiple_choice">
-									{t("mode_multiple_choice") || "Multiple Choice"}
-								</MenuItem>
-								<MenuItem value="match">
-									{t("mode_match") || "Match Mode"}
-								</MenuItem>
-							</Select>
-						</FormControl>
+								{t("game_mode") || "Game Mode"}
+							</Typography>
+							<FormControl fullWidth size="small">
+								<Select
+									value={mode}
+									onChange={(e) => setMode(e.target.value)}
+									sx={{
+										fontWeight: 500,
+										fontFamily: "Inter, sans-serif",
+										borderRadius: 2,
+										"& .MuiOutlinedInput-notchedOutline": {
+											borderColor: "divider",
+										},
+										"&:hover .MuiOutlinedInput-notchedOutline": {
+											borderColor: "primary.main",
+										},
+									}}
+								>
+									<MenuItem value="standard">
+										{t("mode_standard") || "Standard Mode"}
+									</MenuItem>
+									<MenuItem value="timed">
+										{t("mode_timed") || "Timed Mode"}
+									</MenuItem>
+									<MenuItem value="survival">
+										{t("mode_survival") || "Survival Mode"}
+									</MenuItem>
+									<MenuItem value="write">
+										{t("mode_write") || "Write Mode"}
+									</MenuItem>
+									<MenuItem value="multiple_choice">
+										{t("mode_multiple_choice") || "Multiple Choice"}
+									</MenuItem>
+									<MenuItem value="match">
+										{t("mode_match") || "Match Mode"}
+									</MenuItem>
+								</Select>
+							</FormControl>
+						</Box>
 					</Box>
 				</MotionBox>
 
