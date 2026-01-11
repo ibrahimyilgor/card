@@ -518,7 +518,7 @@ export default function Game({ onBackToDecks }) {
 					open={showSettingsModal}
 					onClose={() => setShowSettingsModal(false)}
 					deckId={deckId}
-					onStartGame={handleStartWithNewSettings}
+					onStart={handleStartWithNewSettings}
 				/>
 			</PageContainer>
 		);
