@@ -28,6 +28,7 @@ import TimerIcon from "@mui/icons-material/Timer";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FlashCard from "../components/FlashCard";
 import GameSummary from "../components/GameSummary";
+import GameSettingsModal from "../components/modals/GameSettingsModal";
 import {
 	TimerDisplay,
 	LivesDisplay,
@@ -89,14 +90,16 @@ export default function Game({ onBackToDecks }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 
-	// Get settings from navigation state
-	const settings = location.state?.settings || {
+	// Get initial settings from navigation state, then manage locally
+	const initialSettings = location.state?.settings || {
 		mode: "standard",
 		timeLimit: 10,
 		lives: 3,
 		cardDirection: "normal",
 		hardModeEnabled: false,
 	};
+	const [settings, setSettings] = useState(initialSettings);
+	const [showSettingsModal, setShowSettingsModal] = useState(false);
 	const gameMode = settings.mode || "standard";
 	const cardDirection = settings.cardDirection || "normal";
 	const hardModeEnabled = settings.hardModeEnabled || false;
@@ -300,6 +303,25 @@ export default function Game({ onBackToDecks }) {
 		fetchFlashcards();
 	}, [fetchFlashcards, lives, timer, settings]);
 
+	// Handle starting game with new settings from modal
+	const handleStartWithNewSettings = useCallback((newSettings) => {
+		setSettings(newSettings);
+		setShowSettingsModal(false);
+		setCurrentCardIndex(0);
+		setScores({ correct: 0, incorrect: 0 });
+		setGameEnded(false);
+		setIsCardFlipped(false);
+		setDirection(0);
+		setWriteResult(null);
+		setSelectedChoice(null);
+		setShowChoiceResult(false);
+		setGameStats({ timeSpent: 0, matchAttempts: 0 });
+		setGameStartTime(Date.now());
+		lives.reset(newSettings.lives || 3);
+		timer.reset(newSettings.timeLimit || 10);
+		// Fetch will be triggered by settings change via useEffect
+	}, [lives, timer]);
+
 	// Handle write mode submission
 	const handleWriteSubmit = async (userAnswer) => {
 		const flashcard = flashcards[currentCardIndex];
@@ -486,10 +508,17 @@ export default function Game({ onBackToDecks }) {
 					incorrectCount={scores.incorrect}
 					onRestart={handleRestart}
 					onBackToDecks={onBackToDecks}
+					onChangeMode={() => setShowSettingsModal(true)}
 					gameMode={gameMode}
 					livesRemaining={lives.lives}
 					maxLives={lives.maxLives}
 					matchAttempts={gameStats.matchAttempts}
+				/>
+				<GameSettingsModal
+					open={showSettingsModal}
+					onClose={() => setShowSettingsModal(false)}
+					deckId={deckId}
+					onStartGame={handleStartWithNewSettings}
 				/>
 			</PageContainer>
 		);

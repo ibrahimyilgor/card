@@ -3,6 +3,7 @@ import { Box, Typography, alpha, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
 import ReplayIcon from "@mui/icons-material/Replay";
 import HomeIcon from "@mui/icons-material/Home";
+import SettingsIcon from "@mui/icons-material/Settings";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -77,6 +78,7 @@ export default function GameSummary({
 	incorrectCount,
 	onRestart,
 	onBackToDecks,
+	onChangeMode,
 	gameMode = "standard",
 	livesRemaining = 0,
 	maxLives = 3,
@@ -378,6 +380,15 @@ export default function GameSummary({
 				>
 					{t("back_to_decks") || "Back to Decks"}
 				</StyledButton>
+				{onChangeMode && (
+					<StyledButton
+						variant="secondary"
+						onClick={onChangeMode}
+						startIcon={<SettingsIcon />}
+					>
+						{t("change_mode") || "Change Mode"}
+					</StyledButton>
+				)}
 				<StyledButton
 					variant="primary"
 					onClick={onRestart}
