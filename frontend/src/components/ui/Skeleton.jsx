@@ -9,8 +9,8 @@ export const CardSkeleton = ({ count = 1, sx = {} }) => {
 			{Array.from({ length: count }).map((_, index) => (
 				<MotionBox
 					key={index}
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
+					initial={{ y: 10 }}
+					animate={{ y: 0 }}
 					transition={{ duration: 0.3, delay: index * 0.1 }}
 					sx={{
 						borderRadius: "16px",
@@ -102,8 +102,8 @@ export const StatsSkeleton = () => {
 				{[1, 2, 3, 4].map((i) => (
 					<MotionBox
 						key={i}
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
+						initial={{ y: 20 }}
+						animate={{ y: 0 }}
 						transition={{ duration: 0.3, delay: i * 0.1 }}
 						sx={{
 							borderRadius: "16px",

@@ -14,8 +14,8 @@ const MotionBox = motion.create(Box);
 // Feature item component with animation
 const FeatureItem = ({ icon: Icon, title, description, delay }) => (
 	<MotionBox
-		initial={{ opacity: 0, x: -20 }}
-		animate={{ opacity: 1, x: 0 }}
+		initial={{ x: -20 }}
+		animate={{ x: 0 }}
 		transition={{ duration: 0.5, delay }}
 		sx={{
 			display: "flex",
@@ -180,8 +180,8 @@ export default function Login({ onLogin, onSwitch }) {
 			>
 				{/* Left Info Panel */}
 				<MotionBox
-					initial={{ opacity: 0, x: -40 }}
-					animate={{ opacity: 1, x: 0 }}
+					initial={{ x: -40 }}
+					animate={{ x: 0 }}
 					transition={{ duration: 0.6, ease: "easeOut" }}
 					sx={{
 						flex: 1,
@@ -192,8 +192,8 @@ export default function Login({ onLogin, onSwitch }) {
 				>
 					{/* Logo/Brand */}
 					<MotionBox
-						initial={{ opacity: 0, y: -20 }}
-						animate={{ opacity: 1, y: 0 }}
+						initial={{ y: -20 }}
+						animate={{ y: 0 }}
 						transition={{ duration: 0.5 }}
 						sx={{
 							display: "flex",
@@ -257,8 +257,8 @@ export default function Login({ onLogin, onSwitch }) {
 
 				{/* Right Login Form */}
 				<MotionBox
-					initial={{ opacity: 0, x: 40 }}
-					animate={{ opacity: 1, x: 0 }}
+					initial={{ x: 40 }}
+					animate={{ x: 0 }}
 					transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
 					sx={{
 						flex: 1,
@@ -359,10 +359,7 @@ export default function Login({ onLogin, onSwitch }) {
 							/>
 
 							{error && (
-								<MotionBox
-									initial={{ opacity: 0, y: -10 }}
-									animate={{ opacity: 1, y: 0 }}
-								>
+								<MotionBox initial={{ y: -10 }} animate={{ y: 0 }}>
 									<Alert
 										severity="error"
 										sx={{

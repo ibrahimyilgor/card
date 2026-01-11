@@ -17,12 +17,15 @@ import Settings from "./pages/Settings";
 import Game from "./pages/Game";
 import Plans from "./pages/Plans";
 import Account from "./pages/Account";
+import Achievements from "./pages/Achievements";
 import SessionExpired from "./pages/SessionExpired";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { darkTheme, lightTheme } from "./styles/theme";
 import { I18nProvider } from "./utils/i18n";
+import { AchievementProvider } from "./context/AchievementContext";
 import Topbar from "./components/Topbar";
+import AchievementModal from "./components/modals/AchievementModal";
 import { Box } from "@mui/material";
 
 import "@fontsource/inter/400.css";
@@ -107,13 +110,20 @@ const MainLayout = ({ children, onLogout, themeMode }) => {
 			<Box
 				sx={{
 					flex: 1,
-					overflow: "auto",
+					overflow: "hidden",
 					position: "relative",
 				}}
 			>
-				<AnimatePresence mode="wait" initial={false}>
-					{children}
-				</AnimatePresence>
+				<Box
+					sx={{
+						height: "100%",
+						overflow: "auto",
+					}}
+				>
+					<AnimatePresence mode="wait" initial={false}>
+						{children}
+					</AnimatePresence>
+				</Box>
 			</Box>
 		</Box>
 	);
@@ -216,129 +226,142 @@ const AppContent = () => {
 
 	return (
 		<I18nProvider lang={lang} setLang={setLang}>
-			<ThemeProvider theme={activeTheme}>
-				<CssBaseline />
-				{isAuthPage ? (
-					<Box
-						sx={{
-							height: "100vh",
-							backgroundColor: "background.default",
-							overflow: "hidden",
-						}}
-					>
-						<AnimatePresence mode="wait" initial={false}>
+			<AchievementProvider>
+				<ThemeProvider theme={activeTheme}>
+					<CssBaseline />
+					<AchievementModal />
+					{isAuthPage ? (
+						<Box
+							sx={{
+								height: "100vh",
+								backgroundColor: "background.default",
+								overflow: "hidden",
+							}}
+						>
+							<AnimatePresence mode="wait" initial={false}>
+								<Routes location={location} key={location.pathname}>
+									<Route
+										path="/login"
+										element={
+											<AnimatedPage>
+												<Login
+													onLogin={handleLogin}
+													onSwitch={() => navigate("/signup")}
+												/>
+											</AnimatedPage>
+										}
+									/>
+									<Route
+										path="/signup"
+										element={
+											<AnimatedPage>
+												<Signup
+													onSignup={() => navigate("/login")}
+													onSwitch={() => navigate("/login")}
+												/>
+											</AnimatedPage>
+										}
+									/>
+									<Route
+										path="/session-expired"
+										element={
+											<AnimatedPage>
+												<SessionExpired />
+											</AnimatedPage>
+										}
+									/>
+								</Routes>
+							</AnimatePresence>
+						</Box>
+					) : (
+						<MainLayout onLogout={handleLogout} themeMode={themeMode}>
 							<Routes location={location} key={location.pathname}>
 								<Route
-									path="/login"
+									path="/"
 									element={
-										<AnimatedPage>
-											<Login
-												onLogin={handleLogin}
-												onSwitch={() => navigate("/signup")}
-											/>
-										</AnimatedPage>
+										<ProtectedRoute>
+											<AnimatedPage>
+												<Info
+													accountId={accountId}
+													onStartGame={(deckId, settings) =>
+														navigate(`/game/${deckId}`, { state: { settings } })
+													}
+												/>
+											</AnimatedPage>
+										</ProtectedRoute>
 									}
 								/>
 								<Route
-									path="/signup"
+									path="/stats"
 									element={
-										<AnimatedPage>
-											<Signup
-												onSignup={() => navigate("/login")}
-												onSwitch={() => navigate("/login")}
-											/>
-										</AnimatedPage>
+										<ProtectedRoute>
+											<AnimatedPage>
+												<Stats accountId={accountId} />
+											</AnimatedPage>
+										</ProtectedRoute>
 									}
 								/>
 								<Route
-									path="/session-expired"
+									path="/achievements"
 									element={
-										<AnimatedPage>
-											<SessionExpired />
-										</AnimatedPage>
+										<ProtectedRoute>
+											<AnimatedPage>
+												<Achievements />
+											</AnimatedPage>
+										</ProtectedRoute>
 									}
 								/>
+								<Route
+									path="/plans"
+									element={
+										<ProtectedRoute>
+											<AnimatedPage>
+												<Plans />
+											</AnimatedPage>
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/account"
+									element={
+										<ProtectedRoute>
+											<AnimatedPage>
+												<Account />
+											</AnimatedPage>
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/game/:deckId"
+									element={
+										<ProtectedRoute>
+											<AnimatedPage>
+												<Game onBackToDecks={() => navigate("/")} />
+											</AnimatedPage>
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/settings"
+									element={
+										<ProtectedRoute>
+											<AnimatedPage>
+												<Settings
+													currentTheme={themeMode}
+													onThemeChange={handleThemeChange}
+													onMainPage={() => navigate("/")}
+													onLangChange={setLang}
+												/>
+											</AnimatedPage>
+										</ProtectedRoute>
+									}
+								/>
+								<Route path="*" element={<Navigate to="/" replace />} />
 							</Routes>
-						</AnimatePresence>
-					</Box>
-				) : (
-					<MainLayout onLogout={handleLogout} themeMode={themeMode}>
-						<Routes location={location} key={location.pathname}>
-							<Route
-								path="/"
-								element={
-									<ProtectedRoute>
-										<AnimatedPage>
-											<Info
-												accountId={accountId}
-												onStartGame={(deckId, settings) =>
-													navigate(`/game/${deckId}`, { state: { settings } })
-												}
-											/>
-										</AnimatedPage>
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/stats"
-								element={
-									<ProtectedRoute>
-										<AnimatedPage>
-											<Stats accountId={accountId} />
-										</AnimatedPage>
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/plans"
-								element={
-									<ProtectedRoute>
-										<AnimatedPage>
-											<Plans />
-										</AnimatedPage>
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/account"
-								element={
-									<ProtectedRoute>
-										<AnimatedPage>
-											<Account />
-										</AnimatedPage>
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/game/:deckId"
-								element={
-									<ProtectedRoute>
-										<AnimatedPage>
-											<Game onBackToDecks={() => navigate("/")} />
-										</AnimatedPage>
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/settings"
-								element={
-									<ProtectedRoute>
-										<AnimatedPage>
-											<Settings
-												currentTheme={themeMode}
-												onThemeChange={handleThemeChange}
-												onMainPage={() => navigate("/")}
-												onLangChange={setLang}
-											/>
-										</AnimatedPage>
-									</ProtectedRoute>
-								}
-							/>
-							<Route path="*" element={<Navigate to="/" replace />} />
-						</Routes>
-					</MainLayout>
-				)}
-			</ThemeProvider>
+						</MainLayout>
+					)}
+				</ThemeProvider>
+			</AchievementProvider>
 		</I18nProvider>
 	);
 };

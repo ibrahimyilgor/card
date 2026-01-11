@@ -37,8 +37,8 @@ function SettingCard({ icon: Icon, title, description, children, delay = 0 }) {
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, y: 20 }}
-			whileInView={{ opacity: 1, y: 0 }}
+			initial={{ y: 20 }}
+			whileInView={{ y: 0 }}
 			viewport={{ once: true }}
 			transition={{ delay, duration: 0.4 }}
 		>
@@ -106,8 +106,8 @@ function SettingCard({ icon: Icon, title, description, children, delay = 0 }) {
 function SectionHeader({ title, delay = 0 }) {
 	return (
 		<MotionBox
-			initial={{ opacity: 0, x: -20 }}
-			whileInView={{ opacity: 1, x: 0 }}
+			initial={{ x: -20 }}
+			whileInView={{ x: 0 }}
 			viewport={{ once: true }}
 			transition={{ delay, duration: 0.4 }}
 			sx={{ mb: 2, mt: 3 }}
@@ -218,8 +218,8 @@ export default function Settings({
 			<Box sx={{ mx: "auto", pb: 4 }}>
 				{/* Header */}
 				<MotionBox
-					initial={{ opacity: 0, y: -10 }}
-					whileInView={{ opacity: 1, y: 0 }}
+					initial={{ y: -10 }}
+					whileInView={{ y: 0 }}
 					viewport={{ once: true }}
 					sx={{ mb: 4 }}
 				>
@@ -348,8 +348,8 @@ export default function Settings({
 
 				{/* Save Button */}
 				<MotionBox
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
+					initial={{ y: 20 }}
+					animate={{ y: 0 }}
 					transition={{ delay: 0.4, duration: 0.4 }}
 					sx={{ mt: 4, display: "flex", justifyContent: "center" }}
 				>
@@ -377,9 +377,9 @@ export default function Settings({
 							) : (
 								<MotionBox
 									key="save"
-									initial={{ opacity: 0 }}
-									animate={{ opacity: 1 }}
-									exit={{ opacity: 0 }}
+									initial={{ scale: 0.95 }}
+									animate={{ scale: 1 }}
+									exit={{ scale: 0.95 }}
 								>
 									{loading ? t("saving") : t("save")}
 								</MotionBox>
@@ -390,8 +390,8 @@ export default function Settings({
 
 				{!hasChanges && (
 					<MotionBox
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
+						initial={{ y: 5 }}
+						animate={{ y: 0 }}
 						sx={{ textAlign: "center", mt: 1 }}
 					>
 						<Typography

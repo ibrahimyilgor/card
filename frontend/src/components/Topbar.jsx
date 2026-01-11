@@ -18,6 +18,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import HomeIcon from "@mui/icons-material/Home";
 import LogoutIcon from "@mui/icons-material/Logout";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { I18nContext } from "../utils/i18n";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -218,6 +219,13 @@ export default function Topbar({ onLogout, currentPath }) {
 						onClick={() => navigate("/stats")}
 					/>
 					<NavButton
+						icon={EmojiEventsIcon}
+						label="Achievements"
+						tooltip={t("achievements") || "Achievements"}
+						isActive={activePath === "/achievements"}
+						onClick={() => navigate("/achievements")}
+					/>
+					<NavButton
 						icon={EventNoteIcon}
 						label="Plan"
 						tooltip={t("plan") || "Plan"}
@@ -295,8 +303,8 @@ export default function Topbar({ onLogout, currentPath }) {
 					>
 						<AnimatePresence initial={false}>
 							<MotionBox
-								initial={{ opacity: 0, y: -10 }}
-								animate={{ opacity: 1, y: 0 }}
+								initial={{ y: -10 }}
+								animate={{ y: 0 }}
 								transition={{ duration: 0.2 }}
 							>
 								{/* Profile Header */}

@@ -85,8 +85,8 @@ const DeckCard = ({
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
+			initial={{ opacity: 0, x: 50 }}
+			animate={{ opacity: 1, x: 0 }}
 			exit={{ opacity: 0, scale: 0.95 }}
 			transition={{ duration: 0.3, delay: index * 0.05 }}
 			layout
@@ -543,8 +543,8 @@ export default function Info({ accountId, onStartGame }) {
 		>
 			{/* Header Section */}
 			<MotionBox
-				initial={{ opacity: 0, y: -10 }}
-				animate={{ opacity: 1, y: 0 }}
+				initial={{ y: -10 }}
+				animate={{ y: 0 }}
 				transition={{ duration: 0.3 }}
 				sx={{
 					display: "flex",
@@ -731,9 +731,10 @@ export default function Info({ accountId, onStartGame }) {
 								xl: "repeat(4, 1fr)",
 							},
 							gap: 3,
+							overflow: "hidden",
 						}}
 					>
-						<AnimatePresence mode="popLayout" initial={false}>
+						<AnimatePresence mode="popLayout">
 							{filteredDecks.map((deck, index) => (
 								<DeckCard
 									key={deck.id}

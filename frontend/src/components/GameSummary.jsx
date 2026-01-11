@@ -21,8 +21,8 @@ function StatItem({ value, label, color, icon: Icon, delay = 0 }) {
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
+			initial={{ y: 20 }}
+			animate={{ y: 0 }}
 			transition={{ delay, duration: 0.4 }}
 			sx={{
 				textAlign: "center",
@@ -136,8 +136,8 @@ export default function GameSummary({
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, scale: 0.95 }}
-			animate={{ opacity: 1, scale: 1 }}
+			initial={{ scale: 0.95 }}
+			animate={{ scale: 1 }}
 			transition={{ duration: 0.5 }}
 			sx={{
 				display: "flex",
@@ -185,8 +185,8 @@ export default function GameSummary({
 			>
 				{/* Title */}
 				<MotionBox
-					initial={{ opacity: 0, y: -10 }}
-					animate={{ opacity: 1, y: 0 }}
+					initial={{ y: -10 }}
+					animate={{ y: 0 }}
 					transition={{ delay: 0.3 }}
 				>
 					<Typography
@@ -363,8 +363,8 @@ export default function GameSummary({
 
 			{/* Action Buttons */}
 			<MotionBox
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
+				initial={{ y: 20 }}
+				animate={{ y: 0 }}
 				transition={{ delay: 0.9, duration: 0.4 }}
 				sx={{
 					display: "flex",

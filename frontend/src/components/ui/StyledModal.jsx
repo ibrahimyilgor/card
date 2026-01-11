@@ -24,13 +24,13 @@ const StyledModal = ({
 	const modalVariants = {
 		hidden: {
 			opacity: 0,
-			scale: 0.9,
-			y: 20,
+			scale: 0.95,
+			x: 20,
 		},
 		visible: {
 			opacity: 1,
 			scale: 1,
-			y: 0,
+			x: 0,
 			transition: {
 				type: "spring",
 				stiffness: 300,
@@ -40,7 +40,7 @@ const StyledModal = ({
 		exit: {
 			opacity: 0,
 			scale: 0.95,
-			y: 10,
+			x: -10,
 			transition: {
 				duration: 0.15,
 			},

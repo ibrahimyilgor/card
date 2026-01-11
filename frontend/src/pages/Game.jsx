@@ -9,6 +9,8 @@ import {
 	updateFlashcardStats,
 } from "../services/gameServices";
 import { recordSession } from "../services/statsServices";
+import { checkAchievements } from "../services/achievementServices";
+import { AchievementContext } from "../context/AchievementContext";
 import {
 	Box,
 	Typography,
@@ -89,6 +91,7 @@ export default function Game({ onBackToDecks }) {
 	const location = useLocation();
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
+	const { processNewAchievements } = useContext(AchievementContext);
 
 	// Get initial settings from navigation state, then manage locally
 	const initialSettings = location.state?.settings || {
@@ -204,6 +207,14 @@ export default function Game({ onBackToDecks }) {
 					? flashcards.length
 					: scores.correct + scores.incorrect;
 
+			// Calculate accuracy percentage
+			const totalAnswers = scores.correct + scores.incorrect;
+			const accuracy =
+				totalAnswers > 0
+					? Math.round((scores.correct / totalAnswers) * 100)
+					: 0;
+
+			// Record session
 			recordSession({
 				deckId: parseInt(deckId),
 				gameMode,
@@ -212,6 +223,18 @@ export default function Game({ onBackToDecks }) {
 				wrongAnswers: scores.incorrect,
 				durationSeconds,
 			}).catch((err) => console.error("Error recording session:", err));
+
+			// Check for achievements
+			checkAchievements({
+				accuracy,
+				cardsStudied,
+			})
+				.then((result) => {
+					if (result.newlyEarned && result.newlyEarned.length > 0) {
+						processNewAchievements(result.newlyEarned);
+					}
+				})
+				.catch((err) => console.error("Error checking achievements:", err));
 		}
 	}, [gameEnded]);
 
@@ -304,23 +327,26 @@ export default function Game({ onBackToDecks }) {
 	}, [fetchFlashcards, lives, timer, settings]);
 
 	// Handle starting game with new settings from modal
-	const handleStartWithNewSettings = useCallback((newSettings) => {
-		setSettings(newSettings);
-		setShowSettingsModal(false);
-		setCurrentCardIndex(0);
-		setScores({ correct: 0, incorrect: 0 });
-		setGameEnded(false);
-		setIsCardFlipped(false);
-		setDirection(0);
-		setWriteResult(null);
-		setSelectedChoice(null);
-		setShowChoiceResult(false);
-		setGameStats({ timeSpent: 0, matchAttempts: 0 });
-		setGameStartTime(Date.now());
-		lives.reset(newSettings.lives || 3);
-		timer.reset(newSettings.timeLimit || 10);
-		// Fetch will be triggered by settings change via useEffect
-	}, [lives, timer]);
+	const handleStartWithNewSettings = useCallback(
+		(newSettings) => {
+			setSettings(newSettings);
+			setShowSettingsModal(false);
+			setCurrentCardIndex(0);
+			setScores({ correct: 0, incorrect: 0 });
+			setGameEnded(false);
+			setIsCardFlipped(false);
+			setDirection(0);
+			setWriteResult(null);
+			setSelectedChoice(null);
+			setShowChoiceResult(false);
+			setGameStats({ timeSpent: 0, matchAttempts: 0 });
+			setGameStartTime(Date.now());
+			lives.reset(newSettings.lives || 3);
+			timer.reset(newSettings.timeLimit || 10);
+			// Fetch will be triggered by settings change via useEffect
+		},
+		[lives, timer]
+	);
 
 	// Handle write mode submission
 	const handleWriteSubmit = async (userAnswer) => {
@@ -437,8 +463,8 @@ export default function Game({ onBackToDecks }) {
 		return (
 			<PageContainer centered>
 				<MotionBox
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
+					initial={{ scale: 0.95 }}
+					animate={{ scale: 1 }}
 					sx={{
 						display: "flex",
 						flexDirection: "column",
@@ -536,8 +562,8 @@ export default function Game({ onBackToDecks }) {
 				}}
 			>
 				<MotionBox
-					initial={{ opacity: 0, y: -20 }}
-					animate={{ opacity: 1, y: 0 }}
+					initial={{ y: -20 }}
+					animate={{ y: 0 }}
 					sx={{ width: "100%", maxWidth: 800, mb: 4 }}
 				>
 					<Box
@@ -604,8 +630,8 @@ export default function Game({ onBackToDecks }) {
 		>
 			{/* Progress Section */}
 			<MotionBox
-				initial={{ opacity: 0, y: -20 }}
-				animate={{ opacity: 1, y: 0 }}
+				initial={{ y: -20 }}
+				animate={{ y: 0 }}
 				sx={{ width: "100%", maxWidth: 500 }}
 			>
 				<Box
@@ -788,9 +814,9 @@ export default function Game({ onBackToDecks }) {
 					<AnimatePresence mode="wait" initial={false}>
 						<MotionBox
 							key={currentCardIndex}
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -20 }}
+							initial={{ y: 20 }}
+							animate={{ y: 0 }}
+							exit={{ y: -20 }}
 							sx={{
 								display: "flex",
 								flexDirection: "column",
@@ -849,9 +875,9 @@ export default function Game({ onBackToDecks }) {
 					<AnimatePresence mode="wait" initial={false}>
 						<MotionBox
 							key={currentCardIndex}
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -20 }}
+							initial={{ y: 20 }}
+							animate={{ y: 0 }}
+							exit={{ y: -20 }}
 							sx={{
 								display: "flex",
 								flexDirection: "column",
@@ -907,8 +933,8 @@ export default function Game({ onBackToDecks }) {
 			{/* Answer Buttons - Only for standard, timed, survival, reverse modes */}
 			{["standard", "timed", "survival", "reverse"].includes(gameMode) && (
 				<MotionBox
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
+					initial={{ y: 20 }}
+					animate={{ y: 0 }}
 					transition={{ delay: 0.2 }}
 					sx={{
 						display: "flex",
@@ -939,8 +965,8 @@ export default function Game({ onBackToDecks }) {
 			{/* Keyboard Hints */}
 			{["standard", "timed", "survival", "reverse"].includes(gameMode) && (
 				<MotionBox
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
+					initial={{ y: 10 }}
+					animate={{ y: 0 }}
 					transition={{ delay: 0.4 }}
 					sx={{
 						display: { xs: "none", md: "flex" },

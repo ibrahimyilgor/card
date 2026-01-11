@@ -26,6 +26,7 @@ const decksRouter = require("./decks")(pool);
 const flashcardsRouter = require("./flashcards")(pool);
 const gameRouter = require("./game")(pool);
 const statsRouter = require("./stats")(pool);
+const achievementsRouter = require("./achievements")(pool);
 
 app.use(express.json());
 app.use("/auth", authRouter);
@@ -34,6 +35,7 @@ app.use("/decks", decksRouter);
 app.use("/games", gameRouter);
 app.use("/flashcards", flashcardsRouter);
 app.use("/stats", statsRouter);
+app.use("/achievements", achievementsRouter);
 
 app.get("/api", async (req, res) => {
 	const result = await pool.query("SELECT NOW()");

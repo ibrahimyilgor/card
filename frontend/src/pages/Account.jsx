@@ -42,8 +42,8 @@ function InfoCard({ icon: Icon, title, value, delay = 0 }) {
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
+			initial={{ y: 20 }}
+			animate={{ y: 0 }}
 			transition={{ delay, duration: 0.4 }}
 		>
 			<StyledCard
@@ -104,8 +104,8 @@ function InfoCard({ icon: Icon, title, value, delay = 0 }) {
 function SectionHeader({ title, delay = 0 }) {
 	return (
 		<MotionBox
-			initial={{ opacity: 0, x: -20 }}
-			animate={{ opacity: 1, x: 0 }}
+			initial={{ x: -20 }}
+			animate={{ x: 0 }}
 			transition={{ delay, duration: 0.4 }}
 			sx={{ mb: 2, mt: 4 }}
 		>
@@ -237,11 +237,7 @@ export default function Account() {
 		<PageContainer>
 			<Box sx={{ mx: "auto", pb: 4 }}>
 				{/* Header */}
-				<MotionBox
-					initial={{ opacity: 0, y: -10 }}
-					animate={{ opacity: 1, y: 0 }}
-					sx={{ mb: 4 }}
-				>
+				<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 4 }}>
 					<Typography
 						variant="h4"
 						sx={{
@@ -308,243 +304,267 @@ export default function Account() {
 					)
 				)}
 
-				{/* Change Password Section */}
+				{/* Security Section - Change Password & Delete Account */}
 				<SectionHeader
-					title={t("change_password_section_title")}
+					title={t("security_section_title") || "Security"}
 					delay={0.25}
 				/>
 
-				<MotionBox
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.3, duration: 0.4 }}
+				<Box
+					sx={{
+						display: "grid",
+						gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+						gap: 3,
+					}}
 				>
-					<StyledCard variant="default" sx={{ p: 3 }}>
-						<Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-							<Box
-								sx={{
-									width: 48,
-									height: 48,
-									borderRadius: "12px",
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-									background: `linear-gradient(135deg, ${alpha(
-										theme.palette.warning.main,
-										0.15
-									)} 0%, ${alpha(theme.palette.warning.main, 0.05)} 100%)`,
-									border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-								}}
-							>
-								<VpnKeyIcon sx={{ fontSize: 24, color: "warning.main" }} />
-							</Box>
-							<Box>
-								<Typography
-									variant="subtitle1"
-									sx={{
-										fontWeight: 600,
-										color: "text.cardTitle",
-										fontFamily: "Inter, sans-serif",
-									}}
-								>
-									{t("update_password_title")}
-								</Typography>
-								<Typography
-									variant="body2"
-									sx={{
-										color: "text.cardSubtitle",
-										fontFamily: "Inter, sans-serif",
-										fontSize: "0.85rem",
-									}}
-								>
-									{t("update_password_subtitle")}
-								</Typography>
-							</Box>
-						</Box>
-
-						{pwError && (
-							<Alert severity="error" sx={{ mb: 2 }}>
-								{pwError}
-							</Alert>
-						)}
-
-						<Box
-							component="form"
-							onSubmit={handleChangePassword}
-							sx={{ maxWidth: 400 }}
-						>
-							<TextField
-								label={t("current_password")}
-								type={showOldPassword ? "text" : "password"}
-								value={oldPassword}
-								onChange={(e) => setOldPassword(e.target.value)}
-								fullWidth
-								sx={{ mb: 2 }}
-								required
-								InputProps={{
-									startAdornment: (
-										<InputAdornment position="start">
-											<LockIcon sx={{ color: "text.cardSubtitle" }} />
-										</InputAdornment>
-									),
-									endAdornment: (
-										<InputAdornment position="end">
-											<IconButton
-												onClick={() => setShowOldPassword(!showOldPassword)}
-												edge="end"
-												size="small"
-											>
-												{showOldPassword ? (
-													<VisibilityOffIcon />
-												) : (
-													<VisibilityIcon />
-												)}
-											</IconButton>
-										</InputAdornment>
-									),
-								}}
-							/>
-							<TextField
-								label={t("new_password")}
-								type={showNewPassword ? "text" : "password"}
-								value={newPassword}
-								onChange={(e) => setNewPassword(e.target.value)}
-								fullWidth
-								sx={{ mb: 2 }}
-								required
-								helperText={t("password_rule_helper_text")}
-								InputProps={{
-									startAdornment: (
-										<InputAdornment position="start">
-											<LockIcon sx={{ color: "text.cardSubtitle" }} />
-										</InputAdornment>
-									),
-									endAdornment: (
-										<InputAdornment position="end">
-											<IconButton
-												onClick={() => setShowNewPassword(!showNewPassword)}
-												edge="end"
-												size="small"
-											>
-												{showNewPassword ? (
-													<VisibilityOffIcon />
-												) : (
-													<VisibilityIcon />
-												)}
-											</IconButton>
-										</InputAdornment>
-									),
-								}}
-							/>
-							<TextField
-								label={t("new_password_repeat")}
-								type={showNewPasswordRepeat ? "text" : "password"}
-								value={newPasswordRepeat}
-								onChange={(e) => setNewPasswordRepeat(e.target.value)}
-								fullWidth
-								sx={{ mb: 3 }}
-								required
-								InputProps={{
-									startAdornment: (
-										<InputAdornment position="start">
-											<LockIcon sx={{ color: "text.cardSubtitle" }} />
-										</InputAdornment>
-									),
-									endAdornment: (
-										<InputAdornment position="end">
-											<IconButton
-												onClick={() =>
-													setShowNewPasswordRepeat(!showNewPasswordRepeat)
-												}
-												edge="end"
-												size="small"
-											>
-												{showNewPasswordRepeat ? (
-													<VisibilityOffIcon />
-												) : (
-													<VisibilityIcon />
-												)}
-											</IconButton>
-										</InputAdornment>
-									),
-								}}
-							/>
-							<StyledButton
-								type="submit"
-								variant="primary"
-								fullWidth
-								disabled={pwLoading}
-								startIcon={
-									pwLoading ? null : <CheckCircleIcon sx={{ fontSize: 20 }} />
-								}
-							>
-								{pwLoading ? t("changing") : t("change_password_button")}
-							</StyledButton>
-						</Box>
-					</StyledCard>
-				</MotionBox>
-
-				{/* Danger Zone - Delete Account */}
-				<SectionHeader title={t("danger_zone")} delay={0.5} />
-				<MotionBox
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.6, duration: 0.4 }}
-				>
-					<StyledCard
-						variant="default"
-						sx={{
-							p: 3,
-							border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
-							background: alpha(theme.palette.error.main, 0.02),
-						}}
+					{/* Change Password */}
+					<MotionBox
+						initial={{ y: 20 }}
+						animate={{ y: 0 }}
+						transition={{ delay: 0.3, duration: 0.4 }}
+						sx={{ height: "100%" }}
 					>
-						<Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+						<StyledCard variant="default" sx={{ p: 3, height: "100%" }}>
 							<Box
-								sx={{
-									width: 48,
-									height: 48,
-									borderRadius: "12px",
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-									background: alpha(theme.palette.error.main, 0.15),
-									border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
-								}}
+								sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
 							>
-								<DeleteForeverIcon sx={{ fontSize: 24, color: "error.main" }} />
-							</Box>
-							<Box sx={{ flex: 1 }}>
-								<Typography
-									variant="subtitle1"
+								<Box
 									sx={{
-										fontWeight: 600,
-										color: "text.cardTitle",
-										fontFamily: "Inter, sans-serif",
+										width: 48,
+										height: 48,
+										borderRadius: "12px",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										background: `linear-gradient(135deg, ${alpha(
+											theme.palette.warning.main,
+											0.15
+										)} 0%, ${alpha(theme.palette.warning.main, 0.05)} 100%)`,
+										border: `1px solid ${alpha(
+											theme.palette.warning.main,
+											0.2
+										)}`,
 									}}
 								>
-									{t("delete_account_title")}
-								</Typography>
-								<Typography
-									variant="body2"
-									sx={{
-										color: "text.cardSubtitle",
-										fontFamily: "Inter, sans-serif",
-									}}
-								>
-									{t("delete_account_message")}
-								</Typography>
+									<VpnKeyIcon sx={{ fontSize: 24, color: "warning.main" }} />
+								</Box>
+								<Box>
+									<Typography
+										variant="subtitle1"
+										sx={{
+											fontWeight: 600,
+											color: "text.cardTitle",
+											fontFamily: "Inter, sans-serif",
+										}}
+									>
+										{t("update_password_title")}
+									</Typography>
+									<Typography
+										variant="body2"
+										sx={{
+											color: "text.cardSubtitle",
+											fontFamily: "Inter, sans-serif",
+											fontSize: "0.85rem",
+										}}
+									>
+										{t("update_password_subtitle")}
+									</Typography>
+								</Box>
 							</Box>
-						</Box>
-						<StyledButton
-							variant="danger"
-							onClick={() => setDeleteModalOpen(true)}
-							startIcon={<DeleteForeverIcon sx={{ fontSize: 20 }} />}
+
+							{pwError && (
+								<Alert severity="error" sx={{ mb: 2 }}>
+									{pwError}
+								</Alert>
+							)}
+
+							<Box
+								component="form"
+								onSubmit={handleChangePassword}
+								sx={{ maxWidth: 400 }}
+							>
+								<TextField
+									label={t("current_password")}
+									type={showOldPassword ? "text" : "password"}
+									value={oldPassword}
+									onChange={(e) => setOldPassword(e.target.value)}
+									fullWidth
+									sx={{ mb: 2 }}
+									required
+									InputProps={{
+										startAdornment: (
+											<InputAdornment position="start">
+												<LockIcon sx={{ color: "text.cardSubtitle" }} />
+											</InputAdornment>
+										),
+										endAdornment: (
+											<InputAdornment position="end">
+												<IconButton
+													onClick={() => setShowOldPassword(!showOldPassword)}
+													edge="end"
+													size="small"
+												>
+													{showOldPassword ? (
+														<VisibilityOffIcon />
+													) : (
+														<VisibilityIcon />
+													)}
+												</IconButton>
+											</InputAdornment>
+										),
+									}}
+								/>
+								<TextField
+									label={t("new_password")}
+									type={showNewPassword ? "text" : "password"}
+									value={newPassword}
+									onChange={(e) => setNewPassword(e.target.value)}
+									fullWidth
+									sx={{ mb: 2 }}
+									required
+									helperText={t("password_rule_helper_text")}
+									InputProps={{
+										startAdornment: (
+											<InputAdornment position="start">
+												<LockIcon sx={{ color: "text.cardSubtitle" }} />
+											</InputAdornment>
+										),
+										endAdornment: (
+											<InputAdornment position="end">
+												<IconButton
+													onClick={() => setShowNewPassword(!showNewPassword)}
+													edge="end"
+													size="small"
+												>
+													{showNewPassword ? (
+														<VisibilityOffIcon />
+													) : (
+														<VisibilityIcon />
+													)}
+												</IconButton>
+											</InputAdornment>
+										),
+									}}
+								/>
+								<TextField
+									label={t("new_password_repeat")}
+									type={showNewPasswordRepeat ? "text" : "password"}
+									value={newPasswordRepeat}
+									onChange={(e) => setNewPasswordRepeat(e.target.value)}
+									fullWidth
+									sx={{ mb: 3 }}
+									required
+									InputProps={{
+										startAdornment: (
+											<InputAdornment position="start">
+												<LockIcon sx={{ color: "text.cardSubtitle" }} />
+											</InputAdornment>
+										),
+										endAdornment: (
+											<InputAdornment position="end">
+												<IconButton
+													onClick={() =>
+														setShowNewPasswordRepeat(!showNewPasswordRepeat)
+													}
+													edge="end"
+													size="small"
+												>
+													{showNewPasswordRepeat ? (
+														<VisibilityOffIcon />
+													) : (
+														<VisibilityIcon />
+													)}
+												</IconButton>
+											</InputAdornment>
+										),
+									}}
+								/>
+								<StyledButton
+									type="submit"
+									variant="primary"
+									fullWidth
+									disabled={pwLoading}
+									startIcon={
+										pwLoading ? null : <CheckCircleIcon sx={{ fontSize: 20 }} />
+									}
+								>
+									{pwLoading ? t("changing") : t("change_password_button")}
+								</StyledButton>
+							</Box>
+						</StyledCard>
+					</MotionBox>
+
+					{/* Danger Zone - Delete Account */}
+					<MotionBox
+						initial={{ y: 20 }}
+						animate={{ y: 0 }}
+						transition={{ delay: 0.4, duration: 0.4 }}
+						sx={{ height: "100%" }}
+					>
+						<StyledCard
+							variant="default"
+							sx={{
+								p: 3,
+								height: "100%",
+								border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+								background: alpha(theme.palette.error.main, 0.02),
+								display: "flex",
+								flexDirection: "column",
+							}}
 						>
-							{t("delete_account")}
-						</StyledButton>
-					</StyledCard>
-				</MotionBox>
+							<Box
+								sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}
+							>
+								<Box
+									sx={{
+										width: 48,
+										height: 48,
+										borderRadius: "12px",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										background: alpha(theme.palette.error.main, 0.15),
+										border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+									}}
+								>
+									<DeleteForeverIcon
+										sx={{ fontSize: 24, color: "error.main" }}
+									/>
+								</Box>
+								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="subtitle1"
+										sx={{
+											fontWeight: 600,
+											color: "text.cardTitle",
+											fontFamily: "Inter, sans-serif",
+										}}
+									>
+										{t("delete_account_title")}
+									</Typography>
+									<Typography
+										variant="body2"
+										sx={{
+											color: "text.cardSubtitle",
+											fontFamily: "Inter, sans-serif",
+										}}
+									>
+										{t("delete_account_message")}
+									</Typography>
+								</Box>
+							</Box>
+							<Box sx={{ mt: "auto" }}>
+								<StyledButton
+									variant="danger"
+									onClick={() => setDeleteModalOpen(true)}
+									startIcon={<DeleteForeverIcon sx={{ fontSize: 20 }} />}
+								>
+									{t("delete_account")}
+								</StyledButton>
+							</Box>
+						</StyledCard>
+					</MotionBox>
+				</Box>
 			</Box>
 
 			{/* Delete Account Confirmation Modal */}

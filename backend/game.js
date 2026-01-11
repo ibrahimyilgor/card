@@ -1,6 +1,16 @@
 const express = require("express");
 const authenticateToken = require("./middleware/authenticateToken");
 
+// Fisher-Yates shuffle - proper random distribution
+function shuffleArray(array) {
+	const shuffled = [...array];
+	for (let i = shuffled.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+	}
+	return shuffled;
+}
+
 module.exports = (pool) => {
 	const router = express.Router();
 
@@ -108,9 +118,7 @@ module.exports = (pool) => {
 			const flashcardsWithOptions = flashcards.map((card, index) => {
 				// Get 3 random wrong answers from other cards
 				const otherCards = flashcards.filter((_, i) => i !== index);
-				const shuffledOthers = otherCards
-					.sort(() => Math.random() - 0.5)
-					.slice(0, 3);
+				const shuffledOthers = shuffleArray(otherCards).slice(0, 3);
 
 				// Create options array with correct answer and wrong answers
 				const options = [
@@ -121,8 +129,8 @@ module.exports = (pool) => {
 					})),
 				];
 
-				// Shuffle options
-				const shuffledOptions = options.sort(() => Math.random() - 0.5);
+				// Shuffle options with Fisher-Yates for proper distribution
+				const shuffledOptions = shuffleArray(options);
 
 				return {
 					...card,

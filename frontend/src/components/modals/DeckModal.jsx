@@ -105,8 +105,8 @@ export default function DeckModal({
 				/>
 
 				<MotionBox
-					initial={{ opacity: 0, height: 0 }}
-					animate={{ opacity: 1, height: "auto" }}
+					initial={{ height: 0 }}
+					animate={{ height: "auto" }}
 					transition={{ duration: 0.3 }}
 				>
 					<Box
@@ -193,9 +193,9 @@ export default function DeckModal({
 				<AnimatePresence initial={false}>
 					{error && (
 						<MotionBox
-							initial={{ opacity: 0, y: -10 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -10 }}
+							initial={{ y: -10 }}
+							animate={{ y: 0 }}
+							exit={{ y: -10 }}
 							sx={{
 								p: 2,
 								borderRadius: 2,

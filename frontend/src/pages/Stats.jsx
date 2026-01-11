@@ -88,8 +88,8 @@ const StatCard = ({
 	trend,
 }) => (
 	<MotionBox
-		initial={{ opacity: 0, y: 20 }}
-		animate={{ opacity: 1, y: 0 }}
+		initial={{ y: 20 }}
+		animate={{ y: 0 }}
 		transition={{ duration: 0.4, delay }}
 	>
 		<StyledCard variant="default" padding={3}>
@@ -482,11 +482,7 @@ export default function Stats() {
 	return (
 		<PageContainer>
 			{/* Header */}
-			<MotionBox
-				initial={{ opacity: 0, y: -10 }}
-				animate={{ opacity: 1, y: 0 }}
-				sx={{ mb: 3 }}
-			>
+			<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 3 }}>
 				<Box
 					sx={{
 						display: "flex",
@@ -628,8 +624,8 @@ export default function Stats() {
 			{/* Insights Row */}
 			{insights && (
 				<MotionBox
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
+					initial={{ y: 20 }}
+					animate={{ y: 0 }}
 					transition={{ delay: 0.3 }}
 					sx={{ mb: 3 }}
 				>
@@ -707,7 +703,12 @@ export default function Stats() {
 			)}
 
 			{/* Period Filter */}
-			<Box sx={{ mb: 3, display: "flex", justifyContent: "flex-start" }}>
+			<MotionBox
+				initial={{ opacity: 0, y: 20 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.3, delay: 0.4 }}
+				sx={{ mb: 3, display: "flex", justifyContent: "flex-start" }}
+			>
 				<ToggleButtonGroup
 					value={period}
 					exclusive
@@ -734,7 +735,7 @@ export default function Stats() {
 						{t("all_time_short") || "All"}
 					</ToggleButton>
 				</ToggleButtonGroup>
-			</Box>
+			</MotionBox>
 
 			{/* Tabs */}
 			<Box sx={{ mb: 3 }}>
@@ -770,8 +771,8 @@ export default function Stats() {
 						}}
 					>
 						<MotionBox
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
+							initial={{ y: 20 }}
+							animate={{ y: 0 }}
 							transition={{ delay: 0.4 }}
 						>
 							<StyledCard variant="default" padding={3}>
@@ -793,8 +794,8 @@ export default function Stats() {
 						</MotionBox>
 
 						<MotionBox
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
+							initial={{ y: 20 }}
+							animate={{ y: 0 }}
 							transition={{ delay: 0.5 }}
 						>
 							<StyledCard variant="default" padding={3}>
@@ -833,8 +834,8 @@ export default function Stats() {
 						}}
 					>
 						<MotionBox
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
+							initial={{ y: 20 }}
+							animate={{ y: 0 }}
 							transition={{ delay: 0.6 }}
 						>
 							<StyledCard variant="default" padding={3}>
@@ -869,8 +870,8 @@ export default function Stats() {
 						</MotionBox>
 
 						<MotionBox
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
+							initial={{ y: 20 }}
+							animate={{ y: 0 }}
 							transition={{ delay: 0.7 }}
 						>
 							<StyledCard variant="default" padding={3}>
@@ -910,8 +911,8 @@ export default function Stats() {
 
 					{/* Deck Performance */}
 					<MotionBox
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
+						initial={{ y: 20 }}
+						animate={{ y: 0 }}
 						transition={{ delay: 0.8 }}
 					>
 						<StyledCard variant="default" padding={3}>

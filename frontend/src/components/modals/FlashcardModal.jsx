@@ -32,9 +32,9 @@ function FlashcardItem({ flashcard, onEdit, onDelete, index }) {
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			exit={{ opacity: 0, x: -100 }}
+			initial={{ y: 20 }}
+			animate={{ y: 0 }}
+			exit={{ x: -100 }}
 			transition={{ delay: index * 0.05, duration: 0.3 }}
 			layout
 		>
@@ -283,8 +283,8 @@ export default function FlashcardModal({
 				{/* Card count badge */}
 				{!loading && flashcards.length > 0 && (
 					<MotionBox
-						initial={{ opacity: 0, y: -10 }}
-						animate={{ opacity: 1, y: 0 }}
+						initial={{ y: -10 }}
+						animate={{ y: 0 }}
 						sx={{
 							display: "inline-flex",
 							alignItems: "center",

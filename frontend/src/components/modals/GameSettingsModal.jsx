@@ -56,8 +56,8 @@ function SettingOption({
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, x: -20 }}
-			animate={{ opacity: 1, x: 0 }}
+			initial={{ x: -20 }}
+			animate={{ x: 0 }}
 			transition={{ delay, duration: 0.3 }}
 			sx={{
 				p: 2.5,
@@ -335,8 +335,8 @@ export default function GameSettingsModal({
 					{/* Mode description */}
 					<MotionBox
 						key={settings.mode}
-						initial={{ opacity: 0, y: 5 }}
-						animate={{ opacity: 1, y: 0 }}
+						initial={{ y: 5 }}
+						animate={{ y: 0 }}
 						sx={{
 							mt: 2,
 							p: 2,
@@ -364,9 +364,9 @@ export default function GameSettingsModal({
 				{/* Mode-specific settings */}
 				{settings.mode === "timed" && (
 					<MotionBox
-						initial={{ opacity: 0, height: 0 }}
-						animate={{ opacity: 1, height: "auto" }}
-						exit={{ opacity: 0, height: 0 }}
+						initial={{ height: 0 }}
+						animate={{ height: "auto" }}
+						exit={{ height: 0 }}
 					>
 						<SettingOption
 							icon={TimerIcon}
@@ -400,9 +400,9 @@ export default function GameSettingsModal({
 
 				{settings.mode === "survival" && (
 					<MotionBox
-						initial={{ opacity: 0, height: 0 }}
-						animate={{ opacity: 1, height: "auto" }}
-						exit={{ opacity: 0, height: 0 }}
+						initial={{ height: 0 }}
+						animate={{ height: "auto" }}
+						exit={{ height: 0 }}
 					>
 						<SettingOption
 							icon={FavoriteIcon}
@@ -509,8 +509,8 @@ export default function GameSettingsModal({
 
 				{/* Keyboard shortcuts info */}
 				<MotionBox
-					initial={{ opacity: 0, y: 10 }}
-					animate={{ opacity: 1, y: 0 }}
+					initial={{ y: 10 }}
+					animate={{ y: 0 }}
 					transition={{ delay: 0.2, duration: 0.3 }}
 					sx={{
 						p: 2,

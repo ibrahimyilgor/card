@@ -108,9 +108,9 @@ export default function WriteInput({
 					<AnimatePresence initial={false}>
 						{showHint && !showResult && (
 							<MotionBox
-								initial={{ opacity: 0, height: 0 }}
-								animate={{ opacity: 1, height: "auto" }}
-								exit={{ opacity: 0, height: 0 }}
+								initial={{ height: 0 }}
+								animate={{ height: "auto" }}
+								exit={{ height: 0 }}
 								sx={{
 									p: 2,
 									borderRadius: 2,
@@ -137,9 +137,9 @@ export default function WriteInput({
 					<AnimatePresence initial={false}>
 						{showResult && (
 							<MotionBox
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: -20 }}
+								initial={{ y: 20 }}
+								animate={{ y: 0 }}
+								exit={{ y: -20 }}
 								sx={{
 									p: 3,
 									borderRadius: 3,
