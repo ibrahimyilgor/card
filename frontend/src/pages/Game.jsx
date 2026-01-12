@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
 	getGameFlashcards,
 	getHardFlashcards,
@@ -11,92 +11,40 @@ import {
 import { recordSession } from "../services/statsServices";
 import { checkAchievements } from "../services/achievementServices";
 import { AchievementContext } from "../context/AchievementContext";
-import {
-	Box,
-	Typography,
-	LinearProgress,
-	Tooltip,
-	alpha,
-	useTheme,
-} from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
+import { Box, Typography } from "@mui/material";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import SpaceBarIcon from "@mui/icons-material/SpaceBar";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import TimerIcon from "@mui/icons-material/Timer";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import FlashCard from "../components/FlashCard";
+import StyleIcon from "@mui/icons-material/Style";
 import GameSummary from "../components/GameSummary";
 import GameSettingsModal from "../components/modals/GameSettingsModal";
 import {
-	TimerDisplay,
-	LivesDisplay,
-	WriteInput,
-	MultipleChoice,
-	MatchGrid,
+	KeyboardHint,
+	GameProgress,
+	AnswerButtons,
+	GameHeader,
+	CardView,
+	WriteView,
+	MultipleChoiceView,
+	MatchView,
 } from "../components/game";
 import { useGameTimer, useGameLives } from "../hooks";
 import { I18nContext } from "../utils/i18n";
-import { PageContainer, StyledButton, EmptyState } from "../components/ui";
-import StyleIcon from "@mui/icons-material/Style";
+import { PageContainer, EmptyState } from "../components/ui";
 import { playSound, SOUNDS } from "../utils/sounds";
 
 const MotionBox = motion.create(Box);
 
-// Keyboard hint component
-const KeyboardHint = ({ icon: Icon, label }) => (
-	<Box
-		sx={{
-			display: "flex",
-			alignItems: "center",
-			gap: 0.75,
-			color: "text.cardSubtitle",
-			fontSize: "0.75rem",
-			fontFamily: "Inter, sans-serif",
-		}}
-	>
-		<Box
-			sx={{
-				width: 28,
-				height: 28,
-				borderRadius: "8px",
-				bgcolor: (theme) =>
-					theme.palette.mode === "dark"
-						? "rgba(255, 255, 255, 0.08)"
-						: "rgba(0, 0, 0, 0.06)",
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				border: (theme) =>
-					`1px solid ${
-						theme.palette.mode === "dark"
-							? "rgba(255, 255, 255, 0.1)"
-							: "rgba(0, 0, 0, 0.1)"
-					}`,
-			}}
-		>
-			<Icon sx={{ fontSize: 16 }} />
-		</Box>
-		<Typography variant="caption" sx={{ color: "inherit" }}>
-			{label}
-		</Typography>
-	</Box>
-);
-
 export default function Game({ onBackToDecks }) {
 	const { deckId } = useParams();
 	const location = useLocation();
-	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 	const { processNewAchievements } = useContext(AchievementContext);
 
 	// Get initial settings from navigation state, then manage locally
 	const initialSettings = location.state?.settings || {
 		mode: "standard",
-		timeLimit: 10,
+		timeLimit: 60,
 		lives: 3,
 		cardDirection: "normal",
 		hardModeEnabled: false,
@@ -130,14 +78,13 @@ export default function Game({ onBackToDecks }) {
 	const timer = useGameTimer(settings.timeLimit || 10, gameMode === "timed");
 	const lives = useGameLives(settings.lives || 3);
 
+	// Fetch flashcards
 	const fetchFlashcards = useCallback(async () => {
 		setLoading(true);
 		try {
 			let res;
 
-			// Choose endpoint based on game mode and settings
 			if (hardModeEnabled) {
-				// Hard mode: only study hard cards
 				res = await getHardFlashcards(deckId);
 			} else if (gameMode === "multiple_choice") {
 				res = await getFlashcardsWithOptions(deckId);
@@ -148,7 +95,6 @@ export default function Game({ onBackToDecks }) {
 			if (res.data && Array.isArray(res.data.flashcards)) {
 				let cards = [...res.data.flashcards];
 
-				// Don't shuffle for match mode (it handles its own shuffling)
 				if (gameMode !== "match") {
 					cards = cards.sort(() => Math.random() - 0.5);
 				}
@@ -178,17 +124,23 @@ export default function Game({ onBackToDecks }) {
 
 	// Start timer when cards load for timed mode
 	useEffect(() => {
-		if (!loading && flashcards.length > 0 && gameMode === "timed") {
+		if (
+			!loading &&
+			flashcards.length > 0 &&
+			gameMode === "timed" &&
+			!timer.isRunning
+		) {
 			timer.restart(settings.timeLimit);
 		}
-	}, [loading, flashcards.length, gameMode, currentCardIndex]);
+	}, [loading, flashcards.length, gameMode]);
 
 	// Handle timer expiration
 	useEffect(() => {
-		if (timer.hasExpired && gameMode === "timed") {
-			handleAnswer(false);
+		if (timer.hasExpired && gameMode === "timed" && !gameEnded) {
+			playSound(SOUNDS.GAME_OVER);
+			setGameEnded(true);
 		}
-	}, [timer.hasExpired]);
+	}, [timer.hasExpired, gameMode, gameEnded]);
 
 	// Handle game over in survival mode
 	useEffect(() => {
@@ -207,14 +159,12 @@ export default function Game({ onBackToDecks }) {
 					? flashcards.length
 					: scores.correct + scores.incorrect;
 
-			// Calculate accuracy percentage
 			const totalAnswers = scores.correct + scores.incorrect;
 			const accuracy =
 				totalAnswers > 0
 					? Math.round((scores.correct / totalAnswers) * 100)
 					: 0;
 
-			// Record session
 			recordSession({
 				deckId: parseInt(deckId),
 				gameMode,
@@ -224,7 +174,6 @@ export default function Game({ onBackToDecks }) {
 				durationSeconds,
 			}).catch((err) => console.error("Error recording session:", err));
 
-			// Check for achievements
 			checkAchievements({
 				accuracy,
 				cardsStudied,
@@ -238,17 +187,14 @@ export default function Game({ onBackToDecks }) {
 		}
 	}, [gameEnded]);
 
+	// Handle answer
 	const handleAnswer = useCallback(
 		async (isCorrect) => {
-			// Prevent action if game already ended
 			if (gameEnded) return;
 
 			setDirection(isCorrect ? 1 : -1);
-
-			// Play sound effect
 			playSound(isCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
 
-			// Update stats in database
 			if (flashcards[currentCardIndex]?.id) {
 				try {
 					await updateFlashcardStats(
@@ -264,7 +210,6 @@ export default function Game({ onBackToDecks }) {
 				setScores((prev) => ({ ...prev, correct: prev.correct + 1 }));
 			} else {
 				setScores((prev) => ({ ...prev, incorrect: prev.incorrect + 1 }));
-				// Lose a life in survival mode
 				if (gameMode === "survival") {
 					lives.loseLife();
 					if (lives.lives <= 1) {
@@ -280,30 +225,28 @@ export default function Game({ onBackToDecks }) {
 				setWriteResult(null);
 				setSelectedChoice(null);
 				setShowChoiceResult(false);
-
-				// Reset timer for timed mode
-				if (gameMode === "timed") {
-					timer.restart(settings.timeLimit);
-				}
 			} else {
-				// Game completed - play success sound
-				playSound(SOUNDS.SUCCESS);
-				// Stop timer before ending game
-				if (gameMode === "timed") {
-					timer.pause();
+				if (gameMode === "timed" || gameMode === "survival") {
+					setFlashcards((prev) => {
+						const shuffled = [...prev];
+						for (let i = shuffled.length - 1; i > 0; i--) {
+							const j = Math.floor(Math.random() * (i + 1));
+							[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+						}
+						return shuffled;
+					});
+					setCurrentCardIndex(0);
+					setIsCardFlipped(false);
+					setWriteResult(null);
+					setSelectedChoice(null);
+					setShowChoiceResult(false);
+				} else {
+					playSound(SOUNDS.SUCCESS);
+					setGameEnded(true);
 				}
-				setGameEnded(true);
 			}
 		},
-		[
-			currentCardIndex,
-			flashcards,
-			gameMode,
-			lives,
-			timer,
-			settings.timeLimit,
-			gameEnded,
-		]
+		[currentCardIndex, flashcards, gameMode, lives, gameEnded]
 	);
 
 	const handleCardFlip = useCallback(() => {
@@ -326,7 +269,6 @@ export default function Game({ onBackToDecks }) {
 		fetchFlashcards();
 	}, [fetchFlashcards, lives, timer, settings]);
 
-	// Handle starting game with new settings from modal
 	const handleStartWithNewSettings = useCallback(
 		(newSettings) => {
 			setSettings(newSettings);
@@ -343,19 +285,15 @@ export default function Game({ onBackToDecks }) {
 			setGameStartTime(Date.now());
 			lives.reset(newSettings.lives || 3);
 			timer.reset(newSettings.timeLimit || 10);
-			// Fetch will be triggered by settings change via useEffect
 		},
 		[lives, timer]
 	);
 
-	// Handle write mode submission
 	const handleWriteSubmit = async (userAnswer) => {
 		const flashcard = flashcards[currentCardIndex];
 		try {
 			const res = await validateAnswer(flashcard.id, userAnswer);
 			setWriteResult(res.data);
-
-			// Auto-advance after showing result
 			setTimeout(() => {
 				handleAnswer(res.data.correct);
 			}, 2000);
@@ -364,18 +302,14 @@ export default function Game({ onBackToDecks }) {
 		}
 	};
 
-	// Handle multiple choice selection
 	const handleChoiceSelect = (index, isCorrect) => {
 		setSelectedChoice(index);
 		setShowChoiceResult(true);
-
-		// Auto-advance after showing result
 		setTimeout(() => {
 			handleAnswer(isCorrect);
 		}, 1500);
 	};
 
-	// Handle match mode completion
 	const handleMatchComplete = ({ attempts }) => {
 		playSound(SOUNDS.SUCCESS);
 		setGameStats((prev) => ({ ...prev, matchAttempts: attempts }));
@@ -387,10 +321,8 @@ export default function Game({ onBackToDecks }) {
 		const handleKeyDown = (e) => {
 			if (gameEnded || loading || flashcards.length === 0) return;
 
-			// Don't handle keys if in write mode and not showing result
 			if (gameMode === "write" && !writeResult) return;
 
-			// Handle number keys for multiple choice
 			if (gameMode === "multiple_choice" && !showChoiceResult) {
 				if (["1", "2", "3", "4"].includes(e.key)) {
 					const index = parseInt(e.key) - 1;
@@ -446,12 +378,10 @@ export default function Game({ onBackToDecks }) {
 			? ((currentCardIndex + 1) / flashcards.length) * 100
 			: 0;
 
-	// Get current card with card direction handling
 	const getCurrentCard = () => {
 		const card = flashcards[currentCardIndex];
 		if (!card) return { front: "", back: "" };
 
-		// Reverse card direction if setting is "reverse"
 		if (cardDirection === "reverse") {
 			return { front: card.back_text, back: card.front_text };
 		}
@@ -502,6 +432,7 @@ export default function Game({ onBackToDecks }) {
 		);
 	}
 
+	// Empty state
 	if (flashcards.length === 0) {
 		return (
 			<PageContainer centered>
@@ -526,6 +457,7 @@ export default function Game({ onBackToDecks }) {
 		);
 	}
 
+	// Game ended - show summary
 	if (gameEnded) {
 		return (
 			<PageContainer centered>
@@ -539,6 +471,7 @@ export default function Game({ onBackToDecks }) {
 					livesRemaining={lives.lives}
 					maxLives={lives.maxLives}
 					matchAttempts={gameStats.matchAttempts}
+					matchPairs={Math.min(flashcards.length, 6)}
 				/>
 				<GameSettingsModal
 					open={showSettingsModal}
@@ -550,68 +483,19 @@ export default function Game({ onBackToDecks }) {
 		);
 	}
 
-	// Match mode has its own UI
+	// Match mode
 	if (gameMode === "match") {
 		return (
-			<PageContainer
-				sx={{
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					py: 4,
+			<MatchView
+				flashcards={flashcards}
+				onBackToDecks={onBackToDecks}
+				onRestart={handleRestart}
+				onMatchComplete={handleMatchComplete}
+				onMatch={(isCorrect) => {
+					playSound(isCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
 				}}
-			>
-				<MotionBox
-					initial={{ y: -20 }}
-					animate={{ y: 0 }}
-					sx={{ width: "100%", maxWidth: 800, mb: 4 }}
-				>
-					<Box
-						sx={{
-							display: "flex",
-							justifyContent: "space-between",
-							alignItems: "center",
-						}}
-					>
-						<StyledButton
-							variant="ghost"
-							startIcon={<ArrowBackIcon />}
-							onClick={onBackToDecks}
-						>
-							{t("exit") || "Exit"}
-						</StyledButton>
-						<Typography
-							variant="h5"
-							sx={{
-								color: "text.cardTitle",
-								fontWeight: 700,
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{t("mode_match") || "Match Mode"}
-						</Typography>
-						<StyledButton
-							variant="ghost"
-							startIcon={<RefreshIcon />}
-							onClick={handleRestart}
-						>
-							{t("restart") || "Restart"}
-						</StyledButton>
-					</Box>
-				</MotionBox>
-
-				<MatchGrid
-					flashcards={flashcards}
-					onComplete={handleMatchComplete}
-					onMatch={(isCorrect) => {
-						// Play sound effect
-						playSound(isCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
-						if (isCorrect) {
-							setScores((prev) => ({ ...prev, correct: prev.correct + 1 }));
-						}
-					}}
-				/>
-			</PageContainer>
+				t={t}
+			/>
 		);
 	}
 
@@ -634,133 +518,27 @@ export default function Game({ onBackToDecks }) {
 				animate={{ y: 0 }}
 				sx={{ width: "100%", maxWidth: 500 }}
 			>
-				<Box
-					sx={{
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
-						mb: 1.5,
-					}}
-				>
-					<Tooltip title={t("back_to_decks") || "Back to decks"}>
-						<StyledButton
-							variant="ghost"
-							size="small"
-							startIcon={<ArrowBackIcon />}
-							onClick={onBackToDecks}
-						>
-							{t("exit") || "Exit"}
-						</StyledButton>
-					</Tooltip>
-
-					{/* Mode-specific indicators */}
-					<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-						{gameMode === "timed" && (
-							<TimerDisplay
-								timeLeft={timer.timeLeft}
-								totalTime={settings.timeLimit}
-							/>
-						)}
-						{gameMode === "survival" && (
-							<LivesDisplay lives={lives.lives} maxLives={lives.maxLives} />
-						)}
-						<Typography
-							variant="body1"
-							sx={{
-								color: "text.cardTitle",
-								fontWeight: 600,
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{currentCardIndex + 1} / {flashcards.length}
-						</Typography>
-					</Box>
-
-					<Tooltip title={t("restart_game") || "Restart"}>
-						<StyledButton
-							variant="ghost"
-							size="small"
-							startIcon={<RefreshIcon />}
-							onClick={handleRestart}
-						>
-							{t("restart") || "Restart"}
-						</StyledButton>
-					</Tooltip>
-				</Box>
-
-				<LinearProgress
-					variant="determinate"
-					value={progress}
-					sx={{
-						height: 8,
-						borderRadius: 4,
-						bgcolor: (theme) =>
-							theme.palette.mode === "dark"
-								? "rgba(255, 255, 255, 0.08)"
-								: "rgba(0, 0, 0, 0.08)",
-						"& .MuiLinearProgress-bar": {
-							borderRadius: 4,
-							background:
-								gameMode === "timed"
-									? "linear-gradient(90deg, #f59e0b 0%, #ef4444 100%)"
-									: gameMode === "survival"
-									? "linear-gradient(90deg, #ef4444 0%, #dc2626 100%)"
-									: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
-						},
-					}}
+				<GameHeader
+					gameMode={gameMode}
+					currentCardIndex={currentCardIndex}
+					flashcardsLength={flashcards.length}
+					timer={timer}
+					lives={lives}
+					settings={settings}
+					onBackToDecks={onBackToDecks}
+					onRestart={handleRestart}
+					t={t}
 				/>
 
-				{/* Score indicators */}
-				<Box
-					sx={{
-						display: "flex",
-						justifyContent: "center",
-						gap: 4,
-						mt: 2,
-					}}
-				>
-					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-						<Box
-							sx={{
-								width: 12,
-								height: 12,
-								borderRadius: "50%",
-								bgcolor: "success.main",
-							}}
-						/>
-						<Typography
-							variant="body2"
-							sx={{
-								color: "text.cardSubtitle",
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{scores.correct} {t("correct") || "correct"}
-						</Typography>
-					</Box>
-					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-						<Box
-							sx={{
-								width: 12,
-								height: 12,
-								borderRadius: "50%",
-								bgcolor: "error.main",
-							}}
-						/>
-						<Typography
-							variant="body2"
-							sx={{
-								color: "text.cardSubtitle",
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{scores.incorrect} {t("incorrect_label") || "incorrect"}
-						</Typography>
-					</Box>
-				</Box>
+				<GameProgress
+					scores={scores}
+					progress={progress}
+					gameMode={gameMode}
+					t={t}
+				/>
 			</MotionBox>
 
-			{/* Card Area - Different for each mode */}
+			{/* Card Area */}
 			<Box
 				sx={{
 					position: "relative",
@@ -774,192 +552,42 @@ export default function Game({ onBackToDecks }) {
 					gap: 3,
 				}}
 			>
-				{/* Standard, Timed, Survival, Reverse modes - Show FlashCard */}
+				{/* Standard, Timed, Survival, Reverse modes */}
 				{["standard", "timed", "survival", "reverse"].includes(gameMode) && (
-					<AnimatePresence mode="wait" initial={false}>
-						<MotionBox
-							key={currentCardIndex}
-							initial={{
-								opacity: 0,
-								x: direction * 100,
-								scale: 0.95,
-							}}
-							animate={{
-								opacity: 1,
-								x: 0,
-								scale: 1,
-							}}
-							exit={{
-								opacity: 0,
-								x: direction * -100,
-								scale: 0.95,
-							}}
-							transition={{
-								duration: 0.3,
-								ease: "easeOut",
-							}}
-						>
-							<FlashCard
-								front={currentCard.front}
-								back={currentCard.back}
-								isFlipped={isCardFlipped}
-								onFlip={handleCardFlip}
-							/>
-						</MotionBox>
-					</AnimatePresence>
+					<CardView
+						currentCardIndex={currentCardIndex}
+						currentCard={currentCard}
+						isCardFlipped={isCardFlipped}
+						onCardFlip={handleCardFlip}
+						direction={direction}
+					/>
 				)}
 
 				{/* Write Mode */}
 				{gameMode === "write" && (
-					<AnimatePresence mode="wait" initial={false}>
-						<MotionBox
-							key={currentCardIndex}
-							initial={{ y: 20 }}
-							animate={{ y: 0 }}
-							exit={{ y: -20 }}
-							sx={{
-								display: "flex",
-								flexDirection: "column",
-								alignItems: "center",
-								gap: 3,
-								width: "100%",
-							}}
-						>
-							{/* Question */}
-							<Box
-								sx={{
-									p: 4,
-									borderRadius: 4,
-									background: (theme) =>
-										theme.palette.mode === "dark"
-											? "linear-gradient(145deg, #1a1f2e 0%, #111827 100%)"
-											: "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)",
-									border: (theme) =>
-										`1px solid ${
-											theme.palette.mode === "dark"
-												? "rgba(255, 255, 255, 0.08)"
-												: "rgba(0, 0, 0, 0.08)"
-										}`,
-									textAlign: "center",
-									width: "100%",
-									maxWidth: 500,
-								}}
-							>
-								<Typography
-									variant="h5"
-									sx={{
-										color: "text.cardTitle",
-										fontWeight: 600,
-										fontFamily: "Inter, sans-serif",
-									}}
-								>
-									{currentCard.front}
-								</Typography>
-							</Box>
-
-							{/* Write Input */}
-							<WriteInput
-								onSubmit={handleWriteSubmit}
-								correctAnswer={currentCard.back}
-								showResult={!!writeResult}
-								isCorrect={writeResult?.correct}
-								isClose={writeResult?.isClose}
-								disabled={!!writeResult}
-							/>
-						</MotionBox>
-					</AnimatePresence>
+					<WriteView
+						currentCardIndex={currentCardIndex}
+						currentCard={currentCard}
+						writeResult={writeResult}
+						onWriteSubmit={handleWriteSubmit}
+					/>
 				)}
 
 				{/* Multiple Choice Mode */}
 				{gameMode === "multiple_choice" && (
-					<AnimatePresence mode="wait" initial={false}>
-						<MotionBox
-							key={currentCardIndex}
-							initial={{ y: 20 }}
-							animate={{ y: 0 }}
-							exit={{ y: -20 }}
-							sx={{
-								display: "flex",
-								flexDirection: "column",
-								alignItems: "center",
-								gap: 3,
-								width: "100%",
-							}}
-						>
-							{/* Question */}
-							<Box
-								sx={{
-									p: 4,
-									borderRadius: 4,
-									background: (theme) =>
-										theme.palette.mode === "dark"
-											? "linear-gradient(145deg, #1a1f2e 0%, #111827 100%)"
-											: "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)",
-									border: (theme) =>
-										`1px solid ${
-											theme.palette.mode === "dark"
-												? "rgba(255, 255, 255, 0.08)"
-												: "rgba(0, 0, 0, 0.08)"
-										}`,
-									textAlign: "center",
-									width: "100%",
-								}}
-							>
-								<Typography
-									variant="h5"
-									sx={{
-										color: "text.cardTitle",
-										fontWeight: 600,
-										fontFamily: "Inter, sans-serif",
-									}}
-								>
-									{flashcards[currentCardIndex]?.front_text}
-								</Typography>
-							</Box>
-
-							{/* Options */}
-							<MultipleChoice
-								options={flashcards[currentCardIndex]?.options || []}
-								onSelect={handleChoiceSelect}
-								disabled={showChoiceResult}
-								showResult={showChoiceResult}
-								selectedIndex={selectedChoice}
-							/>
-						</MotionBox>
-					</AnimatePresence>
+					<MultipleChoiceView
+						currentCardIndex={currentCardIndex}
+						flashcard={flashcards[currentCardIndex]}
+						selectedChoice={selectedChoice}
+						showChoiceResult={showChoiceResult}
+						onChoiceSelect={handleChoiceSelect}
+					/>
 				)}
 			</Box>
 
-			{/* Answer Buttons - Only for standard, timed, survival, reverse modes */}
+			{/* Answer Buttons */}
 			{["standard", "timed", "survival", "reverse"].includes(gameMode) && (
-				<MotionBox
-					initial={{ y: 20 }}
-					animate={{ y: 0 }}
-					transition={{ delay: 0.2 }}
-					sx={{
-						display: "flex",
-						gap: 3,
-					}}
-				>
-					<StyledButton
-						variant="danger"
-						size="large"
-						startIcon={<CloseIcon />}
-						onClick={() => handleAnswer(false)}
-						sx={{ minWidth: 140 }}
-					>
-						{t("incorrect") || "Incorrect"}
-					</StyledButton>
-					<StyledButton
-						variant="success"
-						size="large"
-						startIcon={<CheckIcon />}
-						onClick={() => handleAnswer(true)}
-						sx={{ minWidth: 140 }}
-					>
-						{t("correct") || "Correct"}
-					</StyledButton>
-				</MotionBox>
+				<AnswerButtons onAnswer={handleAnswer} t={t} />
 			)}
 
 			{/* Keyboard Hints */}

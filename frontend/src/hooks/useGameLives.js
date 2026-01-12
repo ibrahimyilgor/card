@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 
 export default function useGameLives(initialLives = 3) {
 	const [lives, setLives] = useState(initialLives);
-	const [maxLives] = useState(initialLives);
+	const [maxLives, setMaxLives] = useState(initialLives);
 	const [isGameOver, setIsGameOver] = useState(false);
 
 	// Lose a life
@@ -21,13 +21,18 @@ export default function useGameLives(initialLives = 3) {
 		setLives((prev) => Math.min(maxLives, prev + 1));
 	}, [maxLives]);
 
-	// Reset lives
+	// Reset lives (also updates maxLives if a new value is provided)
 	const reset = useCallback(
-		(newLives = initialLives) => {
-			setLives(newLives);
+		(newLives) => {
+			if (newLives !== undefined) {
+				setLives(newLives);
+				setMaxLives(newLives);
+			} else {
+				setLives(maxLives);
+			}
 			setIsGameOver(false);
 		},
-		[initialLives]
+		[maxLives]
 	);
 
 	// Check if player is alive

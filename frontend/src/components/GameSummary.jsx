@@ -26,27 +26,28 @@ function StatItem({ value, label, color, icon: Icon, delay = 0 }) {
 			transition={{ delay, duration: 0.4 }}
 			sx={{
 				textAlign: "center",
-				p: 2,
-				borderRadius: 3,
+				p: { xs: 1, sm: 1.5, md: 2 },
+				borderRadius: { xs: 2, sm: 3 },
 				background: alpha(color, 0.08),
 				border: `1px solid ${alpha(color, 0.2)}`,
-				minWidth: 100,
+				minWidth: { xs: 60, sm: 80, md: 90 },
+				flex: "1 1 0",
 			}}
 		>
 			<Box
 				sx={{
-					width: 40,
-					height: 40,
-					borderRadius: "10px",
+					width: { xs: 28, sm: 36, md: 40 },
+					height: { xs: 28, sm: 36, md: 40 },
+					borderRadius: { xs: "8px", sm: "10px" },
 					display: "flex",
 					alignItems: "center",
 					justifyContent: "center",
 					background: alpha(color, 0.15),
 					mx: "auto",
-					mb: 1.5,
+					mb: { xs: 0.5, sm: 1 },
 				}}
 			>
-				<Icon sx={{ fontSize: 22, color }} />
+				<Icon sx={{ fontSize: { xs: 16, sm: 20, md: 22 }, color }} />
 			</Box>
 			<Typography
 				variant="h5"
@@ -54,7 +55,8 @@ function StatItem({ value, label, color, icon: Icon, delay = 0 }) {
 					fontWeight: 700,
 					color,
 					fontFamily: "Inter, sans-serif",
-					mb: 0.5,
+					mb: 0.25,
+					fontSize: { xs: "0.95rem", sm: "1.2rem", md: "1.5rem" },
 				}}
 			>
 				{value}
@@ -65,6 +67,7 @@ function StatItem({ value, label, color, icon: Icon, delay = 0 }) {
 					color: "text.cardSubtitle",
 					fontFamily: "Inter, sans-serif",
 					fontWeight: 500,
+					fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.75rem" },
 				}}
 			>
 				{label}
@@ -83,11 +86,20 @@ export default function GameSummary({
 	livesRemaining = 0,
 	maxLives = 3,
 	matchAttempts = 0,
+	matchPairs = 0,
 }) {
 	const theme = useTheme();
 	const totalCards = correctCount + incorrectCount;
+	// Match mode: accuracy = pairs / attempts (perfect = 100%)
+	// Other modes: accuracy = correct / total
 	const percentage =
-		totalCards > 0 ? Math.round((correctCount / totalCards) * 100) : 0;
+		gameMode === "match"
+			? matchAttempts > 0
+				? Math.round((matchPairs / matchAttempts) * 100)
+				: 0
+			: totalCards > 0
+			? Math.round((correctCount / totalCards) * 100)
+			: 0;
 	const { t } = useContext(I18nContext);
 
 	// Determine grade and message based on percentage and mode
@@ -145,7 +157,7 @@ export default function GameSummary({
 				alignItems: "center",
 				gap: 3,
 				p: 3,
-				maxWidth: 500,
+				maxWidth: 600,
 				mx: "auto",
 			}}
 		>
@@ -311,8 +323,11 @@ export default function GameSummary({
 					sx={{
 						display: "flex",
 						justifyContent: "center",
-						gap: 2,
-						flexWrap: "wrap",
+						gap: { xs: 1, sm: 2 },
+						flexWrap: "nowrap",
+						width: "100%",
+						"&::-webkit-scrollbar": { display: "none" },
+						scrollbarWidth: "none",
 					}}
 				>
 					<StatItem

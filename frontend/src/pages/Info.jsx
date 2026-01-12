@@ -5,6 +5,7 @@ import {
 	createDeck,
 	updateDeck,
 	deleteDeck,
+	importDeck,
 } from "../services/deckServices";
 import { getFlashcards } from "../services/flashcardServices";
 import {
@@ -32,10 +33,12 @@ import LayersIcon from "@mui/icons-material/Layers";
 import WhatshotIcon from "@mui/icons-material/Whatshot";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import DownloadIcon from "@mui/icons-material/Download";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { I18nContext } from "../utils/i18n";
 import DeckModal from "../components/modals/DeckModal";
 import FlashcardModal from "../components/modals/FlashcardModal";
 import GameSettingsModal from "../components/modals/GameSettingsModal";
+import ImportDeckModal from "../components/modals/ImportDeckModal";
 import {
 	PageContainer,
 	StyledButton,
@@ -352,6 +355,10 @@ export default function Info({ accountId, onStartGame }) {
 	const [gameSettingsModalOpen, setGameSettingsModalOpen] = useState(false);
 	const [selectedDeckForGame, setSelectedDeckForGame] = useState(null);
 
+	// Import modal state
+	const [importModalOpen, setImportModalOpen] = useState(false);
+	const [importLoading, setImportLoading] = useState(false);
+
 	// Delete confirmation state
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [deckToDelete, setDeckToDelete] = useState(null);
@@ -504,6 +511,47 @@ export default function Info({ accountId, onStartGame }) {
 				message: t("download_error") || "Error downloading file",
 				severity: "error",
 			});
+		}
+	};
+
+	// Import deck from CSV/JSON
+	const handleImportDeck = async (title, description, flashcards) => {
+		setImportLoading(true);
+		try {
+			const res = await importDeck(title, description, flashcards);
+			const { importedCount, skippedCount } = res.data;
+
+			// Refresh decks list
+			const decksRes = await getDecks(accountId);
+			if (Array.isArray(decksRes.data.decks)) {
+				setDecks(decksRes.data.decks);
+			}
+
+			setImportModalOpen(false);
+			setSnackbar({
+				open: true,
+				message:
+					t("import_success", {
+						count: importedCount,
+						skipped: skippedCount,
+					}) ||
+					`Successfully imported ${importedCount} cards${
+						skippedCount > 0 ? ` (${skippedCount} skipped)` : ""
+					}`,
+				severity: "success",
+			});
+		} catch (err) {
+			console.error("Error importing deck:", err);
+			setSnackbar({
+				open: true,
+				message:
+					err.response?.data?.error ||
+					t("import_error") ||
+					"Error importing deck",
+				severity: "error",
+			});
+		} finally {
+			setImportLoading(false);
 		}
 	};
 
@@ -664,6 +712,13 @@ export default function Info({ accountId, onStartGame }) {
 						}}
 					>
 						{t("new_deck") || "New Deck"}
+					</StyledButton>
+					<StyledButton
+						variant="secondary"
+						startIcon={<UploadFileIcon />}
+						onClick={() => setImportModalOpen(true)}
+					>
+						{t("import") || "Import"}
 					</StyledButton>
 				</Box>
 			</MotionBox>
@@ -847,6 +902,14 @@ export default function Info({ accountId, onStartGame }) {
 					onStartGame(selectedDeckForGame, settings);
 				}}
 				deckId={selectedDeckForGame}
+			/>
+
+			{/* Import Deck Modal */}
+			<ImportDeckModal
+				open={importModalOpen}
+				onClose={() => setImportModalOpen(false)}
+				onImport={handleImportDeck}
+				loading={importLoading}
 			/>
 
 			{/* Delete Confirmation Modal */}
