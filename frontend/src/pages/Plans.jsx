@@ -51,8 +51,8 @@ function PlanCard({ plan, isCurrentPlan, delay = 0 }) {
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
+			initial={{ y: 20 }}
+			animate={{ y: 0 }}
 			transition={{ delay, duration: 0.4 }}
 			sx={{ height: "100%" }}
 		>
@@ -299,11 +299,7 @@ export default function Plans() {
 
 	return (
 		<PageContainer>
-			<MotionBox
-				initial={{ opacity: 0, y: -10 }}
-				animate={{ opacity: 1, y: 0 }}
-				sx={{ mb: 4 }}
-			>
+			<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 4 }}>
 				<Box
 					sx={{
 						display: "flex",

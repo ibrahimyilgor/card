@@ -1,5 +1,13 @@
 const express = require("express");
+const validator = require("validator");
 const authenticateToken = require("./middleware/authenticateToken");
+
+// Sanitize text to prevent XSS
+const sanitizeText = (text) => {
+	if (typeof text !== "string") return "";
+	// Escape HTML entities and trim
+	return validator.escape(text.trim());
+};
 
 module.exports = (pool) => {
 	const router = express.Router();
@@ -11,7 +19,10 @@ module.exports = (pool) => {
 			[deckId]
 		);
 		if (result.rows.length === 0) return { exists: false, isOwner: false };
-		return { exists: true, isOwner: result.rows[0].account_id === accountId };
+		return {
+			exists: true,
+			isOwner: parseInt(result.rows[0].account_id) === parseInt(accountId),
+		};
 	};
 
 	// Helper function to verify flashcard ownership via deck
@@ -23,7 +34,10 @@ module.exports = (pool) => {
 			[flashcardId]
 		);
 		if (result.rows.length === 0) return { exists: false, isOwner: false };
-		return { exists: true, isOwner: result.rows[0].account_id === accountId };
+		return {
+			exists: true,
+			isOwner: parseInt(result.rows[0].account_id) === parseInt(accountId),
+		};
 	};
 
 	// Get all flashcards by deckId
@@ -125,6 +139,97 @@ module.exports = (pool) => {
 			});
 		} catch (err) {
 			res.status(500).json({ error: "Failed to delete flashcard" });
+		}
+	});
+
+	// Import deck with flashcards (CSV/JSON)
+	router.post("/import-deck", authenticateToken, async (req, res) => {
+		const { title, description, flashcards } = req.body;
+		const accountId = req.user.accountId;
+
+		// Validate title
+		if (!title || typeof title !== "string" || title.trim().length === 0) {
+			return res.status(400).json({ error: "Deck title is required" });
+		}
+
+		// Validate flashcards array
+		if (!Array.isArray(flashcards) || flashcards.length === 0) {
+			return res.status(400).json({ error: "No valid flashcards to import" });
+		}
+
+		const client = await pool.connect();
+
+		try {
+			await client.query("BEGIN");
+
+			// Create deck
+			const sanitizedTitle = sanitizeText(title).substring(0, 255);
+			const sanitizedDescription = description
+				? sanitizeText(description).substring(0, 1000)
+				: "";
+
+			const deckResult = await client.query(
+				"INSERT INTO deck (account_id, title, description) VALUES ($1, $2, $3) RETURNING *",
+				[accountId, sanitizedTitle, sanitizedDescription]
+			);
+			const newDeck = deckResult.rows[0];
+
+			// Process and insert flashcards
+			let importedCount = 0;
+			let skippedCount = 0;
+			const MAX_TEXT_LENGTH = 5000;
+
+			for (const card of flashcards) {
+				const front =
+					card.front || card.frontText || card.Front || card.FRONT || "";
+				const back = card.back || card.backText || card.Back || card.BACK || "";
+
+				// Skip empty cards
+				if (!front || !back || front.trim() === "" || back.trim() === "") {
+					skippedCount++;
+					continue;
+				}
+
+				// Sanitize and truncate
+				const sanitizedFront = sanitizeText(front).substring(
+					0,
+					MAX_TEXT_LENGTH
+				);
+				const sanitizedBack = sanitizeText(back).substring(0, MAX_TEXT_LENGTH);
+
+				// Skip if sanitized result is empty
+				if (sanitizedFront.length === 0 || sanitizedBack.length === 0) {
+					skippedCount++;
+					continue;
+				}
+
+				await client.query(
+					"INSERT INTO flashcard (deck_id, front_text, back_text) VALUES ($1, $2, $3)",
+					[newDeck.id, sanitizedFront, sanitizedBack]
+				);
+				importedCount++;
+			}
+
+			// If no cards were imported, rollback
+			if (importedCount === 0) {
+				await client.query("ROLLBACK");
+				return res.status(400).json({ error: "No valid flashcards to import" });
+			}
+
+			await client.query("COMMIT");
+
+			res.status(201).json({
+				message: "Deck imported successfully",
+				deck: newDeck,
+				importedCount,
+				skippedCount,
+			});
+		} catch (err) {
+			await client.query("ROLLBACK");
+			console.error("Import error:", err);
+			res.status(500).json({ error: "Failed to import deck" });
+		} finally {
+			client.release();
 		}
 	});
 

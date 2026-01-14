@@ -11,13 +11,14 @@ import {
 	Divider,
 	alpha,
 } from "@mui/material";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { I18nContext } from "../utils/i18n";
 import {
 	updateTheme,
 	updateLanguage,
 	updateSoundEffects,
+	getProfile,
 } from "../services/accountServices";
 import TranslateIcon from "@mui/icons-material/Translate";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
@@ -37,8 +38,8 @@ function SettingCard({ icon: Icon, title, description, children, delay = 0 }) {
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, y: 20 }}
-			whileInView={{ opacity: 1, y: 0 }}
+			initial={{ y: 20 }}
+			whileInView={{ y: 0 }}
 			viewport={{ once: true }}
 			transition={{ delay, duration: 0.4 }}
 		>
@@ -106,8 +107,8 @@ function SettingCard({ icon: Icon, title, description, children, delay = 0 }) {
 function SectionHeader({ title, delay = 0 }) {
 	return (
 		<MotionBox
-			initial={{ opacity: 0, x: -20 }}
-			whileInView={{ opacity: 1, x: 0 }}
+			initial={{ x: -20 }}
+			whileInView={{ x: 0 }}
 			viewport={{ once: true }}
 			transition={{ delay, duration: 0.4 }}
 			sx={{ mb: 2, mt: 3 }}
@@ -151,6 +152,26 @@ export default function Settings({
 	const [soundEnabled, setSoundEnabled] = useState(
 		() => localStorage.getItem("soundEnabled") !== "false"
 	);
+
+	// Load preferences from database on mount
+	useEffect(() => {
+		const loadPreferences = async () => {
+			try {
+				const response = await getProfile();
+				if (response.data?.profile) {
+					const profile = response.data.profile;
+					// Sync sound effects from DB
+					if (profile.sound_effects_enabled !== undefined) {
+						setSoundEnabled(profile.sound_effects_enabled);
+						localStorage.setItem("soundEnabled", profile.sound_effects_enabled);
+					}
+				}
+			} catch (error) {
+				console.error("Error loading preferences:", error);
+			}
+		};
+		loadPreferences();
+	}, []);
 
 	const handleThemeChangeLocal = (e) => {
 		setSelectedTheme(e.target.checked ? "light" : "dark");
@@ -218,8 +239,8 @@ export default function Settings({
 			<Box sx={{ mx: "auto", pb: 4 }}>
 				{/* Header */}
 				<MotionBox
-					initial={{ opacity: 0, y: -10 }}
-					whileInView={{ opacity: 1, y: 0 }}
+					initial={{ y: -10 }}
+					whileInView={{ y: 0 }}
 					viewport={{ once: true }}
 					sx={{ mb: 4 }}
 				>
@@ -348,8 +369,8 @@ export default function Settings({
 
 				{/* Save Button */}
 				<MotionBox
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
+					initial={{ y: 20 }}
+					animate={{ y: 0 }}
 					transition={{ delay: 0.4, duration: 0.4 }}
 					sx={{ mt: 4, display: "flex", justifyContent: "center" }}
 				>
@@ -377,9 +398,9 @@ export default function Settings({
 							) : (
 								<MotionBox
 									key="save"
-									initial={{ opacity: 0 }}
-									animate={{ opacity: 1 }}
-									exit={{ opacity: 0 }}
+									initial={{ scale: 0.95 }}
+									animate={{ scale: 1 }}
+									exit={{ scale: 0.95 }}
 								>
 									{loading ? t("saving") : t("save")}
 								</MotionBox>
@@ -390,8 +411,8 @@ export default function Settings({
 
 				{!hasChanges && (
 					<MotionBox
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
+						initial={{ y: 5 }}
+						animate={{ y: 0 }}
 						sx={{ textAlign: "center", mt: 1 }}
 					>
 						<Typography

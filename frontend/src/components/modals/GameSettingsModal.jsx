@@ -56,8 +56,8 @@ function SettingOption({
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, x: -20 }}
-			animate={{ opacity: 1, x: 0 }}
+			initial={{ x: -20 }}
+			animate={{ x: 0 }}
 			transition={{ delay, duration: 0.3 }}
 			sx={{
 				p: 2.5,
@@ -68,7 +68,8 @@ function SettingOption({
 						: alpha(theme.palette.grey[100], 0.5),
 				border: (theme) => `1px solid ${theme.palette.border.main}`,
 				display: "flex",
-				alignItems: "center",
+				flexDirection: { xs: "column", sm: "row" },
+				alignItems: { xs: "stretch", sm: "center" },
 				justifyContent: "space-between",
 				gap: 2,
 			}}
@@ -124,7 +125,9 @@ function SettingOption({
 					)}
 				</Box>
 			</Box>
-			<Box sx={{ flexShrink: 0 }}>{children}</Box>
+			<Box sx={{ flexShrink: 0, width: { xs: "100%", sm: "auto" } }}>
+				{children}
+			</Box>
 		</MotionBox>
 	);
 }
@@ -209,7 +212,7 @@ export default function GameSettingsModal({
 
 	const [settings, setSettings] = useState({
 		mode: "standard",
-		timeLimit: 10,
+		timeLimit: 60, // seconds (1 minute default)
 		lives: 3,
 		cardDirection: "normal", // "normal" or "reverse"
 		hardModeEnabled: false, // only study hard cards (saved as difficulty_enabled in db)
@@ -279,7 +282,7 @@ export default function GameSettingsModal({
 			onClose={onClose}
 			title={t("game_settings") || "Game Settings"}
 			icon={<SportsEsportsIcon sx={{ fontSize: 24, color: "white" }} />}
-			maxWidth={600}
+			maxWidth={700}
 			actions={
 				<>
 					<StyledButton variant="ghost" onClick={onClose}>
@@ -315,7 +318,11 @@ export default function GameSettingsModal({
 					<Box
 						sx={{
 							display: "grid",
-							gridTemplateColumns: "repeat(4, 1fr)",
+							gridTemplateColumns: {
+								xs: "repeat(3, 1fr)",
+								sm: "repeat(4, 1fr)",
+								md: "repeat(6, 1fr)",
+							},
 							gap: 1.5,
 						}}
 					>
@@ -335,8 +342,8 @@ export default function GameSettingsModal({
 					{/* Mode description */}
 					<MotionBox
 						key={settings.mode}
-						initial={{ opacity: 0, y: 5 }}
-						animate={{ opacity: 1, y: 0 }}
+						initial={{ y: 5 }}
+						animate={{ y: 0 }}
 						sx={{
 							mt: 2,
 							p: 2,
@@ -364,45 +371,63 @@ export default function GameSettingsModal({
 				{/* Mode-specific settings */}
 				{settings.mode === "timed" && (
 					<MotionBox
-						initial={{ opacity: 0, height: 0 }}
-						animate={{ opacity: 1, height: "auto" }}
-						exit={{ opacity: 0, height: 0 }}
+						initial={{ height: 0 }}
+						animate={{ height: "auto" }}
+						exit={{ height: 0 }}
 					>
 						<SettingOption
 							icon={TimerIcon}
-							title={t("time_per_card") || "Time Per Card"}
-							description={`${settings.timeLimit} ${t("seconds") || "seconds"}`}
+							title={t("game_duration") || "Game Duration"}
+							description={t("game_duration_desc") || "Total time for the game"}
 							iconColor="#f59e0b"
 						>
-							<Box sx={{ width: 120 }}>
-								<Slider
-									value={settings.timeLimit}
-									onChange={(e, value) =>
-										setSettings((prev) => ({ ...prev, timeLimit: value }))
+							<ToggleButtonGroup
+								value={settings.timeLimit}
+								exclusive
+								onChange={(e, value) => {
+									if (value !== null) {
+										setSettings((prev) => ({ ...prev, timeLimit: value }));
 									}
-									min={5}
-									max={30}
-									step={5}
-									marks
-									sx={{
-										color: "#f59e0b",
-										"& .MuiSlider-thumb": {
-											"&:hover, &.Mui-focusVisible": {
-												boxShadow: `0 0 0 8px ${alpha("#f59e0b", 0.16)}`,
+								}}
+								size="small"
+								fullWidth
+								sx={{
+									width: "100%",
+									"& .MuiToggleButton-root": {
+										flex: 1,
+										px: { xs: 1, sm: 2, md: 3 },
+										py: 0.5,
+										fontFamily: "Inter, sans-serif",
+										fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
+										fontWeight: 500,
+										textTransform: "none",
+										whiteSpace: "nowrap",
+										border: (theme) => `1px solid ${theme.palette.border.main}`,
+										"&.Mui-selected": {
+											backgroundColor: alpha("#f59e0b", 0.15),
+											color: "#f59e0b",
+											borderColor: "#f59e0b",
+											"&:hover": {
+												backgroundColor: alpha("#f59e0b", 0.25),
 											},
 										},
-									}}
-								/>
-							</Box>
+									},
+								}}
+							>
+								<ToggleButton value={60}>1 {t("min") || "min"}</ToggleButton>
+								<ToggleButton value={180}>3 {t("min") || "min"}</ToggleButton>
+								<ToggleButton value={300}>5 {t("min") || "min"}</ToggleButton>
+								<ToggleButton value={600}>10 {t("min") || "min"}</ToggleButton>
+							</ToggleButtonGroup>
 						</SettingOption>
 					</MotionBox>
 				)}
 
 				{settings.mode === "survival" && (
 					<MotionBox
-						initial={{ opacity: 0, height: 0 }}
-						animate={{ opacity: 1, height: "auto" }}
-						exit={{ opacity: 0, height: 0 }}
+						initial={{ height: 0 }}
+						animate={{ height: "auto" }}
+						exit={{ height: 0 }}
 					>
 						<SettingOption
 							icon={FavoriteIcon}
@@ -453,8 +478,11 @@ export default function GameSettingsModal({
 							}
 						}}
 						size="small"
+						fullWidth
 						sx={{
+							width: "100%",
 							"& .MuiToggleButton-root": {
+								flex: 1,
 								px: 2,
 								py: 0.5,
 								fontFamily: "Inter, sans-serif",
@@ -509,8 +537,8 @@ export default function GameSettingsModal({
 
 				{/* Keyboard shortcuts info */}
 				<MotionBox
-					initial={{ opacity: 0, y: 10 }}
-					animate={{ opacity: 1, y: 0 }}
+					initial={{ y: 10 }}
+					animate={{ y: 0 }}
 					transition={{ delay: 0.2, duration: 0.3 }}
 					sx={{
 						p: 2,

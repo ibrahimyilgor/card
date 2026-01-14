@@ -12,20 +12,16 @@ const PageContainer = ({
 	animate = true,
 	...props
 }) => {
+	// Note: opacity animation is handled by AnimatedPage in App.jsx
+	// This container only handles staggerChildren for child elements
 	const containerVariants = {
-		hidden: { opacity: 0 },
+		hidden: {},
 		visible: {
-			opacity: 1,
 			transition: {
-				duration: 0.4,
-				ease: "easeOut",
 				staggerChildren: 0.1,
 			},
 		},
-		exit: {
-			opacity: 0,
-			transition: { duration: 0.2 },
-		},
+		exit: {},
 	};
 
 	const content = (
@@ -40,6 +36,7 @@ const PageContainer = ({
 				flexDirection: centered ? "column" : undefined,
 				alignItems: centered ? "center" : undefined,
 				justifyContent: centered ? "center" : undefined,
+				overflow: "hidden", // Prevent scroll during animations
 				...sx,
 			}}
 			{...props}
@@ -66,6 +63,7 @@ const PageContainer = ({
 				flexDirection: centered ? "column" : undefined,
 				alignItems: centered ? "center" : undefined,
 				justifyContent: centered ? "center" : undefined,
+				overflow: "hidden", // Prevent scroll during animations
 				...sx,
 			}}
 			{...props}
@@ -78,6 +76,7 @@ const PageContainer = ({
 export default PageContainer;
 
 // Child animation wrapper for staggered animations
+// Note: Does not animate opacity to avoid double-fade with parent AnimatedPage
 export const AnimatedItem = ({ children, delay = 0, sx = {}, ...props }) => {
 	const itemVariants = {
 		hidden: { opacity: 0, y: 20 },

@@ -15,7 +15,7 @@ module.exports = (pool) => {
 		}
 		return {
 			exists: true,
-			isOwner: result.rows[0].account_id === accountId,
+			isOwner: parseInt(result.rows[0].account_id) === parseInt(accountId),
 		};
 	};
 
@@ -46,7 +46,8 @@ module.exports = (pool) => {
 
 	// Create a new deck
 	router.post("/create", authenticateToken, async (req, res) => {
-		const { title, description, difficulty_enabled, mode, card_direction } = req.body;
+		const { title, description, difficulty_enabled, mode, card_direction } =
+			req.body;
 		// Use accountId from token, not from body
 		const accountId = req.user.accountId;
 		if (!title) {
@@ -73,7 +74,8 @@ module.exports = (pool) => {
 	// Update an existing deck
 	router.put("/:deckId", authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
-		const { title, description, difficulty_enabled, mode, card_direction } = req.body;
+		const { title, description, difficulty_enabled, mode, card_direction } =
+			req.body;
 		if (!title) {
 			return res.status(400).json({ error: "title required" });
 		}

@@ -4,10 +4,17 @@ import TimerIcon from "@mui/icons-material/Timer";
 
 const MotionBox = motion.create(Box);
 
-export default function TimerDisplay({ timeLeft, totalTime = 10 }) {
+export default function TimerDisplay({ timeLeft, totalTime = 60 }) {
 	const percentage = (timeLeft / totalTime) * 100;
-	const isWarning = timeLeft <= 3;
-	const isCritical = timeLeft <= 1;
+	const isWarning = timeLeft <= 10;
+	const isCritical = timeLeft <= 5;
+
+	// Format time as MM:SS
+	const formatTime = (seconds) => {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins}:${secs.toString().padStart(2, "0")}`;
+	};
 
 	const getColor = () => {
 		if (isCritical) return "#ef4444";
@@ -80,11 +87,11 @@ export default function TimerDisplay({ timeLeft, totalTime = 10 }) {
 						fontWeight: 700,
 						color: getColor(),
 						fontFamily: "Inter, sans-serif",
-						fontSize: "1.25rem",
+						fontSize: "1rem",
 						lineHeight: 1,
 					}}
 				>
-					{timeLeft}
+					{formatTime(timeLeft)}
 				</Typography>
 			</Box>
 		</MotionBox>

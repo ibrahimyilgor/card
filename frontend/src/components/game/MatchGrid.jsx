@@ -17,6 +17,16 @@ export default function MatchGrid({ flashcards = [], onComplete, onMatch }) {
 	const [attempts, setAttempts] = useState(0);
 	const [isChecking, setIsChecking] = useState(false);
 
+	// Fisher-Yates shuffle algorithm for true randomness
+	const shuffleArray = (array) => {
+		const shuffled = [...array];
+		for (let i = shuffled.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+		}
+		return shuffled;
+	};
+
 	// Initialize cards
 	useEffect(() => {
 		if (flashcards.length > 0) {
@@ -36,8 +46,8 @@ export default function MatchGrid({ flashcards = [], onComplete, onMatch }) {
 				},
 			]);
 
-			// Shuffle cards
-			const shuffled = pairs.sort(() => Math.random() - 0.5);
+			// Shuffle cards using Fisher-Yates algorithm
+			const shuffled = shuffleArray(pairs);
 			setCards(shuffled);
 			setFlipped([]);
 			setMatched([]);

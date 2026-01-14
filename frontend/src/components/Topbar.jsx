@@ -18,6 +18,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import HomeIcon from "@mui/icons-material/Home";
 import LogoutIcon from "@mui/icons-material/Logout";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { I18nContext } from "../utils/i18n";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -99,8 +100,25 @@ export default function Topbar({ onLogout, currentPath }) {
 		setAnchorEl(null);
 	};
 
-	const handleLogout = () => {
+	const handleLogout = async () => {
+		try {
+			const refreshToken = localStorage.getItem("refreshToken");
+			if (refreshToken) {
+				// Invalidate refresh token on server
+				await fetch(
+					`${window.location.protocol}//${window.location.hostname}/api/auth/logout`,
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ refreshToken }),
+					}
+				);
+			}
+		} catch (error) {
+			console.error("Error during logout:", error);
+		}
 		localStorage.removeItem("token");
+		localStorage.removeItem("refreshToken");
 		localStorage.removeItem("accountId");
 		if (onLogout) onLogout();
 		setAnchorEl(null);
@@ -218,6 +236,13 @@ export default function Topbar({ onLogout, currentPath }) {
 						onClick={() => navigate("/stats")}
 					/>
 					<NavButton
+						icon={EmojiEventsIcon}
+						label="Achievements"
+						tooltip={t("achievements") || "Achievements"}
+						isActive={activePath === "/achievements"}
+						onClick={() => navigate("/achievements")}
+					/>
+					<NavButton
 						icon={EventNoteIcon}
 						label="Plan"
 						tooltip={t("plan") || "Plan"}
@@ -295,8 +320,8 @@ export default function Topbar({ onLogout, currentPath }) {
 					>
 						<AnimatePresence initial={false}>
 							<MotionBox
-								initial={{ opacity: 0, y: -10 }}
-								animate={{ opacity: 1, y: 0 }}
+								initial={{ y: -10 }}
+								animate={{ y: 0 }}
 								transition={{ duration: 0.2 }}
 							>
 								{/* Profile Header */}

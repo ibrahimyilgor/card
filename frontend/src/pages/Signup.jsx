@@ -111,8 +111,8 @@ export default function Signup({ onSignup, onSwitch }) {
 			/>
 
 			<MotionBox
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
+				initial={{ y: 20 }}
+				animate={{ y: 0 }}
 				transition={{ duration: 0.5, ease: "easeOut" }}
 				sx={{
 					width: "100%",
@@ -290,10 +290,7 @@ export default function Signup({ onSignup, onSwitch }) {
 								/>
 
 								{error && (
-									<MotionBox
-										initial={{ opacity: 0, y: -10 }}
-										animate={{ opacity: 1, y: 0 }}
-									>
+									<MotionBox initial={{ y: -10 }} animate={{ y: 0 }}>
 										<Alert
 											severity="error"
 											sx={{

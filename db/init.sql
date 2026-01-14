@@ -42,16 +42,37 @@ CREATE TABLE IF NOT EXISTS flashcard (
 CREATE TABLE IF NOT EXISTS achievement (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  description TEXT
+  description TEXT,
+  icon VARCHAR(50) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  threshold INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS account_achievements (
   account_id INT REFERENCES account(id) ON DELETE CASCADE,
   achievement_id INT REFERENCES achievement(id) ON DELETE CASCADE,
-  done_count INT DEFAULT 0,
+  done_count INT DEFAULT 1,
   earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (account_id, achievement_id)
 );
+
+-- Seed achievements
+INSERT INTO achievement (name, description, icon, category, threshold) VALUES
+-- Streak achievements (consecutive days of game completion)
+('streak_3', '3 Day Streak', '🔥', 'streak', 3),
+('streak_7', '7 Day Streak', '🔥', 'streak', 7),
+('streak_14', '14 Day Streak', '🔥', 'streak', 14),
+('streak_30', '30 Day Streak', '🔥', 'streak', 30),
+-- Accuracy achievements (complete a deck with X% accuracy)
+('accuracy_80', '80% Accuracy', '🎯', 'accuracy', 80),
+('accuracy_90', '90% Accuracy', '🎯', 'accuracy', 90),
+('accuracy_100', 'Perfect Score', '🎯', 'accuracy', 100),
+-- Volume achievements (total cards studied all-time)
+('volume_50', '50 Cards Studied', '📚', 'volume', 50),
+('volume_100', '100 Cards Studied', '📚', 'volume', 100),
+('volume_500', '500 Cards Studied', '📚', 'volume', 500),
+('volume_1000', '1000 Cards Studied', '📚', 'volume', 1000)
+ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS study_session (
   id SERIAL PRIMARY KEY,
@@ -106,3 +127,14 @@ CREATE TABLE IF NOT EXISTS account_plan_history (
   -- upgrade, downgrade, cancel, expired, trial_end vb.
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS refresh_token (
+  id SERIAL PRIMARY KEY,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  account_id INT REFERENCES account(id) ON DELETE CASCADE,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_token_token ON refresh_token(token);
+CREATE INDEX IF NOT EXISTS idx_refresh_token_expires ON refresh_token(expires_at);

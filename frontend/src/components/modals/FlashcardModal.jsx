@@ -12,31 +12,43 @@ import {
 	Tooltip,
 	alpha,
 	useTheme,
+	InputAdornment,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
 import StyleIcon from "@mui/icons-material/Style";
 import AddIcon from "@mui/icons-material/Add";
 import AddFlashcardModal from "./AddFlashcardModal";
 import { I18nContext } from "../../utils/i18n";
 import { updateFlashcard } from "../../services/flashcardServices";
-import { StyledModal, StyledButton, StyledCard, EmptyState } from "../ui";
+import {
+	StyledModal,
+	StyledButton,
+	StyledCard,
+	EmptyState,
+	StyledTextField,
+} from "../ui";
 
 const MotionBox = motion.create(Box);
 
 // Flashcard Item Component
-function FlashcardItem({ flashcard, onEdit, onDelete, index }) {
+function FlashcardItem({ flashcard, onEdit, onDelete, index, isSearching }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 
 	return (
 		<MotionBox
-			initial={{ opacity: 0, y: 20 }}
+			initial={{ opacity: 0, y: 10 }}
 			animate={{ opacity: 1, y: 0 }}
-			exit={{ opacity: 0, x: -100 }}
-			transition={{ delay: index * 0.05, duration: 0.3 }}
-			layout
+			exit={{ opacity: 0, scale: 0.95 }}
+			transition={{
+				duration: 0.2,
+				delay: isSearching ? 0 : index * 0.03,
+			}}
+			layout="position"
 		>
 			<StyledCard
 				variant="default"
@@ -171,6 +183,17 @@ export default function FlashcardModal({
 	const [addLoading, setAddLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [editFlashcard, setEditFlashcard] = useState(null);
+	const [searchQuery, setSearchQuery] = useState("");
+
+	// Filter flashcards based on search query
+	const filteredFlashcards = flashcards.filter((flashcard) => {
+		if (!searchQuery.trim()) return true;
+		const query = searchQuery.toLowerCase();
+		return (
+			flashcard.front_text.toLowerCase().includes(query) ||
+			flashcard.back_text.toLowerCase().includes(query)
+		);
+	});
 
 	const handleDeleteFlashcard = async (flashcardId) => {
 		try {
@@ -252,6 +275,13 @@ export default function FlashcardModal({
 		fetchFlashcardsList();
 	}, [deckId, open]);
 
+	// Reset search query when modal closes
+	useEffect(() => {
+		if (!open) {
+			setSearchQuery("");
+		}
+	}, [open]);
+
 	const handleEdit = (flashcard) => {
 		setEditFlashcard(flashcard);
 		setAddModalOpen(true);
@@ -280,35 +310,70 @@ export default function FlashcardModal({
 					</>
 				}
 			>
-				{/* Card count badge */}
+				{/* Search and Card count */}
 				{!loading && flashcards.length > 0 && (
-					<MotionBox
-						initial={{ opacity: 0, y: -10 }}
-						animate={{ opacity: 1, y: 0 }}
-						sx={{
-							display: "inline-flex",
-							alignItems: "center",
-							gap: 1,
-							px: 2,
-							py: 0.75,
-							borderRadius: 2,
-							background: (theme) => alpha(theme.palette.primary.main, 0.1),
-							border: (theme) =>
-								`1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-							mb: 2,
-						}}
-					>
-						<Typography
-							variant="caption"
+					<Box sx={{ mb: 2 }}>
+						{/* Search Input */}
+						<StyledTextField
+							fullWidth
+							size="small"
+							placeholder={t("search_flashcards") || "Search flashcards..."}
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							InputProps={{
+								startAdornment: (
+									<InputAdornment position="start">
+										<SearchIcon
+											sx={{ color: "text.cardSubtitle", fontSize: 20 }}
+										/>
+									</InputAdornment>
+								),
+								endAdornment: searchQuery && (
+									<InputAdornment position="end">
+										<IconButton
+											size="small"
+											onClick={() => setSearchQuery("")}
+											sx={{ color: "text.cardSubtitle" }}
+										>
+											<ClearIcon fontSize="small" />
+										</IconButton>
+									</InputAdornment>
+								),
+							}}
+							sx={{ mb: 1.5 }}
+						/>
+
+						{/* Card count badge */}
+						<MotionBox
+							initial={{ y: -10 }}
+							animate={{ y: 0 }}
 							sx={{
-								fontWeight: 600,
-								color: "primary.main",
-								fontFamily: "Inter, sans-serif",
+								display: "inline-flex",
+								alignItems: "center",
+								gap: 1,
+								px: 2,
+								py: 0.75,
+								borderRadius: 2,
+								background: (theme) => alpha(theme.palette.primary.main, 0.1),
+								border: (theme) =>
+									`1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
 							}}
 						>
-							{flashcards.length} {flashcards.length === 1 ? "card" : "cards"}
-						</Typography>
-					</MotionBox>
+							<Typography
+								variant="caption"
+								sx={{
+									fontWeight: 600,
+									color: "primary.main",
+									fontFamily: "Inter, sans-serif",
+								}}
+							>
+								{searchQuery
+									? `${filteredFlashcards.length} / ${flashcards.length}`
+									: flashcards.length}{" "}
+								{flashcards.length === 1 ? "card" : "cards"}
+							</Typography>
+						</MotionBox>
+					</Box>
 				)}
 
 				{loading ? (
@@ -322,6 +387,17 @@ export default function FlashcardModal({
 						description="Add your first flashcard to get started learning!"
 						actionLabel={t("add_flashcard") || "Add Flashcard"}
 						onAction={() => setAddModalOpen(true)}
+					/>
+				) : filteredFlashcards.length === 0 ? (
+					<EmptyState
+						icon={SearchIcon}
+						title={t("no_results") || "No results found"}
+						description={
+							t("no_search_results_flashcards") ||
+							"No flashcards match your search"
+						}
+						actionLabel={t("clear_search") || "Clear Search"}
+						onAction={() => setSearchQuery("")}
 					/>
 				) : (
 					<Box
@@ -345,14 +421,15 @@ export default function FlashcardModal({
 							},
 						}}
 					>
-						<AnimatePresence mode="popLayout" initial={false}>
-							{flashcards.map((flashcard, index) => (
+						<AnimatePresence mode="sync" initial={false}>
+							{filteredFlashcards.map((flashcard, index) => (
 								<FlashcardItem
 									key={flashcard.id}
 									flashcard={flashcard}
 									onEdit={handleEdit}
 									onDelete={handleDeleteFlashcard}
 									index={index}
+									isSearching={!!searchQuery}
 								/>
 							))}
 						</AnimatePresence>
