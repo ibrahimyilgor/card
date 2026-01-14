@@ -4,8 +4,8 @@ import { Box, Typography, LinearProgress } from "@mui/material";
 const GameProgress = ({ scores, progress, gameMode, t }) => {
 	return (
 		<>
-			{/* Progress bar - hidden for survival mode */}
-			{gameMode !== "survival" && (
+			{/* Progress bar - hidden for survival and timed modes */}
+			{gameMode !== "survival" && gameMode !== "timed" && (
 				<LinearProgress
 					variant="determinate"
 					value={progress}

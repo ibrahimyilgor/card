@@ -19,7 +19,10 @@ module.exports = (pool) => {
 			[deckId]
 		);
 		if (result.rows.length === 0) return { exists: false, isOwner: false };
-		return { exists: true, isOwner: result.rows[0].account_id === accountId };
+		return {
+			exists: true,
+			isOwner: parseInt(result.rows[0].account_id) === parseInt(accountId),
+		};
 	};
 
 	// Helper function to verify flashcard ownership via deck
@@ -31,7 +34,10 @@ module.exports = (pool) => {
 			[flashcardId]
 		);
 		if (result.rows.length === 0) return { exists: false, isOwner: false };
-		return { exists: true, isOwner: result.rows[0].account_id === accountId };
+		return {
+			exists: true,
+			isOwner: parseInt(result.rows[0].account_id) === parseInt(accountId),
+		};
 	};
 
 	// Get all flashcards by deckId

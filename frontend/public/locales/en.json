@@ -1,4 +1,5 @@
 {
+	"vs_last_week": "vs last week",
 	"edit_deck": "Edit",
 	"card": "Flashfacts",
 	"settings": "Settings",
@@ -99,7 +100,7 @@
 	"sort_oldest": "Oldest First",
 	"sort_name": "Name (A-Z)",
 	"sort_cards": "Most Cards",
-	"no_decks_yet": "No decks yet",
+	"no_decks_yet": "Create your first Deck",
 	"no_results": "No results found",
 	"no_results_desc": "Try adjusting your search or create a new deck",
 	"clear_search": "Clear Search",
@@ -167,6 +168,7 @@
 	"1_year": "1Y",
 	"all_time_short": "All",
 	"sessions": "Sessions",
+	"total_sessions": "Total Sessions",
 	"decks": "Decks",
 	"best": "Best",
 	"insights": "Insights",
@@ -282,7 +284,7 @@
 	"achievements": "Achievements",
 	"achievements_subtitle": "Track your learning milestones",
 	"achievements_earned": "achievements earned",
-	"achievement_unlocked": "Achievement Unlocked!",
+	"achievement_earned": "Achievement Earned!",
 	"more": "more",
 	"earned_times": "Earned",
 	"achievement_category_streak": "Streak",
@@ -313,6 +315,9 @@
 	"and_more_cards": "...and {{count}} more cards",
 	"import_success": "Successfully imported {{count}} cards",
 	"import_error": "Error importing deck",
+	"import_format_title": "File Format",
+	"import_csv_format": "First row should be headers (front, back). Each following row is a flashcard.",
+	"import_json_format": "Array of objects with \"front\" and \"back\" properties.",
 	"game_duration": "Game Duration",
 	"game_duration_desc": "Select the duration of the game"
 }

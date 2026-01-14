@@ -127,3 +127,14 @@ CREATE TABLE IF NOT EXISTS account_plan_history (
   -- upgrade, downgrade, cancel, expired, trial_end vb.
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS refresh_token (
+  id SERIAL PRIMARY KEY,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  account_id INT REFERENCES account(id) ON DELETE CASCADE,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_token_token ON refresh_token(token);
+CREATE INDEX IF NOT EXISTS idx_refresh_token_expires ON refresh_token(expires_at);

@@ -48,7 +48,7 @@ const GameHeader = ({
 				{gameMode === "survival" && (
 					<LivesDisplay lives={lives.lives} maxLives={lives.maxLives} />
 				)}
-				{gameMode !== "survival" && (
+				{gameMode !== "survival" && gameMode !== "timed" && (
 					<Typography
 						variant="body1"
 						sx={{

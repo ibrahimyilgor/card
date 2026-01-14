@@ -1,4 +1,4 @@
-import { useState, useContext, useRef } from "react";
+import { useState, useContext, useRef, useEffect } from "react";
 import {
 	Box,
 	Typography,
@@ -112,7 +112,17 @@ export default function ImportDeckModal({
 		setFileName("");
 		setError("");
 		setIsDragging(false);
+		if (fileInputRef.current) {
+			fileInputRef.current.value = "";
+		}
 	};
+
+	// Reset state when modal opens
+	useEffect(() => {
+		if (open) {
+			resetState();
+		}
+	}, [open]);
 
 	const handleClose = () => {
 		resetState();
@@ -319,6 +329,58 @@ export default function ImportDeckModal({
 						</Box>
 					)}
 				</Box>
+
+				{/* Format Description */}
+				{!fileName && (
+					<Box
+						sx={{
+							p: 2,
+							borderRadius: 2,
+							backgroundColor: alpha(theme.palette.info.main, 0.08),
+							border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+						}}
+					>
+						<Typography
+							variant="subtitle2"
+							sx={{ color: theme.palette.info.main, mb: 1, fontWeight: 600 }}
+						>
+							{t("import_format_title") || "File Format"}
+						</Typography>
+						<Typography
+							variant="body2"
+							sx={{ color: theme.palette.text.secondary, mb: 1 }}
+						>
+							<strong>CSV:</strong> {t("import_csv_format") || "First row should be headers (front, back). Each following row is a flashcard."}
+						</Typography>
+						<Typography
+							variant="body2"
+							sx={{ color: theme.palette.text.secondary }}
+						>
+							<strong>JSON:</strong> {t("import_json_format") || 'Array of objects with "front" and "back" properties.'}
+						</Typography>
+						<Box
+							component="pre"
+							sx={{
+								mt: 1.5,
+								p: 1.5,
+								borderRadius: 1,
+								backgroundColor: alpha(theme.palette.background.default, 0.5),
+								fontSize: 11,
+								color: theme.palette.text.secondary,
+								overflow: "auto",
+								fontFamily: "monospace",
+							}}
+						>
+{`CSV:
+front,back
+Hello,Merhaba
+Goodbye,Güle güle
+
+JSON:
+[{"front":"Hello","back":"Merhaba"}]`}
+						</Box>
+					</Box>
+				)}
 
 				{/* Error Message */}
 				{error && (

@@ -81,6 +81,12 @@ export default function Login({ onLogin, onSwitch }) {
 			const data = res.data;
 			if (res.status === 200 && data.token) {
 				localStorage.setItem("token", data.token);
+				if (data.refreshToken) {
+					localStorage.setItem("refreshToken", data.refreshToken);
+				}
+				if (data.accountId) {
+					localStorage.setItem("accountId", data.accountId);
+				}
 				onLogin();
 			} else {
 				setError(data.error || t("login_failed"));

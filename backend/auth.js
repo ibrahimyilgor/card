@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const authenticateToken = require("./middleware/authenticateToken");
 
 module.exports = (pool) => {
@@ -92,15 +93,85 @@ module.exports = (pool) => {
 				result.rows[0].password_hash
 			);
 			if (!valid) return res.status(401).json({ error: "Invalid credentials" });
-			// JWT token üret
+
+			const accountId = result.rows[0].id;
+
+			// Generate access token (60 minutes)
 			const token = jwt.sign(
-				{ accountId: result.rows[0].id, accountname },
+				{ accountId, accountname },
 				process.env.JWT_SECRET || "dev_secret",
-				{ expiresIn: "1h" }
+				{ expiresIn: "60m" }
 			);
-			res.json({ message: "Login successful", token });
+
+			// Generate refresh token (30 days)
+			const refreshToken = crypto.randomBytes(64).toString("hex");
+			const expiresAt = new Date();
+			expiresAt.setDate(expiresAt.getDate() + 30);
+
+			// Store refresh token in database
+			await pool.query(
+				"INSERT INTO refresh_token (token, account_id, expires_at) VALUES ($1, $2, $3)",
+				[refreshToken, accountId, expiresAt]
+			);
+
+			res.json({ message: "Login successful", token, refreshToken, accountId });
 		} catch (err) {
+			console.error("Login error:", err);
 			res.status(500).json({ error: "Login failed" });
+		}
+	});
+
+	// Refresh token endpoint
+	router.post("/refresh", async (req, res) => {
+		const { refreshToken } = req.body;
+		if (!refreshToken)
+			return res.status(400).json({ error: "Refresh token required" });
+
+		try {
+			// Find valid refresh token
+			const result = await pool.query(
+				`SELECT rt.account_id, a.accountname 
+				 FROM refresh_token rt 
+				 JOIN account a ON rt.account_id = a.id 
+				 WHERE rt.token = $1 AND rt.expires_at > NOW()`,
+				[refreshToken]
+			);
+
+			if (result.rows.length === 0)
+				return res
+					.status(401)
+					.json({ error: "Invalid or expired refresh token" });
+
+			const { account_id: accountId, accountname } = result.rows[0];
+
+			// Generate new access token (60 minutes)
+			const token = jwt.sign(
+				{ accountId, accountname },
+				process.env.JWT_SECRET || "dev_secret",
+				{ expiresIn: "60m" }
+			);
+
+			res.json({ token });
+		} catch (err) {
+			console.error("Refresh token error:", err);
+			res.status(500).json({ error: "Token refresh failed" });
+		}
+	});
+
+	// Logout endpoint - invalidate refresh token
+	router.post("/logout", async (req, res) => {
+		const { refreshToken } = req.body;
+		if (!refreshToken)
+			return res.status(400).json({ error: "Refresh token required" });
+
+		try {
+			await pool.query("DELETE FROM refresh_token WHERE token = $1", [
+				refreshToken,
+			]);
+			res.json({ message: "Logged out successfully" });
+		} catch (err) {
+			console.error("Logout error:", err);
+			res.status(500).json({ error: "Logout failed" });
 		}
 	});
 

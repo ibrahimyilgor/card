@@ -1,17 +1,21 @@
 -minio dockerhubdan kullanılabilir mi?
 
 -dbyi bozmadan yeni column veya tablo ekleme işi nasıl olacak? 
-
--token refresh olmuyor. frontendde token geçersiz hale geldiğinde ve o tokenle istek atıldıgında logout yapılıyor.
     
 -kayıt olurken maille dogrulama.
 
 -şifremi unuttum
 
--plan'ın planlanması
+-plana göre özelliklerin açılıp kapatılması.
 
--match'te random zayıf
+-plana ekleme, plandan çıkarma vs
 
 -match için başarımlar yanlış
+
+-mobil-web istatistiklerin yenilenmesi
+
+-backend token alıp her şeyi değiştirebilme.
+
+-reklam ekleme
 
 

@@ -11,13 +11,14 @@ import {
 	Divider,
 	alpha,
 } from "@mui/material";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { I18nContext } from "../utils/i18n";
 import {
 	updateTheme,
 	updateLanguage,
 	updateSoundEffects,
+	getProfile,
 } from "../services/accountServices";
 import TranslateIcon from "@mui/icons-material/Translate";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
@@ -151,6 +152,26 @@ export default function Settings({
 	const [soundEnabled, setSoundEnabled] = useState(
 		() => localStorage.getItem("soundEnabled") !== "false"
 	);
+
+	// Load preferences from database on mount
+	useEffect(() => {
+		const loadPreferences = async () => {
+			try {
+				const response = await getProfile();
+				if (response.data?.profile) {
+					const profile = response.data.profile;
+					// Sync sound effects from DB
+					if (profile.sound_effects_enabled !== undefined) {
+						setSoundEnabled(profile.sound_effects_enabled);
+						localStorage.setItem("soundEnabled", profile.sound_effects_enabled);
+					}
+				}
+			} catch (error) {
+				console.error("Error loading preferences:", error);
+			}
+		};
+		loadPreferences();
+	}, []);
 
 	const handleThemeChangeLocal = (e) => {
 		setSelectedTheme(e.target.checked ? "light" : "dark");

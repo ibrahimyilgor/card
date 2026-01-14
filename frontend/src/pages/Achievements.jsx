@@ -9,6 +9,9 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
+import GpsFixedIcon from "@mui/icons-material/GpsFixed";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { getAchievements } from "../services/achievementServices";
 import { I18nContext } from "../utils/i18n";
 import { PageContainer, StyledCard } from "../components/ui";
@@ -18,15 +21,23 @@ const MotionBox = motion.create(Box);
 // Category colors
 const categoryColors = {
 	streak: "#f97316", // Orange
-	accuracy: "#22c55e", // Green
-	volume: "#3b82f6", // Blue
+	accuracy: "#4ECDC4", // Teal/Turquoise
+	volume: "#9B59B6", // Purple
 };
 
-// Category icons
-const categoryIcons = {
-	streak: "🔥",
-	accuracy: "🎯",
-	volume: "📚",
+// Category icon components
+const CategoryIconComponent = ({ category, size = 24, color }) => {
+	const iconSx = { fontSize: size, color: color || categoryColors[category] };
+	switch (category) {
+		case "streak":
+			return <LocalFireDepartmentIcon sx={iconSx} />;
+		case "accuracy":
+			return <GpsFixedIcon sx={iconSx} />;
+		case "volume":
+			return <MenuBookIcon sx={iconSx} />;
+		default:
+			return <EmojiEventsIcon sx={iconSx} />;
+	}
 };
 
 function AchievementCard({ achievement, index }) {
@@ -128,10 +139,13 @@ function AchievementCard({ achievement, index }) {
 						justifyContent: "center",
 						mx: "auto",
 						mb: 2,
-						fontSize: 32,
 					}}
 				>
-					{achievement.icon}
+					<CategoryIconComponent 
+						category={achievement.category} 
+						size={32} 
+						color={isEarned ? categoryColor : undefined}
+					/>
 				</Box>
 
 				{/* Title */}
@@ -348,13 +362,7 @@ export default function Achievements() {
 										mb: 2,
 									}}
 								>
-									<Box
-										sx={{
-											fontSize: 24,
-										}}
-									>
-										{categoryIcons[category]}
-									</Box>
+									<CategoryIconComponent category={category} size={28} />
 									<Typography
 										variant="h6"
 										sx={{

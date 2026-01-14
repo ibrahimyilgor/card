@@ -205,8 +205,25 @@ const AppContent = () => {
 		navigate("/");
 	}, [navigate]);
 
-	const handleLogout = useCallback(() => {
+	const handleLogout = useCallback(async () => {
+		try {
+			const refreshToken = localStorage.getItem("refreshToken");
+			if (refreshToken) {
+				// Invalidate refresh token on server
+				await fetch(
+					`${window.location.protocol}//${window.location.hostname}/api/auth/logout`,
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ refreshToken }),
+					}
+				);
+			}
+		} catch (error) {
+			console.error("Error during logout:", error);
+		}
 		localStorage.removeItem("token");
+		localStorage.removeItem("refreshToken");
 		localStorage.removeItem("accountId");
 		navigate("/login");
 	}, [navigate]);

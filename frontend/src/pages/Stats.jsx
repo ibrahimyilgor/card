@@ -546,12 +546,9 @@ export default function Stats() {
 					icon={SchoolIcon}
 					title={t("cards_studied") || "Cards Studied"}
 					value={overview?.totalCardsStudied || 0}
-					subtitle={`${overview?.totalSessions || 0} ${
-						t("sessions") || "sessions"
-					}`}
+					subtitle={weeklyTrend !== 0 ? `${weeklyTrend > 0 ? '+' : ''}${weeklyTrend}% ${t("vs_last_week") || "vs last week"}` : " "}
 					color={chartColors.success}
 					delay={0.1}
-					trend={weeklyTrend}
 				/>
 				<StatCard
 					icon={EmojiEventsIcon}
@@ -591,7 +588,7 @@ export default function Stats() {
 				<StatCard
 					icon={AccessTimeIcon}
 					title={t("study_time") || "Study Time"}
-					value={formatDuration(overview?.totalStudyTime)}
+					value={formatDuration(overview?.totalStudyTime || 0)}
 					color="#06b6d4"
 					delay={0.4}
 				/>
@@ -613,8 +610,8 @@ export default function Stats() {
 				/>
 				<StatCard
 					icon={CalendarTodayIcon}
-					title={t("avg_session") || "Avg Session"}
-					value={formatDuration(overview?.avgSessionDuration)}
+					title={t("total_sessions") || "Total Sessions"}
+					value={overview?.totalSessions || 0}
 					subtitle=" "
 					color="#ec4899"
 					delay={0.7}

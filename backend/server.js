@@ -1,6 +1,7 @@
 const express = require("express");
 const { Pool } = require("pg");
 const cors = require("cors");
+const cron = require("node-cron");
 require("dotenv").config();
 const app = express();
 const port = 5000;
@@ -15,7 +16,7 @@ const pool = new Pool({
 
 app.use(
 	cors({
-		origin: "*",
+		origin: process.env.CORS_ORIGIN || "*",
 		credentials: true,
 	})
 );
@@ -44,4 +45,16 @@ app.get("/api", async (req, res) => {
 
 app.listen(port, () => {
 	console.log(`Backend listening at port: ${port}`);
+});
+
+// Cron job to clean expired refresh tokens daily at 3 AM
+cron.schedule("0 3 * * *", async () => {
+	try {
+		const result = await pool.query(
+			"DELETE FROM refresh_token WHERE expires_at < NOW()"
+		);
+		console.log(`[Cron] Cleaned ${result.rowCount} expired refresh tokens`);
+	} catch (err) {
+		console.error("[Cron] Error cleaning expired refresh tokens:", err);
+	}
 });

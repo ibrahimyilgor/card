@@ -193,7 +193,7 @@ export default function AchievementModal() {
 										mb: 1,
 									}}
 								>
-									{t("achievement_unlocked") || "Achievement Unlocked!"}
+									{t("achievement_earned") || "Achievement Earned!"}
 								</Typography>
 							</MotionBox>
 
