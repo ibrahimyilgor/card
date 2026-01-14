@@ -6,13 +6,20 @@ require("dotenv").config();
 const app = express();
 const port = 5000;
 
-const pool = new Pool({
-	user: "postgres",
-	host: process.env.PGHOST || "db", // Change 'localhost' to 'db' for Docker
-	database: "postgres",
-	password: "postgres",
-	port: 5432,
-});
+const pool = new Pool(
+	process.env.DATABASE_URL
+		? {
+				connectionString: process.env.DATABASE_URL,
+				ssl: { rejectUnauthorized: false },
+		  }
+		: {
+				user: "postgres",
+				host: process.env.PGHOST || "db",
+				database: "postgres",
+				password: "postgres",
+				port: 5432,
+		  }
+);
 
 app.use(
 	cors({
