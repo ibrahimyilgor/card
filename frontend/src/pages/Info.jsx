@@ -1,5 +1,6 @@
 import { useEffect, useState, useContext, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSEO } from "../utils/seo";
 import {
 	getDecks,
 	createDeck,
@@ -344,6 +345,10 @@ const DeckCard = ({
 export default function Info({ accountId, onStartGame }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
+
+	// SEO meta tags for info/decks page
+	useSEO('info');
+
 	const [decks, setDecks] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [modalOpen, setModalOpen] = useState(false);

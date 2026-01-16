@@ -1,5 +1,6 @@
 import { useEffect, useState, useContext, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useSEO } from "../utils/seo";
 import {
 	Box,
 	Typography,
@@ -203,6 +204,10 @@ const InsightCard = ({ icon: Icon, title, value, color }) => (
 export default function Stats() {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
+
+	// SEO meta tags for stats page
+	useSEO('stats');
+
 	const [loading, setLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState(0);
 	const [period, setPeriod] = useState("30d");

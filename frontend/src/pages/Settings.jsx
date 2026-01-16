@@ -14,6 +14,7 @@ import {
 import { useContext, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { I18nContext } from "../utils/i18n";
+import { useSEO } from "../utils/seo";
 import {
 	updateTheme,
 	updateLanguage,
@@ -136,6 +137,10 @@ export default function Settings({
 }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
+
+	// SEO meta tags for settings page
+	useSEO('settings');
+
 	const [selectedTheme, setSelectedTheme] = useState(currentTheme || "dark");
 	const [selectedLang, setSelectedLang] = useState(
 		localStorage.getItem("lang") || "en"

@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import { motion } from "framer-motion";
 import { login } from "../services/authServices";
 import { I18nContext } from "../utils/i18n";
+import { useSEO } from "../utils/seo";
 import { Box, Typography, Alert, Link } from "@mui/material";
 import BoltIcon from "@mui/icons-material/Bolt";
 import BuildIcon from "@mui/icons-material/Build";
@@ -71,6 +72,9 @@ export default function Login({ onLogin, onSwitch }) {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 	const { t } = useContext(I18nContext);
+
+	// SEO meta tags for login page
+	useSEO('login');
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();

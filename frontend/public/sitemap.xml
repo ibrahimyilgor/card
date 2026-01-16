@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage -->
+  <url>
+    <loc>https://memodeck.app/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://memodeck.app/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://memodeck.app/tr/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://memodeck.app/"/>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://memodeck.app/images/logo/memodeck.png</image:loc>
+      <image:title>MemoDeck Logo</image:title>
+      <image:caption>MemoDeck - Smart Flashcard Learning App</image:caption>
+    </image:image>
+  </url>
+  
+  <!-- Login Page -->
+  <url>
+    <loc>https://memodeck.app/login</loc>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Signup Page -->
+  <url>
+    <loc>https://memodeck.app/signup</loc>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Info/Home Page -->
+  <url>
+    <loc>https://memodeck.app/info</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://memodeck.app/info"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://memodeck.app/tr/info"/>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Plans/Pricing Page -->
+  <url>
+    <loc>https://memodeck.app/plans</loc>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Stats Page -->
+  <url>
+    <loc>https://memodeck.app/stats</loc>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Achievements Page -->
+  <url>
+    <loc>https://memodeck.app/achievements</loc>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Settings Page -->
+  <url>
+    <loc>https://memodeck.app/settings</loc>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+</urlset>

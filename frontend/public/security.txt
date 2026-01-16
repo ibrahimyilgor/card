@@ -1,0 +1,8 @@
+# MemoDeck Security Policy
+# https://memodeck.app/.well-known/security.txt
+
+Contact: mailto:security@memodeck.app
+Expires: 2027-01-16T00:00:00.000Z
+Preferred-Languages: en, tr
+Canonical: https://memodeck.app/.well-known/security.txt
+Policy: https://memodeck.app/security-policy
