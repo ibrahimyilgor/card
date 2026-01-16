@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useSEO } from "../utils/seo";
 import {
 	getGameFlashcards,
 	getHardFlashcards,
@@ -40,6 +41,9 @@ export default function Game({ onBackToDecks }) {
 	const location = useLocation();
 	const { t } = useContext(I18nContext);
 	const { processNewAchievements } = useContext(AchievementContext);
+
+	// SEO meta tags for game page
+	useSEO('game');
 
 	// Get initial settings from navigation state, then manage locally
 	const initialSettings = location.state?.settings || {

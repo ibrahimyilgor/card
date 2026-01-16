@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import { motion } from "framer-motion";
 import { login } from "../services/authServices";
 import { I18nContext } from "../utils/i18n";
+import { useSEO } from "../utils/seo";
 import { Box, Typography, Alert, Link } from "@mui/material";
 import BoltIcon from "@mui/icons-material/Bolt";
 import BuildIcon from "@mui/icons-material/Build";
@@ -71,6 +72,9 @@ export default function Login({ onLogin, onSwitch }) {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 	const { t } = useContext(I18nContext);
+
+	// SEO meta tags for login page
+	useSEO('login');
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -210,8 +214,8 @@ export default function Login({ onLogin, onSwitch }) {
 					>
 						<Box
 							component="img"
-							src="/images/logo/flashfacts.jpg"
-							alt="Flashfacts"
+							src="/images/logo/memodeck.png"
+							alt="MemoDeck"
 							sx={{
 								width: 40,
 								height: 40,
@@ -233,7 +237,7 @@ export default function Login({ onLogin, onSwitch }) {
 									fontFamily: "Inter, sans-serif",
 								}}
 							>
-								Flashfacts
+								MemoDeck
 							</Typography>
 							<Typography
 								variant="body2"
@@ -294,8 +298,8 @@ export default function Login({ onLogin, onSwitch }) {
 						>
 							<Box
 								component="img"
-								src="/images/logo/flashfacts.jpg"
-								alt="Flashfacts"
+								src="/images/logo/memodeck.png"
+								alt="MemoDeck"
 								sx={{
 									width: 48,
 									height: 48,
@@ -314,7 +318,7 @@ export default function Login({ onLogin, onSwitch }) {
 									WebkitTextFillColor: "transparent",
 								}}
 							>
-								Flashfacts
+								MemoDeck
 							</Typography>
 						</Box>
 

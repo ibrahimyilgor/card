@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import { motion } from "framer-motion";
 import { register } from "../services/authServices";
 import { I18nContext } from "../utils/i18n";
+import { useSEO } from "../utils/seo";
 import { Box, Typography, Alert, Link } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { StyledButton, StyledTextField, StyledCard } from "../components/ui";
@@ -10,6 +11,10 @@ const MotionBox = motion.create(Box);
 
 export default function Signup({ onSignup, onSwitch }) {
 	const { t } = useContext(I18nContext);
+
+	// SEO meta tags for signup page
+	useSEO('signup');
+
 	const [accountname, setAccountname] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -143,8 +148,8 @@ export default function Signup({ onSignup, onSwitch }) {
 					>
 						<Box
 							component="img"
-							src="/images/logo/flashfacts.jpg"
-							alt="Flashfacts"
+							src="/images/logo/memodeck.png"
+							alt="MemoDeck"
 							sx={{
 								width: 52,
 								height: 52,
@@ -164,7 +169,7 @@ export default function Signup({ onSignup, onSwitch }) {
 								fontFamily: "Inter, sans-serif",
 							}}
 						>
-							Flashfacts
+							MemoDeck
 						</Typography>
 					</MotionBox>
 

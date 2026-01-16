@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useSEO } from "../utils/seo";
 import {
 	Typography,
 	Box,
@@ -129,6 +130,10 @@ export default function Account() {
 	const theme = useTheme();
 	const navigate = useNavigate();
 	const { t, lang } = useContext(I18nContext);
+
+	// SEO meta tags for account page
+	useSEO('account');
+
 	const [account, setAccount] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");

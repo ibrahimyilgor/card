@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useSEO } from "../utils/seo";
 import PageContainer from "../components/ui/PageContainer";
 import { StyledCard, StyledButton } from "../components/ui";
 import {
@@ -272,6 +273,10 @@ function PlanSkeleton() {
 
 export default function Plans() {
 	const { t } = useContext(I18nContext);
+
+	// SEO meta tags for plans page
+	useSEO('plans');
+
 	const [plans, setPlans] = useState([]);
 	const [myPlan, setMyPlan] = useState(null);
 	const [loading, setLoading] = useState(true);

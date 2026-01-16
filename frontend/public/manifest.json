@@ -1,0 +1,139 @@
+{
+  "name": "MemoDeck - Smart Flashcard Learning App",
+  "short_name": "MemoDeck",
+  "description": "Master any subject with MemoDeck's intelligent flashcard system. Create custom decks, track your progress, and boost retention with spaced repetition.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e1e2e",
+  "theme_color": "#6366f1",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/images/logo/memodeck-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/memodeck-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/images/logo/memodeck-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshots/desktop-home.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "MemoDeck Dashboard"
+    },
+    {
+      "src": "/images/screenshots/desktop-game.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Flashcard Game Mode"
+    },
+    {
+      "src": "/images/screenshots/mobile-home.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "MemoDeck Mobile Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Decks",
+      "short_name": "Decks",
+      "description": "View and manage your flashcard decks",
+      "url": "/info",
+      "icons": [{ "src": "/images/icons/decks-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Statistics",
+      "short_name": "Stats",
+      "description": "View your learning statistics",
+      "url": "/stats",
+      "icons": [{ "src": "/images/icons/stats-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Achievements",
+      "short_name": "Achieve",
+      "description": "View your achievements",
+      "url": "/achievements",
+      "icons": [{ "src": "/images/icons/achievements-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}

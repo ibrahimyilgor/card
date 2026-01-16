@@ -1,0 +1,59 @@
+# MemoDeck Robots.txt
+# https://memodeck.app/robots.txt
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow private/authenticated areas
+Disallow: /api/
+Disallow: /session-expired
+Disallow: /*.json$
+
+# Allow specific public assets
+Allow: /images/
+Allow: /locales/
+Allow: /manifest.json
+Allow: /sitemap.xml
+
+# Crawl-delay for politeness (optional)
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://memodeck.app/sitemap.xml
+
+# Google-specific
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+
+# Bing-specific
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+
+# Yandex-specific
+User-agent: Yandex
+Allow: /
+Disallow: /api/
+
+# Baidu-specific
+User-agent: Baiduspider
+Allow: /
+Disallow: /api/
+
+# Block AI training bots (optional - remove if you want AI indexing)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
