@@ -6,7 +6,7 @@
 
 -oyun modlarının tekrar düzenlenmesi, buna bağlı olarak başarımların kontrolü
 
--mobil-web istatistiklerin yenilenmesi
+-mobil istatistiklerin webe göre yenilenmesi
 
 -backend token alıp her şeyi değiştirebilme. (Zaten olduğu iddia ediliyor test et)
 

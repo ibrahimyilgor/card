@@ -167,6 +167,7 @@
 	"90_days": "90G",
 	"1_year": "1Y",
 	"all_time_short": "Tümü",
+	"download_report": "Rapor İndir",
 	"sessions": "Oturum",
 	"total_sessions": "Toplam Oturum",
 	"decks": "Deste",
@@ -319,5 +320,16 @@
 	"import_csv_format": "İlk satır başlık olmalı (front, back). Sonraki her satır bir karttır.",
 	"import_json_format": "\"front\" ve \"back\" özelliklerine sahip nesneler dizisi.",
 	"game_duration": "Oyun Süresi",
-	"game_duration_desc": "Oyun süresini seçin"
+	"game_duration_desc": "Oyun süresini seçin",
+	"deck": "Deste",
+	"refresh": "Yenile",
+	"card_performance": "Kart Performansı",
+	"times_played": "Oynanma",
+	"filters": "Filtreler",
+	"today": "Bugün",
+	"start_date": "Başlangıç Tarihi",
+	"end_date": "Bitiş Tarihi",
+	"no_cards_data": "Henüz kart performans verisi yok",
+	"monthly": "Aylık",
+	"card_title": "Kart"
 }

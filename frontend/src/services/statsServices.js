@@ -61,3 +61,33 @@ export const getInsights = async () => {
 	const response = await api.get("/stats/insights");
 	return response.data;
 };
+
+// NEW: Get filtered stats summary for overview cards
+export const getFilteredStats = async (deckId = "all", startDate = null, endDate = null) => {
+	const params = new URLSearchParams();
+	params.append("deckId", deckId);
+	if (startDate) params.append("startDate", startDate);
+	if (endDate) params.append("endDate", endDate);
+	const response = await api.get(`/stats/filtered?${params.toString()}`);
+	return response.data;
+};
+
+// NEW: Get chart data with auto-grouping (daily/monthly)
+export const getChartData = async (deckId = "all", startDate = null, endDate = null) => {
+	const params = new URLSearchParams();
+	params.append("deckId", deckId);
+	if (startDate) params.append("startDate", startDate);
+	if (endDate) params.append("endDate", endDate);
+	const response = await api.get(`/stats/chart-data?${params.toString()}`);
+	return response.data;
+};
+
+// NEW: Get cards table with sorting
+export const getCardsTable = async (deckId = "all", sort = "times_played", order = "desc") => {
+	const params = new URLSearchParams();
+	params.append("deckId", deckId);
+	params.append("sort", sort);
+	params.append("order", order);
+	const response = await api.get(`/stats/cards-table?${params.toString()}`);
+	return response.data;
+};

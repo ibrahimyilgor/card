@@ -167,6 +167,7 @@
 	"90_days": "90D",
 	"1_year": "1Y",
 	"all_time_short": "All",
+	"download_report": "Download Report",
 	"sessions": "Sessions",
 	"total_sessions": "Total Sessions",
 	"decks": "Decks",
@@ -319,5 +320,16 @@
 	"import_csv_format": "First row should be headers (front, back). Each following row is a flashcard.",
 	"import_json_format": "Array of objects with \"front\" and \"back\" properties.",
 	"game_duration": "Game Duration",
-	"game_duration_desc": "Select the duration of the game"
+	"game_duration_desc": "Select the duration of the game",
+	"deck": "Deck",
+	"refresh": "Refresh",
+	"card_performance": "Card Performance",
+	"times_played": "Played",
+	"filters": "Filters",
+	"today": "Today",
+	"start_date": "Start Date",
+	"end_date": "End Date",
+	"no_cards_data": "No card performance data yet",
+	"monthly": "Monthly",
+	"card_title": "Card"
 }

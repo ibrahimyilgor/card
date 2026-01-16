@@ -624,5 +624,197 @@ module.exports = (pool) => {
 		}
 	});
 
+	// NEW: Get filtered stats summary (for overview cards)
+	router.get("/filtered", authenticateToken, async (req, res) => {
+		const accountId = req.user.accountId;
+		const { deckId, startDate, endDate } = req.query;
+
+		try {
+			let deckFilter = "";
+			let params = [accountId];
+			let paramIndex = 2;
+
+			// Deck filter
+			if (deckId && deckId !== "all") {
+				deckFilter = `AND deck_id = $${paramIndex}`;
+				params.push(deckId);
+				paramIndex++;
+			}
+
+			// Date filter
+			let dateFilter = "";
+			if (startDate && endDate) {
+				dateFilter = `AND DATE(session_date) >= $${paramIndex} AND DATE(session_date) <= $${
+					paramIndex + 1
+				}`;
+				params.push(startDate, endDate);
+			}
+
+			const result = await pool.query(
+				`
+				SELECT 
+					COALESCE(SUM(cards_studied), 0) as cards_studied,
+					COALESCE(SUM(correct_answers), 0) as correct,
+					COALESCE(SUM(wrong_answers), 0) as incorrect,
+					COALESCE(SUM(duration_seconds), 0) as study_time_seconds,
+					COUNT(*) as sessions
+				FROM study_session
+				WHERE account_id = $1 ${deckFilter} ${dateFilter}
+			`,
+				params
+			);
+
+			res.json({
+				cardsStudied: parseInt(result.rows[0].cards_studied) || 0,
+				correct: parseInt(result.rows[0].correct) || 0,
+				incorrect: parseInt(result.rows[0].incorrect) || 0,
+				studyTimeSeconds: parseInt(result.rows[0].study_time_seconds) || 0,
+				sessions: parseInt(result.rows[0].sessions) || 0,
+			});
+		} catch (err) {
+			console.error("Error fetching filtered stats:", err);
+			res.status(500).json({ error: "Failed to fetch filtered stats" });
+		}
+	});
+
+	// NEW: Get daily/monthly stats for charts with auto-grouping
+	router.get("/chart-data", authenticateToken, async (req, res) => {
+		const accountId = req.user.accountId;
+		const { deckId, startDate, endDate } = req.query;
+
+		try {
+			let deckFilter = "";
+			let params = [accountId];
+			let paramIndex = 2;
+
+			// Deck filter
+			if (deckId && deckId !== "all") {
+				deckFilter = `AND deck_id = $${paramIndex}`;
+				params.push(deckId);
+				paramIndex++;
+			}
+
+			// Date filter
+			let dateFilter = "";
+			if (startDate && endDate) {
+				dateFilter = `AND DATE(session_date) >= $${paramIndex} AND DATE(session_date) <= $${
+					paramIndex + 1
+				}`;
+				params.push(startDate, endDate);
+			}
+
+			// Calculate days difference to determine grouping
+			const daysDiff =
+				startDate && endDate
+					? Math.ceil(
+							(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)
+					  )
+					: 30;
+
+			let groupBy, dateFormat;
+			if (daysDiff <= 30) {
+				// Daily grouping
+				groupBy = "DATE(session_date)";
+				dateFormat = "DATE(session_date) as date";
+			} else {
+				// Monthly grouping
+				groupBy = "DATE_TRUNC('month', session_date)";
+				dateFormat = "DATE_TRUNC('month', session_date) as date";
+			}
+
+			const result = await pool.query(
+				`
+				SELECT 
+					${dateFormat},
+					SUM(cards_studied) as cards_studied,
+					SUM(correct_answers) as correct,
+					SUM(wrong_answers) as incorrect,
+					SUM(duration_seconds) as study_time_seconds,
+					COUNT(*) as sessions
+				FROM study_session
+				WHERE account_id = $1 ${deckFilter} ${dateFilter}
+				GROUP BY ${groupBy}
+				ORDER BY date ASC
+			`,
+				params
+			);
+
+			res.json({
+				data: result.rows.map((row) => ({
+					date: row.date,
+					cardsStudied: parseInt(row.cards_studied) || 0,
+					correct: parseInt(row.correct) || 0,
+					incorrect: parseInt(row.incorrect) || 0,
+					studyTimeSeconds: parseInt(row.study_time_seconds) || 0,
+					sessions: parseInt(row.sessions) || 0,
+				})),
+				grouping: daysDiff <= 30 ? "daily" : "monthly",
+			});
+		} catch (err) {
+			console.error("Error fetching chart data:", err);
+			res.status(500).json({ error: "Failed to fetch chart data" });
+		}
+	});
+
+	// NEW: Get cards table with sorting (all cards from selected deck(s) with stats)
+	router.get("/cards-table", authenticateToken, async (req, res) => {
+		const accountId = req.user.accountId;
+		const { deckId, sort = "times_played", order = "desc" } = req.query;
+
+		try {
+			let deckFilter = "";
+			let params = [accountId];
+
+			// Deck filter
+			if (deckId && deckId !== "all") {
+				deckFilter = `AND d.id = $2`;
+				params.push(deckId);
+			}
+
+			// Validate sort field
+			const validSorts = {
+				front: "f.front_text",
+				back: "f.back_text",
+				deck: "d.title",
+				times_played: "(f.correct_count + f.wrong_count)",
+				correct: "f.correct_count",
+				wrong: "f.wrong_count",
+				accuracy: `CASE WHEN f.correct_count + f.wrong_count > 0 
+					THEN f.correct_count::numeric / (f.correct_count + f.wrong_count) 
+					ELSE 0 END`,
+			};
+
+			const sortField = validSorts[sort] || validSorts.times_played;
+			const sortOrder = order === "asc" ? "ASC" : "DESC";
+
+			const result = await pool.query(
+				`
+				SELECT 
+					f.id,
+					f.front_text as front,
+					f.back_text as back,
+					d.id as deck_id,
+					d.title as deck_title,
+					f.correct_count as correct,
+					f.wrong_count as wrong,
+					(f.correct_count + f.wrong_count) as times_played,
+					CASE WHEN f.correct_count + f.wrong_count > 0
+						THEN ROUND(f.correct_count::numeric / (f.correct_count + f.wrong_count) * 100, 1)
+						ELSE 0 END as accuracy
+				FROM flashcard f
+				JOIN deck d ON f.deck_id = d.id
+				WHERE d.account_id = $1 ${deckFilter}
+				ORDER BY ${sortField} ${sortOrder}, f.id ASC
+			`,
+				params
+			);
+
+			res.json({ cards: result.rows });
+		} catch (err) {
+			console.error("Error fetching cards table:", err);
+			res.status(500).json({ error: "Failed to fetch cards table" });
+		}
+	});
+
 	return router;
 };

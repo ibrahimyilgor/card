@@ -80,7 +80,14 @@ module.exports = (pool) => {
 			);
 
 			await client.query("COMMIT");
-			res.status(201).json({ message: "Account registered", token, refreshToken, accountId });
+			res
+				.status(201)
+				.json({
+					message: "Account registered",
+					token,
+					refreshToken,
+					accountId,
+				});
 		} catch (err) {
 			await client.query("ROLLBACK");
 			console.error("Register error:", err);

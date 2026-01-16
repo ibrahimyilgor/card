@@ -9,6 +9,10 @@ import {
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import CloseIcon from "@mui/icons-material/Close";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
+import GpsFixedIcon from "@mui/icons-material/GpsFixed";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Confetti from "react-confetti";
 import { I18nContext } from "../../utils/i18n";
 import { AchievementContext } from "../../context/AchievementContext";
@@ -18,8 +22,23 @@ const MotionBox = motion.create(Box);
 // Category colors
 const categoryColors = {
 	streak: "#f97316", // Orange
-	accuracy: "#22c55e", // Green
-	volume: "#3b82f6", // Blue
+	accuracy: "#4ECDC4", // Teal/Turquoise
+	volume: "#9B59B6", // Purple
+};
+
+// Category icon component - same as Achievements page
+const CategoryIconComponent = ({ category, size = 48, color }) => {
+	const iconSx = { fontSize: size, color: color || categoryColors[category] };
+	switch (category) {
+		case "streak":
+			return <LocalFireDepartmentIcon sx={iconSx} />;
+		case "accuracy":
+			return <GpsFixedIcon sx={iconSx} />;
+		case "volume":
+			return <MenuBookIcon sx={iconSx} />;
+		default:
+			return <EmojiEventsIcon sx={iconSx} />;
+	}
 };
 
 export default function AchievementModal() {
@@ -172,10 +191,13 @@ export default function AchievementModal() {
 									justifyContent: "center",
 									mx: "auto",
 									mb: 3,
-									fontSize: 48,
 								}}
 							>
-								{currentAchievement.icon}
+								<CategoryIconComponent
+									category={currentAchievement.category}
+									size={48}
+									color={categoryColor}
+								/>
 							</MotionBox>
 
 							{/* Title */}
