@@ -61,8 +61,26 @@ module.exports = (pool) => {
 				[accountId, freePlanId]
 			);
 
+			// Generate access token (60 minutes)
+			const token = jwt.sign(
+				{ accountId, accountname },
+				process.env.JWT_SECRET || "dev_secret",
+				{ expiresIn: "60m" }
+			);
+
+			// Generate refresh token (30 days)
+			const refreshToken = crypto.randomBytes(64).toString("hex");
+			const expiresAt = new Date();
+			expiresAt.setDate(expiresAt.getDate() + 30);
+
+			// Store refresh token in database
+			await client.query(
+				"INSERT INTO refresh_token (token, account_id, expires_at) VALUES ($1, $2, $3)",
+				[refreshToken, accountId, expiresAt]
+			);
+
 			await client.query("COMMIT");
-			res.status(201).json({ message: "Account registered" });
+			res.status(201).json({ message: "Account registered", token, refreshToken, accountId });
 		} catch (err) {
 			await client.query("ROLLBACK");
 			console.error("Register error:", err);

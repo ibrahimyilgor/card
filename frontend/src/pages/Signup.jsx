@@ -143,8 +143,8 @@ export default function Signup({ onSignup, onSwitch }) {
 					>
 						<Box
 							component="img"
-							src="/images/logo/flashfacts.jpg"
-							alt="Flashfacts"
+							src="/images/logo/memodeck.png"
+							alt="MemoDeck"
 							sx={{
 								width: 52,
 								height: 52,
@@ -164,7 +164,7 @@ export default function Signup({ onSignup, onSwitch }) {
 								fontFamily: "Inter, sans-serif",
 							}}
 						>
-							Flashfacts
+							MemoDeck
 						</Typography>
 					</MotionBox>
 

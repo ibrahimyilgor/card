@@ -210,8 +210,8 @@ export default function Login({ onLogin, onSwitch }) {
 					>
 						<Box
 							component="img"
-							src="/images/logo/flashfacts.jpg"
-							alt="Flashfacts"
+							src="/images/logo/memodeck.png"
+							alt="MemoDeck"
 							sx={{
 								width: 40,
 								height: 40,
@@ -233,7 +233,7 @@ export default function Login({ onLogin, onSwitch }) {
 									fontFamily: "Inter, sans-serif",
 								}}
 							>
-								Flashfacts
+								MemoDeck
 							</Typography>
 							<Typography
 								variant="body2"
@@ -294,8 +294,8 @@ export default function Login({ onLogin, onSwitch }) {
 						>
 							<Box
 								component="img"
-								src="/images/logo/flashfacts.jpg"
-								alt="Flashfacts"
+								src="/images/logo/memodeck.png"
+								alt="MemoDeck"
 								sx={{
 									width: 48,
 									height: 48,
@@ -314,7 +314,7 @@ export default function Login({ onLogin, onSwitch }) {
 									WebkitTextFillColor: "transparent",
 								}}
 							>
-								Flashfacts
+								MemoDeck
 							</Typography>
 						</Box>
 

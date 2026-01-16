@@ -173,8 +173,8 @@ export default function Topbar({ onLogout, currentPath }) {
 				>
 					<Box
 						component="img"
-						src="/images/logo/flashfacts.jpg"
-						alt="Flashfacts"
+						src="/images/logo/memodeck.png"
+						alt="MemoDeck"
 						sx={{
 							width: 40,
 							height: 40,
@@ -198,7 +198,7 @@ export default function Topbar({ onLogout, currentPath }) {
 							display: { xs: "none", sm: "block" },
 						}}
 					>
-						Flashfacts
+						MemoDeck
 					</Typography>
 				</MotionBox>
 

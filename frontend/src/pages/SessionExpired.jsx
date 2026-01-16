@@ -37,8 +37,8 @@ export default function SessionExpired() {
 				{/* Logo */}
 				<Box
 					component="img"
-					src="/images/logo/flashfacts.jpg"
-					alt="Flashfacts"
+					src="/images/logo/memodeck.png"
+					alt="MemoDeck"
 					sx={{
 						width: 64,
 						height: 64,

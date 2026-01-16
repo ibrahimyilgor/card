@@ -1,21 +1,16 @@
--minio dockerhubdan kullanılabilir mi?
-
--dbyi bozmadan yeni column veya tablo ekleme işi nasıl olacak? 
-    
--kayıt olurken maille dogrulama.
-
--şifremi unuttum
+-firebase authenticationa geçiş.
 
 -plana göre özelliklerin açılıp kapatılması.
 
 -plana ekleme, plandan çıkarma vs
 
--match için başarımlar yanlış
+-oyun modlarının tekrar düzenlenmesi, buna bağlı olarak başarımların kontrolü
 
 -mobil-web istatistiklerin yenilenmesi
 
--backend token alıp her şeyi değiştirebilme.
+-backend token alıp her şeyi değiştirebilme. (Zaten olduğu iddia ediliyor test et)
 
 -reklam ekleme
 
+-test ekleme
 
