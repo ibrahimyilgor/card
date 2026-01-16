@@ -8,7 +8,6 @@ import {
 	Skeleton,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import { useSEO } from "../utils/seo";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import GpsFixedIcon from "@mui/icons-material/GpsFixed";
@@ -142,9 +141,9 @@ function AchievementCard({ achievement, index }) {
 						mb: 2,
 					}}
 				>
-					<CategoryIconComponent 
-						category={achievement.category} 
-						size={32} 
+					<CategoryIconComponent
+						category={achievement.category}
+						size={32}
 						color={isEarned ? categoryColor : undefined}
 					/>
 				</Box>
@@ -213,10 +212,6 @@ function AchievementsSkeleton() {
 export default function Achievements() {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
-
-	// SEO meta tags for achievements page
-	useSEO('achievements');
-
 	const [achievements, setAchievements] = useState([]);
 	const [loading, setLoading] = useState(true);
 

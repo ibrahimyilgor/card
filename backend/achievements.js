@@ -39,7 +39,11 @@ module.exports = (pool) => {
 		const accountId = req.user.accountId;
 		const { accuracy, cardsStudied } = req.body;
 
-		console.log("[Achievements] Check request:", { accountId, accuracy, cardsStudied });
+		console.log("[Achievements] Check request:", {
+			accountId,
+			accuracy,
+			cardsStudied,
+		});
 
 		try {
 			const newlyEarned = [];
@@ -87,7 +91,12 @@ module.exports = (pool) => {
 				console.log("[Achievements] Checking accuracy:", accuracy);
 				const accuracyThresholds = [100, 90, 80]; // Check from highest to lowest
 				for (const threshold of accuracyThresholds) {
-					console.log("[Achievements] Testing threshold:", threshold, "accuracy >= threshold:", accuracy >= threshold);
+					console.log(
+						"[Achievements] Testing threshold:",
+						threshold,
+						"accuracy >= threshold:",
+						accuracy >= threshold
+					);
 					if (accuracy >= threshold) {
 						const earned = await awardAchievement(
 							pool,
@@ -95,7 +104,12 @@ module.exports = (pool) => {
 							"accuracy",
 							threshold
 						);
-						console.log("[Achievements] Award result for", threshold, ":", earned);
+						console.log(
+							"[Achievements] Award result for",
+							threshold,
+							":",
+							earned
+						);
 						if (earned) newlyEarned.push(earned);
 						break; // Only award the highest threshold
 					}
