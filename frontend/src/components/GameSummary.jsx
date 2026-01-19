@@ -83,6 +83,7 @@ export default function GameSummary({
 	onBackToDecks,
 	onChangeMode,
 	gameMode = "standard",
+	challengeType = "none",
 	livesRemaining = 0,
 	maxLives = 3,
 	matchAttempts = 0,
@@ -98,14 +99,14 @@ export default function GameSummary({
 				? Math.round((matchPairs / matchAttempts) * 100)
 				: 0
 			: totalCards > 0
-			? Math.round((correctCount / totalCards) * 100)
-			: 0;
+				? Math.round((correctCount / totalCards) * 100)
+				: 0;
 	const { t } = useContext(I18nContext);
 
 	// Determine grade and message based on percentage and mode
 	const getGrade = () => {
-		// Survival mode - game over
-		if (gameMode === "survival" && livesRemaining === 0) {
+		// Survival challenge - game over
+		if (challengeType === "survival" && livesRemaining === 0) {
 			return {
 				grade: "💀",
 				message: t("game_over") || "Game Over!",
@@ -177,7 +178,7 @@ export default function GameSummary({
 						justifyContent: "center",
 						background: `linear-gradient(135deg, ${alpha(
 							gradeColor,
-							0.2
+							0.2,
 						)} 0%, ${alpha(gradeColor, 0.05)} 100%)`,
 						border: `2px solid ${alpha(gradeColor, 0.3)}`,
 						boxShadow: `0 8px 32px ${alpha(gradeColor, 0.2)}`,
@@ -225,98 +226,100 @@ export default function GameSummary({
 					</Typography>
 				</MotionBox>
 
-				{/* Percentage Circle */}
-				<MotionBox
-					initial={{ scale: 0 }}
-					animate={{ scale: 1 }}
-					transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-					sx={{ mb: 4 }}
-				>
-					<Box
-						sx={{
-							position: "relative",
-							width: 140,
-							height: 140,
-							mx: "auto",
-						}}
+				{/* Percentage Circle - Hide for match mode */}
+				{gameMode !== "match" && (
+					<MotionBox
+						initial={{ scale: 0 }}
+						animate={{ scale: 1 }}
+						transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+						sx={{ mb: 4 }}
 					>
-						{/* Background circle */}
 						<Box
 							sx={{
-								position: "absolute",
-								top: 0,
-								left: 0,
-								width: "100%",
-								height: "100%",
-								borderRadius: "50%",
-								border: `8px solid ${alpha(theme.palette.divider, 0.2)}`,
-							}}
-						/>
-						{/* Progress circle */}
-						<Box
-							component="svg"
-							viewBox="0 0 100 100"
-							sx={{
-								position: "absolute",
-								top: 0,
-								left: 0,
-								width: "100%",
-								height: "100%",
-								transform: "rotate(-90deg)",
+								position: "relative",
+								width: 140,
+								height: 140,
+								mx: "auto",
 							}}
 						>
-							<motion.circle
-								cx="50"
-								cy="50"
-								r="42"
-								fill="none"
-								stroke={gradeColor}
-								strokeWidth="8"
-								strokeLinecap="round"
-								initial={{ pathLength: 0 }}
-								animate={{ pathLength: percentage / 100 }}
-								transition={{ delay: 0.5, duration: 1, ease: "easeOut" }}
-								style={{
-									strokeDasharray: "264",
-									strokeDashoffset: "0",
+							{/* Background circle */}
+							<Box
+								sx={{
+									position: "absolute",
+									top: 0,
+									left: 0,
+									width: "100%",
+									height: "100%",
+									borderRadius: "50%",
+									border: `8px solid ${alpha(theme.palette.divider, 0.2)}`,
 								}}
 							/>
-						</Box>
-						{/* Content */}
-						<Box
-							sx={{
-								position: "absolute",
-								top: "50%",
-								left: "50%",
-								transform: "translate(-50%, -50%)",
-								textAlign: "center",
-							}}
-						>
-							<Typography
-								variant="h3"
+							{/* Progress circle */}
+							<Box
+								component="svg"
+								viewBox="0 0 100 100"
 								sx={{
-									fontWeight: 800,
-									color: gradeColor,
-									fontFamily: "Inter, sans-serif",
-									lineHeight: 1,
-									fontSize: 36,
+									position: "absolute",
+									top: 0,
+									left: 0,
+									width: "100%",
+									height: "100%",
+									transform: "rotate(-90deg)",
 								}}
 							>
-								{percentage}%
-							</Typography>
-							<Typography
-								variant="caption"
+								<motion.circle
+									cx="50"
+									cy="50"
+									r="42"
+									fill="none"
+									stroke={gradeColor}
+									strokeWidth="8"
+									strokeLinecap="round"
+									initial={{ pathLength: 0 }}
+									animate={{ pathLength: percentage / 100 }}
+									transition={{ delay: 0.5, duration: 1, ease: "easeOut" }}
+									style={{
+										strokeDasharray: "264",
+										strokeDashoffset: "0",
+									}}
+								/>
+							</Box>
+							{/* Content */}
+							<Box
 								sx={{
-									color: "text.cardSubtitle",
-									fontFamily: "Inter, sans-serif",
-									fontWeight: 500,
+									position: "absolute",
+									top: "50%",
+									left: "50%",
+									transform: "translate(-50%, -50%)",
+									textAlign: "center",
 								}}
 							>
-								{t("success_rate") || "Score"}
-							</Typography>
+								<Typography
+									variant="h3"
+									sx={{
+										fontWeight: 800,
+										color: gradeColor,
+										fontFamily: "Inter, sans-serif",
+										lineHeight: 1,
+										fontSize: 36,
+									}}
+								>
+									{percentage}%
+								</Typography>
+								<Typography
+									variant="caption"
+									sx={{
+										color: "text.cardSubtitle",
+										fontFamily: "Inter, sans-serif",
+										fontWeight: 500,
+									}}
+								>
+									{t("success_rate") || "Score"}
+								</Typography>
+							</Box>
 						</Box>
-					</Box>
-				</MotionBox>
+					</MotionBox>
+				)}
 
 				{/* Stats Row */}
 				<Box
@@ -330,48 +333,48 @@ export default function GameSummary({
 						scrollbarWidth: "none",
 					}}
 				>
-					<StatItem
-						value={correctCount}
-						label={t("correct") || "Correct"}
-						color={theme.palette.success.main}
-						icon={CheckCircleIcon}
-						delay={0.6}
-					/>
-					<StatItem
-						value={incorrectCount}
-						label={t("incorrect") || "Incorrect"}
-						color={theme.palette.error.main}
-						icon={CancelIcon}
-						delay={0.7}
-					/>
-					<StatItem
-						value={totalCards}
-						label={t("total") || "Total"}
-						color={theme.palette.primary.main}
-						icon={StyleIcon}
-						delay={0.8}
-					/>
-
-					{/* Survival mode - show lives remaining */}
-					{gameMode === "survival" && (
-						<StatItem
-							value={`${livesRemaining}/${maxLives}`}
-							label={t("lives_left") || "Lives Left"}
-							color="#ef4444"
-							icon={FavoriteIcon}
-							delay={0.9}
-						/>
-					)}
-
-					{/* Match mode - show attempts */}
-					{gameMode === "match" && (
-						<StatItem
-							value={matchAttempts}
-							label={t("attempts") || "Attempts"}
-							color="#ec4899"
-							icon={GridViewIcon}
-							delay={0.9}
-						/>
+					{/* Match mode: show pairs and attempts only */}
+					{gameMode === "match" ? (
+						<>
+							<StatItem
+								value={matchPairs}
+								label={t("pairs") || "Pairs"}
+								color={theme.palette.primary.main}
+								icon={StyleIcon}
+								delay={0.6}
+							/>
+							<StatItem
+								value={matchAttempts}
+								label={t("attempts") || "Attempts"}
+								color="#ec4899"
+								icon={GridViewIcon}
+								delay={0.7}
+							/>
+						</>
+					) : (
+						<>
+							<StatItem
+								value={correctCount}
+								label={t("correct") || "Correct"}
+								color={theme.palette.success.main}
+								icon={CheckCircleIcon}
+								delay={0.6}
+							/>
+							<StatItem
+								value={incorrectCount}
+								label={t("incorrect") || "Incorrect"}
+								color={theme.palette.error.main}
+								icon={CancelIcon}
+								delay={0.7}
+							/>
+							<StatItem
+								value={totalCards}
+								label={t("total") || "Total"}
+								color={theme.palette.primary.main}
+								icon={StyleIcon}
+								delay={0.8}
+							/>
+						</>
 					)}
 				</Box>
 			</StyledCard>

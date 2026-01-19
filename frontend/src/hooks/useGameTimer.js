@@ -27,7 +27,7 @@ export default function useGameTimer(initialTime = 10, isActive = true) {
 				clearInterval(intervalRef.current);
 			}
 		},
-		[initialTime]
+		[initialTime],
 	);
 
 	// Restart the timer (reset and start)
@@ -37,7 +37,7 @@ export default function useGameTimer(initialTime = 10, isActive = true) {
 			setHasExpired(false);
 			setIsRunning(true);
 		},
-		[initialTime]
+		[initialTime],
 	);
 
 	// Timer effect
@@ -77,8 +77,16 @@ export default function useGameTimer(initialTime = 10, isActive = true) {
 		};
 	}, []);
 
+	// Format time as MM:SS
+	const formatTime = (seconds) => {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins}:${secs.toString().padStart(2, "0")}`;
+	};
+
 	return {
 		timeLeft,
+		formattedTime: formatTime(timeLeft),
 		isRunning,
 		hasExpired,
 		start,

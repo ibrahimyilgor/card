@@ -18,7 +18,7 @@ module.exports = (pool) => {
                 LEFT JOIN flashcard f ON d.id = f.deck_id
                 WHERE d.account_id = $1
             `,
-				[accountId]
+				[accountId],
 			);
 
 			// Total correct/wrong counts
@@ -31,7 +31,7 @@ module.exports = (pool) => {
                 JOIN deck d ON f.deck_id = d.id
                 WHERE d.account_id = $1
             `,
-				[accountId]
+				[accountId],
 			);
 
 			// Study sessions from study_session table
@@ -46,7 +46,7 @@ module.exports = (pool) => {
                 FROM study_session
                 WHERE account_id = $1
             `,
-				[accountId]
+				[accountId],
 			);
 
 			// Current streak calculation
@@ -67,7 +67,7 @@ module.exports = (pool) => {
                 FROM streak
                 WHERE grp = (SELECT grp FROM streak WHERE study_date = CURRENT_DATE)
             `,
-				[accountId]
+				[accountId],
 			);
 
 			// Longest streak
@@ -91,7 +91,7 @@ module.exports = (pool) => {
                     GROUP BY grp
                 ) s
             `,
-				[accountId]
+				[accountId],
 			);
 
 			// Best deck (highest accuracy with at least 10 answers)
@@ -111,7 +111,7 @@ module.exports = (pool) => {
                 ORDER BY accuracy DESC
                 LIMIT 1
             `,
-				[accountId]
+				[accountId],
 			);
 
 			// Average session duration
@@ -121,7 +121,7 @@ module.exports = (pool) => {
                 FROM study_session
                 WHERE account_id = $1
             `,
-				[accountId]
+				[accountId],
 			);
 
 			const totalCorrect = parseInt(answerStats.rows[0].total_correct) || 0;
@@ -145,7 +145,7 @@ module.exports = (pool) => {
 					parseInt(longestStreakResult.rows[0]?.longest_streak) || 0,
 				bestDeck: bestDeck.rows[0] || null,
 				avgSessionDuration: Math.round(
-					parseFloat(avgSession.rows[0].avg_duration) || 0
+					parseFloat(avgSession.rows[0].avg_duration) || 0,
 				),
 			});
 		} catch (err) {
@@ -193,7 +193,7 @@ module.exports = (pool) => {
                 GROUP BY DATE(session_date)
                 ORDER BY date ASC
             `,
-				params
+				params,
 			);
 
 			res.json({ daily: dailyStats.rows });
@@ -228,7 +228,7 @@ module.exports = (pool) => {
                 GROUP BY d.id, d.title, d.mode, d.created_at
                 ORDER BY d.title ASC
             `,
-				[accountId]
+				[accountId],
 			);
 
 			res.json({ decks: deckStats.rows });
@@ -248,7 +248,7 @@ module.exports = (pool) => {
 			// Verify ownership
 			const ownership = await pool.query(
 				"SELECT account_id FROM deck WHERE id = $1",
-				[deckId]
+				[deckId],
 			);
 			if (ownership.rows.length === 0)
 				return res.status(404).json({ error: "Deck not found" });
@@ -264,7 +264,7 @@ module.exports = (pool) => {
                 WHERE d.id = $1
                 GROUP BY d.id
             `,
-				[deckId]
+				[deckId],
 			);
 
 			// Card stats
@@ -279,7 +279,7 @@ module.exports = (pool) => {
                 FROM flashcard
                 WHERE deck_id = $1
             `,
-				[deckId]
+				[deckId],
 			);
 
 			// Session history
@@ -305,7 +305,7 @@ module.exports = (pool) => {
                 GROUP BY DATE(session_date), game_mode
                 ORDER BY date DESC
             `,
-				[deckId]
+				[deckId],
 			);
 
 			// Mode breakdown
@@ -321,7 +321,7 @@ module.exports = (pool) => {
                 WHERE deck_id = $1
                 GROUP BY game_mode
             `,
-				[deckId]
+				[deckId],
 			);
 
 			// Top 5 hardest cards
@@ -336,7 +336,7 @@ module.exports = (pool) => {
                 ORDER BY error_rate DESC, wrong_count DESC
                 LIMIT 5
             `,
-				[deckId]
+				[deckId],
 			);
 
 			// Top 5 easiest cards
@@ -351,7 +351,7 @@ module.exports = (pool) => {
                 ORDER BY success_rate DESC, correct_count DESC
                 LIMIT 5
             `,
-				[deckId]
+				[deckId],
 			);
 
 			const totalCorrect = parseInt(cardStats.rows[0].total_correct) || 0;
@@ -392,7 +392,7 @@ module.exports = (pool) => {
 			// Verify ownership
 			const ownership = await pool.query(
 				"SELECT account_id FROM deck WHERE id = $1",
-				[deckId]
+				[deckId],
 			);
 			if (ownership.rows.length === 0)
 				return res.status(404).json({ error: "Deck not found" });
@@ -427,7 +427,7 @@ module.exports = (pool) => {
                 WHERE deck_id = $1
                 ORDER BY ${orderBy}
             `,
-				[deckId]
+				[deckId],
 			);
 
 			res.json({ cards: cards.rows });
@@ -443,6 +443,7 @@ module.exports = (pool) => {
 		const {
 			deckId,
 			gameMode,
+			challengeType,
 			cardsStudied,
 			correctAnswers,
 			wrongAnswers,
@@ -453,7 +454,7 @@ module.exports = (pool) => {
 			// Verify deck ownership
 			const ownership = await pool.query(
 				"SELECT account_id FROM deck WHERE id = $1",
-				[deckId]
+				[deckId],
 			);
 			if (ownership.rows.length === 0)
 				return res.status(404).json({ error: "Deck not found" });
@@ -462,19 +463,20 @@ module.exports = (pool) => {
 
 			const result = await pool.query(
 				`
-                INSERT INTO study_session (account_id, deck_id, game_mode, cards_studied, correct_answers, wrong_answers, duration_seconds)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                INSERT INTO study_session (account_id, deck_id, game_mode, challenge_type, cards_studied, correct_answers, wrong_answers, duration_seconds)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 RETURNING *
             `,
 				[
 					accountId,
 					deckId,
 					gameMode,
+					challengeType || "none",
 					cardsStudied,
 					correctAnswers,
 					wrongAnswers,
 					durationSeconds,
-				]
+				],
 			);
 
 			res.status(201).json({ session: result.rows[0] });
@@ -499,7 +501,7 @@ module.exports = (pool) => {
                 GROUP BY DATE(session_date)
                 ORDER BY date ASC
             `,
-				[accountId]
+				[accountId],
 			);
 
 			res.json({ heatmap: heatmap.rows });
@@ -529,7 +531,7 @@ module.exports = (pool) => {
                 ORDER BY avg_accuracy DESC
                 LIMIT 1
             `,
-				[accountId]
+				[accountId],
 			);
 
 			// Best study day
@@ -548,7 +550,7 @@ module.exports = (pool) => {
                 ORDER BY avg_accuracy DESC
                 LIMIT 1
             `,
-				[accountId]
+				[accountId],
 			);
 
 			// Weekly comparison
@@ -563,7 +565,7 @@ module.exports = (pool) => {
                 WHERE account_id = $1 AND session_date >= CURRENT_DATE - INTERVAL '14 days'
                 GROUP BY CASE WHEN session_date >= CURRENT_DATE - INTERVAL '7 days' THEN 'current' ELSE 'previous' END
             `,
-				[accountId]
+				[accountId],
 			);
 
 			// Most active mode
@@ -576,7 +578,7 @@ module.exports = (pool) => {
                 ORDER BY cards DESC
                 LIMIT 1
             `,
-				[accountId]
+				[accountId],
 			);
 
 			const dayNames = [
@@ -594,13 +596,13 @@ module.exports = (pool) => {
 					? {
 							hour: parseInt(bestHour.rows[0].hour),
 							accuracy: Math.round(parseFloat(bestHour.rows[0].avg_accuracy)),
-					  }
+						}
 					: null,
 				bestDay: bestDay.rows[0]
 					? {
 							day: dayNames[parseInt(bestDay.rows[0].day_of_week)],
 							accuracy: Math.round(parseFloat(bestDay.rows[0].avg_accuracy)),
-					  }
+						}
 					: null,
 				weeklyComparison: weeklyComparison.rows.reduce(
 					(acc, row) => {
@@ -614,7 +616,7 @@ module.exports = (pool) => {
 					{
 						current: { cards: 0, correct: 0, wrong: 0 },
 						previous: { cards: 0, correct: 0, wrong: 0 },
-					}
+					},
 				),
 				mostActiveMode: mostActiveMode.rows[0] || null,
 			});
@@ -661,7 +663,7 @@ module.exports = (pool) => {
 				FROM study_session
 				WHERE account_id = $1 ${deckFilter} ${dateFilter}
 			`,
-				params
+				params,
 			);
 
 			res.json({
@@ -707,8 +709,8 @@ module.exports = (pool) => {
 			const daysDiff =
 				startDate && endDate
 					? Math.ceil(
-							(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)
-					  )
+							(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24),
+						)
 					: 30;
 
 			let groupBy, dateFormat;
@@ -736,7 +738,7 @@ module.exports = (pool) => {
 				GROUP BY ${groupBy}
 				ORDER BY date ASC
 			`,
-				params
+				params,
 			);
 
 			res.json({
@@ -806,13 +808,54 @@ module.exports = (pool) => {
 				WHERE d.account_id = $1 ${deckFilter}
 				ORDER BY ${sortField} ${sortOrder}, f.id ASC
 			`,
-				params
+				params,
 			);
 
 			res.json({ cards: result.rows });
 		} catch (err) {
 			console.error("Error fetching cards table:", err);
 			res.status(500).json({ error: "Failed to fetch cards table" });
+		}
+	});
+
+	// Reset all statistics for the account
+	router.delete("/reset", authenticateToken, async (req, res) => {
+		const accountId = req.user.accountId;
+		const client = await pool.connect();
+
+		try {
+			await client.query("BEGIN");
+
+			// Reset flashcard statistics (correct_count and wrong_count to 0)
+			await client.query(
+				`
+				UPDATE flashcard f
+				SET correct_count = 0, wrong_count = 0
+				FROM deck d
+				WHERE f.deck_id = d.id AND d.account_id = $1
+				`,
+				[accountId],
+			);
+
+			// Delete all study sessions
+			const sessionsResult = await client.query(
+				`DELETE FROM study_session WHERE account_id = $1 RETURNING id`,
+				[accountId],
+			);
+
+			await client.query("COMMIT");
+
+			res.json({
+				success: true,
+				message: "Statistics reset successfully",
+				deletedSessions: sessionsResult.rowCount,
+			});
+		} catch (err) {
+			await client.query("ROLLBACK");
+			console.error("Error resetting statistics:", err);
+			res.status(500).json({ error: "Failed to reset statistics" });
+		} finally {
+			client.release();
 		}
 	});
 

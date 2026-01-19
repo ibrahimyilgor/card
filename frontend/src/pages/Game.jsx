@@ -43,11 +43,12 @@ export default function Game({ onBackToDecks }) {
 	const { processNewAchievements } = useContext(AchievementContext);
 
 	// SEO meta tags for game page
-	useSEO('game');
+	useSEO("game");
 
 	// Get initial settings from navigation state, then manage locally
 	const initialSettings = location.state?.settings || {
 		mode: "standard",
+		challengeType: "none",
 		timeLimit: 60,
 		lives: 3,
 		cardDirection: "normal",
@@ -56,6 +57,7 @@ export default function Game({ onBackToDecks }) {
 	const [settings, setSettings] = useState(initialSettings);
 	const [showSettingsModal, setShowSettingsModal] = useState(false);
 	const gameMode = settings.mode || "standard";
+	const challengeType = settings.challengeType || "none";
 	const cardDirection = settings.cardDirection || "normal";
 	const hardModeEnabled = settings.hardModeEnabled || false;
 
@@ -78,8 +80,11 @@ export default function Game({ onBackToDecks }) {
 	});
 	const [gameStartTime, setGameStartTime] = useState(null);
 
-	// Custom hooks for timed and survival modes
-	const timer = useGameTimer(settings.timeLimit || 10, gameMode === "timed");
+	// Custom hooks for timed and survival challenge types
+	const timer = useGameTimer(
+		settings.timeLimit || 60,
+		challengeType === "timed",
+	);
 	const lives = useGameLives(settings.lives || 3);
 
 	// Fetch flashcards
@@ -126,42 +131,43 @@ export default function Game({ onBackToDecks }) {
 		}
 	}, [loading, flashcards.length, gameStartTime]);
 
-	// Start timer when cards load for timed mode
+	// Start timer when cards load for timed challenge
 	useEffect(() => {
 		if (
 			!loading &&
 			flashcards.length > 0 &&
-			gameMode === "timed" &&
+			challengeType === "timed" &&
 			!timer.isRunning
 		) {
 			timer.restart(settings.timeLimit);
 		}
-	}, [loading, flashcards.length, gameMode]);
+	}, [loading, flashcards.length, challengeType]);
 
 	// Handle timer expiration
 	useEffect(() => {
-		if (timer.hasExpired && gameMode === "timed" && !gameEnded) {
+		if (timer.hasExpired && challengeType === "timed" && !gameEnded) {
 			playSound(SOUNDS.GAME_OVER);
 			setGameEnded(true);
 		}
-	}, [timer.hasExpired, gameMode, gameEnded]);
+	}, [timer.hasExpired, challengeType, gameEnded]);
 
-	// Handle game over in survival mode
+	// Handle game over in survival challenge
 	useEffect(() => {
-		if (lives.isGameOver && gameMode === "survival") {
+		if (lives.isGameOver && challengeType === "survival") {
 			playSound(SOUNDS.GAME_OVER);
 			setGameEnded(true);
 		}
-	}, [lives.isGameOver, gameMode]);
+	}, [lives.isGameOver, challengeType]);
 
 	// Record session when game ends
 	useEffect(() => {
 		if (gameEnded && gameStartTime) {
 			const durationSeconds = Math.round((Date.now() - gameStartTime) / 1000);
-			const cardsStudied =
-				gameMode === "match"
-					? flashcards.length
-					: scores.correct + scores.incorrect;
+			// Match mode: track pairs matched, not correct/wrong (it's a memory game)
+			const isMatchMode = gameMode === "match";
+			const cardsStudied = isMatchMode
+				? flashcards.length // pairs matched
+				: scores.correct + scores.incorrect;
 
 			const totalAnswers = scores.correct + scores.incorrect;
 			const accuracy =
@@ -172,14 +178,17 @@ export default function Game({ onBackToDecks }) {
 			recordSession({
 				deckId: parseInt(deckId),
 				gameMode,
+				challengeType,
 				cardsStudied,
-				correctAnswers: scores.correct,
-				wrongAnswers: scores.incorrect,
+				// Match mode: don't track correct/wrong (memory game, not knowledge test)
+				correctAnswers: isMatchMode ? 0 : scores.correct,
+				wrongAnswers: isMatchMode ? 0 : scores.incorrect,
 				durationSeconds,
 			}).catch((err) => console.error("Error recording session:", err));
 
+			// Skip accuracy achievements for match mode (it's a memory game)
 			checkAchievements({
-				accuracy,
+				accuracy: isMatchMode ? 0 : accuracy,
 				cardsStudied,
 			})
 				.then((result) => {
@@ -203,7 +212,7 @@ export default function Game({ onBackToDecks }) {
 				try {
 					await updateFlashcardStats(
 						flashcards[currentCardIndex].id,
-						isCorrect
+						isCorrect,
 					);
 				} catch (err) {
 					console.error("Error updating stats:", err);
@@ -214,7 +223,7 @@ export default function Game({ onBackToDecks }) {
 				setScores((prev) => ({ ...prev, correct: prev.correct + 1 }));
 			} else {
 				setScores((prev) => ({ ...prev, incorrect: prev.incorrect + 1 }));
-				if (gameMode === "survival") {
+				if (challengeType === "survival") {
 					lives.loseLife();
 					if (lives.lives <= 1) {
 						setGameEnded(true);
@@ -230,7 +239,7 @@ export default function Game({ onBackToDecks }) {
 				setSelectedChoice(null);
 				setShowChoiceResult(false);
 			} else {
-				if (gameMode === "timed" || gameMode === "survival") {
+				if (challengeType === "timed" || challengeType === "survival") {
 					setFlashcards((prev) => {
 						const shuffled = [...prev];
 						for (let i = shuffled.length - 1; i > 0; i--) {
@@ -250,7 +259,7 @@ export default function Game({ onBackToDecks }) {
 				}
 			}
 		},
-		[currentCardIndex, flashcards, gameMode, lives, gameEnded]
+		[currentCardIndex, flashcards, challengeType, lives, gameEnded],
 	);
 
 	const handleCardFlip = useCallback(() => {
@@ -290,7 +299,7 @@ export default function Game({ onBackToDecks }) {
 			lives.reset(newSettings.lives || 3);
 			timer.reset(newSettings.timeLimit || 10);
 		},
-		[lives, timer]
+		[lives, timer],
 	);
 
 	const handleWriteSubmit = async (userAnswer) => {
@@ -314,9 +323,13 @@ export default function Game({ onBackToDecks }) {
 		}, 1500);
 	};
 
-	const handleMatchComplete = ({ attempts }) => {
+	const handleMatchComplete = ({ attempts, totalPairs }) => {
 		playSound(SOUNDS.SUCCESS);
-		setGameStats((prev) => ({ ...prev, matchAttempts: attempts }));
+		setGameStats((prev) => ({
+			...prev,
+			matchAttempts: attempts,
+			matchPairs: totalPairs,
+		}));
 		setGameEnded(true);
 	};
 
@@ -342,19 +355,19 @@ export default function Game({ onBackToDecks }) {
 				case " ":
 				case "Enter":
 					e.preventDefault();
-					if (["standard", "timed", "survival", "reverse"].includes(gameMode)) {
+					if (["standard", "reverse"].includes(gameMode)) {
 						handleCardFlip();
 					}
 					break;
 				case "ArrowLeft":
 					e.preventDefault();
-					if (["standard", "timed", "survival", "reverse"].includes(gameMode)) {
+					if (["standard", "reverse"].includes(gameMode)) {
 						handleAnswer(false);
 					}
 					break;
 				case "ArrowRight":
 					e.preventDefault();
-					if (["standard", "timed", "survival", "reverse"].includes(gameMode)) {
+					if (["standard", "reverse"].includes(gameMode)) {
 						handleAnswer(true);
 					}
 					break;
@@ -450,9 +463,9 @@ export default function Game({ onBackToDecks }) {
 					description={
 						hardModeEnabled
 							? t("no_hard_cards_desc") ||
-							  "Great job! You have no cards marked as difficult."
+								"Great job! You have no cards marked as difficult."
 							: t("no_flashcards_desc") ||
-							  "This deck has no flashcards yet. Add some cards to start studying."
+								"This deck has no flashcards yet. Add some cards to start studying."
 					}
 					actionLabel={t("back_to_decks") || "Back to Decks"}
 					onAction={onBackToDecks}
@@ -472,10 +485,11 @@ export default function Game({ onBackToDecks }) {
 					onBackToDecks={onBackToDecks}
 					onChangeMode={() => setShowSettingsModal(true)}
 					gameMode={gameMode}
+					challengeType={challengeType}
 					livesRemaining={lives.lives}
 					maxLives={lives.maxLives}
 					matchAttempts={gameStats.matchAttempts}
-					matchPairs={Math.min(flashcards.length, 6)}
+					matchPairs={gameStats.matchPairs || Math.min(flashcards.length, 6)}
 				/>
 				<GameSettingsModal
 					open={showSettingsModal}
@@ -498,6 +512,8 @@ export default function Game({ onBackToDecks }) {
 				onMatch={(isCorrect) => {
 					playSound(isCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
 				}}
+				challengeType={challengeType}
+				timer={timer}
 				t={t}
 			/>
 		);
@@ -524,6 +540,7 @@ export default function Game({ onBackToDecks }) {
 			>
 				<GameHeader
 					gameMode={gameMode}
+					challengeType={challengeType}
 					currentCardIndex={currentCardIndex}
 					flashcardsLength={flashcards.length}
 					timer={timer}
@@ -556,8 +573,8 @@ export default function Game({ onBackToDecks }) {
 					gap: 3,
 				}}
 			>
-				{/* Standard, Timed, Survival, Reverse modes */}
-				{["standard", "timed", "survival", "reverse"].includes(gameMode) && (
+				{/* Standard mode */}
+				{["standard", "reverse"].includes(gameMode) && (
 					<CardView
 						currentCardIndex={currentCardIndex}
 						currentCard={currentCard}
@@ -590,12 +607,12 @@ export default function Game({ onBackToDecks }) {
 			</Box>
 
 			{/* Answer Buttons */}
-			{["standard", "timed", "survival", "reverse"].includes(gameMode) && (
+			{["standard", "reverse"].includes(gameMode) && (
 				<AnswerButtons onAnswer={handleAnswer} t={t} />
 			)}
 
 			{/* Keyboard Hints */}
-			{["standard", "timed", "survival", "reverse"].includes(gameMode) && (
+			{["standard", "reverse"].includes(gameMode) && (
 				<MotionBox
 					initial={{ y: 10 }}
 					animate={{ y: 0 }}

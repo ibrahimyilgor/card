@@ -8,6 +8,7 @@ import LivesDisplay from "./LivesDisplay";
 
 const GameHeader = ({
 	gameMode,
+	challengeType,
 	currentCardIndex,
 	flashcardsLength,
 	timer,
@@ -37,18 +38,18 @@ const GameHeader = ({
 				</StyledButton>
 			</Tooltip>
 
-			{/* Mode-specific indicators */}
+			{/* Challenge-specific indicators */}
 			<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-				{gameMode === "timed" && (
+				{challengeType === "timed" && (
 					<TimerDisplay
 						timeLeft={timer.timeLeft}
 						totalTime={settings.timeLimit}
 					/>
 				)}
-				{gameMode === "survival" && (
+				{challengeType === "survival" && (
 					<LivesDisplay lives={lives.lives} maxLives={lives.maxLives} />
 				)}
-				{gameMode !== "survival" && gameMode !== "timed" && (
+				{challengeType !== "survival" && challengeType !== "timed" && (
 					<Typography
 						variant="body1"
 						sx={{

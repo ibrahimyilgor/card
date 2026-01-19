@@ -3,6 +3,7 @@ import { Box, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import TimerIcon from "@mui/icons-material/Timer";
 import { StyledButton } from "../ui";
 import { PageContainer } from "../ui";
 import MatchGrid from "./MatchGrid";
@@ -15,6 +16,8 @@ const MatchView = ({
 	onRestart,
 	onMatchComplete,
 	onMatch,
+	challengeType,
+	timer,
 	t,
 }) => {
 	return (
@@ -45,16 +48,50 @@ const MatchView = ({
 					>
 						{t("exit") || "Exit"}
 					</StyledButton>
-					<Typography
-						variant="h5"
-						sx={{
-							color: "text.cardTitle",
-							fontWeight: 700,
-							fontFamily: "Inter, sans-serif",
-						}}
-					>
-						{t("mode_match") || "Match Mode"}
-					</Typography>
+
+					{/* Title or Timer */}
+					{challengeType === "timed" && timer ? (
+						<Box
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								gap: 1,
+								px: 2,
+								py: 1,
+								borderRadius: 2,
+								bgcolor:
+									timer.timeLeft < 10
+										? "rgba(239, 68, 68, 0.1)"
+										: "rgba(245, 158, 11, 0.1)",
+							}}
+						>
+							<TimerIcon
+								sx={{ color: timer.timeLeft < 10 ? "#ef4444" : "#f59e0b" }}
+							/>
+							<Typography
+								variant="h5"
+								sx={{
+									color: timer.timeLeft < 10 ? "#ef4444" : "#f59e0b",
+									fontWeight: 700,
+									fontFamily: "Inter, sans-serif",
+								}}
+							>
+								{timer.formattedTime}
+							</Typography>
+						</Box>
+					) : (
+						<Typography
+							variant="h5"
+							sx={{
+								color: "text.cardTitle",
+								fontWeight: 700,
+								fontFamily: "Inter, sans-serif",
+							}}
+						>
+							{t("mode_match") || "Match Mode"}
+						</Typography>
+					)}
+
 					<StyledButton
 						variant="ghost"
 						startIcon={<RefreshIcon />}

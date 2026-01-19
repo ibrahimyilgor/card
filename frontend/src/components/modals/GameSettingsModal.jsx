@@ -33,14 +33,19 @@ import { StyledModal, StyledButton } from "../ui";
 
 const MotionBox = motion.create(Box);
 
-// Game mode definitions (reverse and hard_cards removed - they are now separate options)
+// Game mode definitions (timed and survival are now challenge types, not modes)
 const GAME_MODES = [
 	{ value: "standard", icon: TuneIcon, color: "#3b82f6" },
-	{ value: "timed", icon: TimerIcon, color: "#f59e0b" },
-	{ value: "survival", icon: FavoriteIcon, color: "#ef4444" },
 	{ value: "write", icon: EditIcon, color: "#22c55e" },
 	{ value: "multiple_choice", icon: QuizIcon, color: "#8b5cf6" },
 	{ value: "match", icon: GridViewIcon, color: "#ec4899" },
+];
+
+// Challenge type definitions
+const CHALLENGE_TYPES = [
+	{ value: "none", icon: TuneIcon, color: "#6b7280" },
+	{ value: "timed", icon: TimerIcon, color: "#f59e0b" },
+	{ value: "survival", icon: FavoriteIcon, color: "#ef4444" },
 ];
 
 // Setting Option Component
@@ -86,12 +91,12 @@ function SettingOption({
 						background: iconColor
 							? `linear-gradient(135deg, ${alpha(iconColor, 0.2)} 0%, ${alpha(
 									iconColor,
-									0.1
-							  )} 100%)`
+									0.1,
+								)} 100%)`
 							: (theme) =>
 									`linear-gradient(135deg, ${alpha(
 										theme.palette.primary.main,
-										0.15
+										0.15,
 									)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
 						border: iconColor
 							? `1px solid ${alpha(iconColor, 0.3)}`
@@ -154,8 +159,8 @@ function ModeCard({ mode, selected, onClick, t }) {
 				background: selected
 					? alpha(mode.color, 0.1)
 					: isDark
-					? "rgba(255, 255, 255, 0.03)"
-					: "rgba(0, 0, 0, 0.02)",
+						? "rgba(255, 255, 255, 0.03)"
+						: "rgba(0, 0, 0, 0.02)",
 				transition: "all 0.2s ease",
 				"&:hover": {
 					background: alpha(mode.color, 0.08),
@@ -174,12 +179,12 @@ function ModeCard({ mode, selected, onClick, t }) {
 					background: selected
 						? `linear-gradient(135deg, ${mode.color} 0%, ${alpha(
 								mode.color,
-								0.7
-						  )} 100%)`
+								0.7,
+							)} 100%)`
 						: `linear-gradient(135deg, ${alpha(mode.color, 0.2)} 0%, ${alpha(
 								mode.color,
-								0.1
-						  )} 100%)`,
+								0.1,
+							)} 100%)`,
 					boxShadow: selected ? `0 4px 12px ${alpha(mode.color, 0.4)}` : "none",
 				}}
 			>
@@ -212,6 +217,7 @@ export default function GameSettingsModal({
 
 	const [settings, setSettings] = useState({
 		mode: "standard",
+		challengeType: "none", // "none", "timed", or "survival"
 		timeLimit: 60, // seconds (1 minute default)
 		lives: 3,
 		cardDirection: "normal", // "normal" or "reverse"
@@ -230,6 +236,9 @@ export default function GameSettingsModal({
 						hardModeEnabled: res.data.settings.difficulty_enabled || false,
 						mode: res.data.settings.mode || "standard",
 						cardDirection: res.data.settings.card_direction || "normal",
+						challengeType: res.data.settings.challenge_type || "none",
+						timeLimit: res.data.settings.time_limit || 60,
+						lives: res.data.settings.starting_lives || 3,
 					}));
 				}
 			} catch (err) {
@@ -239,6 +248,13 @@ export default function GameSettingsModal({
 		fetchSettings();
 	}, [deckId, open]);
 
+	// When mode changes to "match", disable survival challenge
+	useEffect(() => {
+		if (settings.mode === "match" && settings.challengeType === "survival") {
+			setSettings((prev) => ({ ...prev, challengeType: "none" }));
+		}
+	}, [settings.mode]);
+
 	const handleSaveAndStart = async () => {
 		setLoading(true);
 		try {
@@ -246,6 +262,9 @@ export default function GameSettingsModal({
 				difficulty_enabled: settings.hardModeEnabled,
 				mode: settings.mode,
 				card_direction: settings.cardDirection,
+				challenge_type: settings.challengeType,
+				time_limit: settings.timeLimit,
+				starting_lives: settings.lives,
 			});
 			onStart(settings);
 		} catch (err) {
@@ -256,15 +275,14 @@ export default function GameSettingsModal({
 	};
 
 	const selectedMode = GAME_MODES.find((m) => m.value === settings.mode);
+	const selectedChallenge = CHALLENGE_TYPES.find(
+		(c) => c.value === settings.challengeType,
+	);
 
 	const getModeDescription = () => {
 		switch (settings.mode) {
 			case "standard":
 				return t("mode_standard_desc") || "Classic flashcard flip mode";
-			case "timed":
-				return t("mode_timed_desc") || "Race against the clock";
-			case "survival":
-				return t("mode_survival_desc") || "Limited lives, no room for mistakes";
 			case "write":
 				return t("mode_write_desc") || "Type the answer yourself";
 			case "multiple_choice":
@@ -319,9 +337,8 @@ export default function GameSettingsModal({
 						sx={{
 							display: "grid",
 							gridTemplateColumns: {
-								xs: "repeat(3, 1fr)",
+								xs: "repeat(2, 1fr)",
 								sm: "repeat(4, 1fr)",
-								md: "repeat(6, 1fr)",
 							},
 							gap: 1.5,
 						}}
@@ -351,7 +368,7 @@ export default function GameSettingsModal({
 							background: alpha(selectedMode?.color || "#3b82f6", 0.08),
 							border: `1px solid ${alpha(
 								selectedMode?.color || "#3b82f6",
-								0.2
+								0.2,
 							)}`,
 						}}
 					>
@@ -368,8 +385,142 @@ export default function GameSettingsModal({
 					</MotionBox>
 				</Box>
 
-				{/* Mode-specific settings */}
-				{settings.mode === "timed" && (
+				{/* Challenge Type Selection */}
+				<Box>
+					<Typography
+						variant="subtitle2"
+						sx={{
+							fontWeight: 600,
+							color: "text.cardTitle",
+							fontFamily: "Inter, sans-serif",
+							mb: 2,
+						}}
+					>
+						{t("challenge_type") || "Challenge Type"}
+					</Typography>
+
+					<ToggleButtonGroup
+						value={settings.challengeType}
+						exclusive
+						onChange={(e, value) => {
+							if (value !== null) {
+								setSettings((prev) => ({ ...prev, challengeType: value }));
+							}
+						}}
+						size="small"
+						fullWidth
+						sx={{
+							width: "100%",
+							"& .MuiToggleButton-root": {
+								flex: 1,
+								px: 2,
+								py: 1.5,
+								fontFamily: "Inter, sans-serif",
+								fontSize: "0.875rem",
+								fontWeight: 500,
+								textTransform: "none",
+								display: "flex",
+								flexDirection: "column",
+								gap: 0.5,
+								border: (theme) => `1px solid ${theme.palette.border.main}`,
+								"&.Mui-selected": {
+									backgroundColor: (theme) => {
+										const challenge = CHALLENGE_TYPES.find(
+											(c) => c.value === settings.challengeType,
+										);
+										return alpha(challenge?.color || "#6b7280", 0.15);
+									},
+									color: (theme) => {
+										const challenge = CHALLENGE_TYPES.find(
+											(c) => c.value === settings.challengeType,
+										);
+										return challenge?.color || "#6b7280";
+									},
+									borderColor: (theme) => {
+										const challenge = CHALLENGE_TYPES.find(
+											(c) => c.value === settings.challengeType,
+										);
+										return challenge?.color || "#6b7280";
+									},
+									"&:hover": {
+										backgroundColor: (theme) => {
+											const challenge = CHALLENGE_TYPES.find(
+												(c) => c.value === settings.challengeType,
+											);
+											return alpha(challenge?.color || "#6b7280", 0.25);
+										},
+									},
+								},
+								"&.Mui-disabled": {
+									opacity: 0.4,
+								},
+							},
+						}}
+					>
+						<ToggleButton value="none">
+							<TuneIcon sx={{ fontSize: 20, mb: 0.5 }} />
+							{t("challenge_none") || "None"}
+						</ToggleButton>
+						<ToggleButton value="timed">
+							<TimerIcon
+								sx={{
+									fontSize: 20,
+									mb: 0.5,
+									color:
+										settings.challengeType === "timed" ? "#f59e0b" : "inherit",
+								}}
+							/>
+							{t("challenge_timed") || "Timed"}
+						</ToggleButton>
+						<ToggleButton value="survival" disabled={settings.mode === "match"}>
+							<FavoriteIcon
+								sx={{
+									fontSize: 20,
+									mb: 0.5,
+									color:
+										settings.challengeType === "survival"
+											? "#ef4444"
+											: "inherit",
+								}}
+							/>
+							{t("challenge_survival") || "Survival"}
+						</ToggleButton>
+					</ToggleButtonGroup>
+
+					{/* Challenge description */}
+					{settings.challengeType !== "none" && (
+						<MotionBox
+							key={settings.challengeType}
+							initial={{ y: 5 }}
+							animate={{ y: 0 }}
+							sx={{
+								mt: 2,
+								p: 2,
+								borderRadius: 2,
+								background: alpha(selectedChallenge?.color || "#6b7280", 0.08),
+								border: `1px solid ${alpha(selectedChallenge?.color || "#6b7280", 0.2)}`,
+							}}
+						>
+							<Typography
+								variant="body2"
+								sx={{
+									color: selectedChallenge?.color || "text.secondary",
+									fontFamily: "Inter, sans-serif",
+									fontWeight: 500,
+								}}
+							>
+								{settings.challengeType === "timed"
+									? t("challenge_timed_desc") ||
+										"Race against the clock - answer as many cards as possible before time runs out!"
+									: t("challenge_survival_desc") ||
+										"Limited lives - one wrong answer costs a life. Survive as long as you can!"}
+							</Typography>
+						</MotionBox>
+					)}
+				</Box>
+
+				{/* Challenge-specific settings */}
+				{settings.challengeType === "timed" && (
 					<MotionBox
 						initial={{ height: 0 }}
 						animate={{ height: "auto" }}
@@ -423,7 +574,7 @@ export default function GameSettingsModal({
 					</MotionBox>
 				)}
 
-				{settings.mode === "survival" && (
+				{settings.challengeType === "survival" && (
 					<MotionBox
 						initial={{ height: 0 }}
 						animate={{ height: "auto" }}

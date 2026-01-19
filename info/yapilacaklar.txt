@@ -8,9 +8,6 @@
 -plana ekleme, plandan çıkarma vs
     +google play bağlantısı ile planı ayarlama
 
--oyun modlarının tekrar düzenlenmesi, buna bağlı olarak başarımların kontrolü
-    +süreliyi ve survivalı diğerlerine özellik olarak ekle
-
 -istatistikler sayfası
     +mobilin dosya ismi. stats_report_yyyy_mm_dd olmalı.
 

@@ -1,12 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import {
-	Box,
-	Typography,
-	Grid,
-	useTheme,
-	alpha,
-	Skeleton,
-} from "@mui/material";
+import { Box, Typography, Grid, useTheme, alpha } from "@mui/material";
 import { motion } from "framer-motion";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
@@ -14,7 +7,11 @@ import GpsFixedIcon from "@mui/icons-material/GpsFixed";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { getAchievements } from "../services/achievementServices";
 import { I18nContext } from "../utils/i18n";
-import { PageContainer, StyledCard } from "../components/ui";
+import {
+	PageContainer,
+	StyledCard,
+	AchievementsSkeleton,
+} from "../components/ui";
 
 const MotionBox = motion.create(Box);
 
@@ -77,12 +74,12 @@ function AchievementCard({ achievement, index }) {
 						? `2px solid ${categoryColor}`
 						: `2px solid ${
 								isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-						  }`,
+							}`,
 					background: isEarned
 						? `linear-gradient(135deg, ${alpha(categoryColor, 0.1)} 0%, ${alpha(
 								categoryColor,
-								0.05
-						  )} 100%)`
+								0.05,
+							)} 100%)`
 						: undefined,
 					filter: isEarned ? "none" : "grayscale(100%)",
 					transition: "all 0.3s ease",
@@ -124,16 +121,16 @@ function AchievementCard({ achievement, index }) {
 						background: isEarned
 							? `linear-gradient(135deg, ${alpha(
 									categoryColor,
-									0.2
-							  )} 0%, ${alpha(categoryColor, 0.1)} 100%)`
+									0.2,
+								)} 0%, ${alpha(categoryColor, 0.1)} 100%)`
 							: isDark
-							? "rgba(255, 255, 255, 0.05)"
-							: "rgba(0, 0, 0, 0.05)",
+								? "rgba(255, 255, 255, 0.05)"
+								: "rgba(0, 0, 0, 0.05)",
 						border: isEarned
 							? `2px solid ${categoryColor}`
 							: `2px solid ${
 									isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-							  }`,
+								}`,
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
@@ -194,18 +191,6 @@ function AchievementCard({ achievement, index }) {
 				)}
 			</StyledCard>
 		</MotionBox>
-	);
-}
-
-function AchievementsSkeleton() {
-	return (
-		<Grid container spacing={3}>
-			{[...Array(8)].map((_, index) => (
-				<Grid item xs={6} sm={4} md={3} key={index}>
-					<Skeleton variant="rounded" height={200} sx={{ borderRadius: 4 }} />
-				</Grid>
-			))}
-		</Grid>
 	);
 }
 
@@ -395,7 +380,7 @@ export default function Achievements() {
 									))}
 								</Grid>
 							</MotionBox>
-						)
+						),
 					)
 				)}
 			</Box>

@@ -29,7 +29,12 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { PageContainer, StyledCard, StyledButton } from "../components/ui";
+import {
+	PageContainer,
+	StyledCard,
+	StyledButton,
+	SettingsSkeleton,
+} from "../components/ui";
 
 const MotionBox = motion.create(Box);
 
@@ -65,7 +70,7 @@ function SettingCard({ icon: Icon, title, description, children, delay = 0 }) {
 							justifyContent: "center",
 							background: `linear-gradient(135deg, ${alpha(
 								theme.palette.primary.main,
-								0.15
+								0.15,
 							)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
 							border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
 						}}
@@ -139,13 +144,14 @@ export default function Settings({
 	const { t } = useContext(I18nContext);
 
 	// SEO meta tags for settings page
-	useSEO('settings');
+	useSEO("settings");
 
 	const [selectedTheme, setSelectedTheme] = useState(currentTheme || "dark");
 	const [selectedLang, setSelectedLang] = useState(
-		localStorage.getItem("lang") || "en"
+		localStorage.getItem("lang") || "en",
 	);
 	const [loading, setLoading] = useState(false);
+	const [initialLoading, setInitialLoading] = useState(true);
 	const [snackbar, setSnackbar] = useState({
 		open: false,
 		message: "",
@@ -155,7 +161,7 @@ export default function Settings({
 
 	// Local preferences (stored in localStorage only)
 	const [soundEnabled, setSoundEnabled] = useState(
-		() => localStorage.getItem("soundEnabled") !== "false"
+		() => localStorage.getItem("soundEnabled") !== "false",
 	);
 
 	// Load preferences from database on mount
@@ -173,6 +179,8 @@ export default function Settings({
 				}
 			} catch (error) {
 				console.error("Error loading preferences:", error);
+			} finally {
+				setInitialLoading(false);
 			}
 		};
 		loadPreferences();
@@ -211,7 +219,7 @@ export default function Settings({
 			const soundRes = await updateSoundEffects(soundEnabled, accountId);
 			if (soundRes.status !== 200)
 				throw new Error(
-					soundRes.data?.error || "Failed to update sound effects"
+					soundRes.data?.error || "Failed to update sound effects",
 				);
 			localStorage.setItem("soundEnabled", soundEnabled);
 
@@ -275,161 +283,175 @@ export default function Settings({
 					</Typography>
 				</MotionBox>
 
-				{/* Appearance Section */}
-				<SectionHeader title={t("appearance") || "Appearance"} delay={0.1} />
+				{initialLoading ? (
+					<SettingsSkeleton />
+				) : (
+					<>
+						{/* Appearance Section */}
+						<SectionHeader
+							title={t("appearance") || "Appearance"}
+							delay={0.1}
+						/>
 
-				<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-					<SettingCard
-						icon={PaletteIcon}
-						title={t("theme")}
-						description={
-							t("theme_desc") || "Switch between dark and light mode"
-						}
-						delay={0.15}
-					>
-						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-							<DarkModeIcon
-								sx={{
-									fontSize: 20,
-									color:
-										selectedTheme === "dark"
-											? "primary.main"
-											: "text.cardSubtitle",
-									transition: "color 0.3s",
-								}}
-							/>
-							<Switch
-								checked={selectedTheme === "light"}
-								onChange={handleThemeChangeLocal}
-								color="primary"
-								sx={{
-									"& .MuiSwitch-track": {
-										borderRadius: 20,
-									},
-								}}
-							/>
-							<LightModeIcon
-								sx={{
-									fontSize: 20,
-									color:
-										selectedTheme === "light"
-											? "warning.main"
-											: "text.cardSubtitle",
-									transition: "color 0.3s",
-								}}
-							/>
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+							<SettingCard
+								icon={PaletteIcon}
+								title={t("theme")}
+								description={
+									t("theme_desc") || "Switch between dark and light mode"
+								}
+								delay={0.15}
+							>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<DarkModeIcon
+										sx={{
+											fontSize: 20,
+											color:
+												selectedTheme === "dark"
+													? "primary.main"
+													: "text.cardSubtitle",
+											transition: "color 0.3s",
+										}}
+									/>
+									<Switch
+										checked={selectedTheme === "light"}
+										onChange={handleThemeChangeLocal}
+										color="primary"
+										sx={{
+											"& .MuiSwitch-track": {
+												borderRadius: 20,
+											},
+										}}
+									/>
+									<LightModeIcon
+										sx={{
+											fontSize: 20,
+											color:
+												selectedTheme === "light"
+													? "warning.main"
+													: "text.cardSubtitle",
+											transition: "color 0.3s",
+										}}
+									/>
+								</Box>
+							</SettingCard>
+
+							<SettingCard
+								icon={TranslateIcon}
+								title={t("language")}
+								description={
+									t("language_desc") || "Choose your preferred language"
+								}
+								delay={0.2}
+							>
+								<FormControl size="small" sx={{ minWidth: 140 }}>
+									<Select
+										value={selectedLang}
+										onChange={handleLangChange}
+										sx={{
+											fontWeight: 500,
+											fontSize: "0.9rem",
+											borderRadius: 2,
+											fontFamily: "Inter, sans-serif",
+											"& .MuiOutlinedInput-notchedOutline": {
+												borderColor: "border.main",
+											},
+											"&:hover .MuiOutlinedInput-notchedOutline": {
+												borderColor: "primary.main",
+											},
+										}}
+									>
+										<MenuItem value="en">{t("english")}</MenuItem>
+										<MenuItem value="tr">{t("turkish")}</MenuItem>
+									</Select>
+								</FormControl>
+							</SettingCard>
 						</Box>
-					</SettingCard>
 
-					<SettingCard
-						icon={TranslateIcon}
-						title={t("language")}
-						description={t("language_desc") || "Choose your preferred language"}
-						delay={0.2}
-					>
-						<FormControl size="small" sx={{ minWidth: 140 }}>
-							<Select
-								value={selectedLang}
-								onChange={handleLangChange}
+						{/* Preferences Section */}
+						<SectionHeader
+							title={t("preferences") || "Preferences"}
+							delay={0.25}
+						/>
+
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+							<SettingCard
+								icon={VolumeUpIcon}
+								title={t("sound_effects") || "Sound Effects"}
+								description={
+									t("sound_effects_desc") ||
+									"Play sounds for correct/incorrect answers"
+								}
+								delay={0.3}
+							>
+								<Switch
+									checked={soundEnabled}
+									onChange={handleSoundChange}
+									color="primary"
+								/>
+							</SettingCard>
+						</Box>
+
+						{/* Save Button */}
+						<MotionBox
+							initial={{ y: 20 }}
+							animate={{ y: 0 }}
+							transition={{ delay: 0.4, duration: 0.4 }}
+							sx={{ mt: 4, display: "flex", justifyContent: "center" }}
+						>
+							<StyledButton
+								variant={saveSuccess ? "success" : "primary"}
+								onClick={handleSave}
+								disabled={loading || !hasChanges}
 								sx={{
-									fontWeight: 500,
-									fontSize: "0.9rem",
-									borderRadius: 2,
-									fontFamily: "Inter, sans-serif",
-									"& .MuiOutlinedInput-notchedOutline": {
-										borderColor: "border.main",
-									},
-									"&:hover .MuiOutlinedInput-notchedOutline": {
-										borderColor: "primary.main",
-									},
+									minWidth: 200,
+									py: 1.5,
 								}}
 							>
-								<MenuItem value="en">{t("english")}</MenuItem>
-								<MenuItem value="tr">{t("turkish")}</MenuItem>
-							</Select>
-						</FormControl>
-					</SettingCard>
-				</Box>
+								<AnimatePresence mode="wait" initial={false}>
+									{saveSuccess ? (
+										<MotionBox
+											key="success"
+											initial={{ scale: 0 }}
+											animate={{ scale: 1 }}
+											exit={{ scale: 0 }}
+											sx={{ display: "flex", alignItems: "center", gap: 1 }}
+										>
+											<CheckCircleIcon sx={{ fontSize: 20 }} />
+											{t("settings_saved") || "Saved!"}
+										</MotionBox>
+									) : (
+										<MotionBox
+											key="save"
+											initial={{ scale: 0.95 }}
+											animate={{ scale: 1 }}
+											exit={{ scale: 0.95 }}
+										>
+											{loading ? t("saving") : t("save")}
+										</MotionBox>
+									)}
+								</AnimatePresence>
+							</StyledButton>
+						</MotionBox>
 
-				{/* Preferences Section */}
-				<SectionHeader title={t("preferences") || "Preferences"} delay={0.25} />
-
-				<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-					<SettingCard
-						icon={VolumeUpIcon}
-						title={t("sound_effects") || "Sound Effects"}
-						description={
-							t("sound_effects_desc") ||
-							"Play sounds for correct/incorrect answers"
-						}
-						delay={0.3}
-					>
-						<Switch
-							checked={soundEnabled}
-							onChange={handleSoundChange}
-							color="primary"
-						/>
-					</SettingCard>
-				</Box>
-
-				{/* Save Button */}
-				<MotionBox
-					initial={{ y: 20 }}
-					animate={{ y: 0 }}
-					transition={{ delay: 0.4, duration: 0.4 }}
-					sx={{ mt: 4, display: "flex", justifyContent: "center" }}
-				>
-					<StyledButton
-						variant={saveSuccess ? "success" : "primary"}
-						onClick={handleSave}
-						disabled={loading || !hasChanges}
-						sx={{
-							minWidth: 200,
-							py: 1.5,
-						}}
-					>
-						<AnimatePresence mode="wait" initial={false}>
-							{saveSuccess ? (
-								<MotionBox
-									key="success"
-									initial={{ scale: 0 }}
-									animate={{ scale: 1 }}
-									exit={{ scale: 0 }}
-									sx={{ display: "flex", alignItems: "center", gap: 1 }}
+						{!hasChanges && (
+							<MotionBox
+								initial={{ y: 5 }}
+								animate={{ y: 0 }}
+								sx={{ textAlign: "center", mt: 1 }}
+							>
+								<Typography
+									variant="caption"
+									sx={{
+										color: "text.cardSubtitle",
+										fontFamily: "Inter, sans-serif",
+									}}
 								>
-									<CheckCircleIcon sx={{ fontSize: 20 }} />
-									{t("settings_saved") || "Saved!"}
-								</MotionBox>
-							) : (
-								<MotionBox
-									key="save"
-									initial={{ scale: 0.95 }}
-									animate={{ scale: 1 }}
-									exit={{ scale: 0.95 }}
-								>
-									{loading ? t("saving") : t("save")}
-								</MotionBox>
-							)}
-						</AnimatePresence>
-					</StyledButton>
-				</MotionBox>
-
-				{!hasChanges && (
-					<MotionBox
-						initial={{ y: 5 }}
-						animate={{ y: 0 }}
-						sx={{ textAlign: "center", mt: 1 }}
-					>
-						<Typography
-							variant="caption"
-							sx={{
-								color: "text.cardSubtitle",
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{t("no_unsaved_changes") || "No unsaved changes"}
-						</Typography>
-					</MotionBox>
+									{t("no_unsaved_changes") || "No unsaved changes"}
+								</Typography>
+							</MotionBox>
+						)}
+					</>
 				)}
 			</Box>
 
