@@ -8,7 +8,7 @@ module.exports = (pool) => {
 	const verifyDeckOwnership = async (deckId, accountId) => {
 		const result = await pool.query(
 			"SELECT account_id FROM deck WHERE id = $1",
-			[deckId]
+			[deckId],
 		);
 		if (result.rows.length === 0) {
 			return { exists: false, isOwner: false };
@@ -36,7 +36,7 @@ module.exports = (pool) => {
 				GROUP BY d.id 
 				ORDER BY d.id ASC
 			`,
-				[accountId]
+				[accountId],
 			);
 			res.json({ decks: result.rows });
 		} catch (err) {
@@ -63,7 +63,7 @@ module.exports = (pool) => {
 					difficulty_enabled || false,
 					mode || "standard",
 					card_direction || "normal",
-				]
+				],
 			);
 			res.status(201).json({ deck: result.rows[0] });
 		} catch (err) {
@@ -98,7 +98,7 @@ module.exports = (pool) => {
 					mode || "standard",
 					card_direction || "normal",
 					deckId,
-				]
+				],
 			);
 			res.json({ deck: result.rows[0] });
 		} catch (err) {
@@ -120,8 +120,8 @@ module.exports = (pool) => {
 			}
 
 			const result = await pool.query(
-				"SELECT difficulty_enabled, mode, card_direction FROM deck WHERE id = $1",
-				[deckId]
+				"SELECT difficulty_enabled, mode, card_direction, challenge_type, time_limit, starting_lives FROM deck WHERE id = $1",
+				[deckId],
 			);
 			res.json({ settings: result.rows[0] });
 		} catch (err) {
@@ -132,7 +132,14 @@ module.exports = (pool) => {
 	// Update deck settings
 	router.put("/settings/:deckId", authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
-		const { difficulty_enabled, mode, card_direction } = req.body;
+		const {
+			difficulty_enabled,
+			mode,
+			card_direction,
+			challenge_type,
+			time_limit,
+			starting_lives,
+		} = req.body;
 		try {
 			// Verify ownership
 			const ownership = await verifyDeckOwnership(deckId, req.user.accountId);
@@ -144,8 +151,16 @@ module.exports = (pool) => {
 			}
 
 			const result = await pool.query(
-				"UPDATE deck SET difficulty_enabled = $1, mode = $2, card_direction = $3 WHERE id = $4 RETURNING *",
-				[difficulty_enabled, mode, card_direction || "normal", deckId]
+				"UPDATE deck SET difficulty_enabled = $1, mode = $2, card_direction = $3, challenge_type = $4, time_limit = $5, starting_lives = $6 WHERE id = $7 RETURNING *",
+				[
+					difficulty_enabled,
+					mode,
+					card_direction || "normal",
+					challenge_type || "none",
+					time_limit || 60,
+					starting_lives || 3,
+					deckId,
+				],
 			);
 			res.json({ settings: result.rows[0] });
 		} catch (err) {
@@ -168,7 +183,7 @@ module.exports = (pool) => {
 
 			const result = await pool.query(
 				"SELECT * FROM flashcard WHERE deck_id = $1",
-				[deckId]
+				[deckId],
 			);
 			res.json({ flashcards: result.rows });
 		} catch (err) {
@@ -198,7 +213,7 @@ module.exports = (pool) => {
 			// Then delete the deck itself
 			const result = await pool.query(
 				"DELETE FROM deck WHERE id = $1 RETURNING *",
-				[deckId]
+				[deckId],
 			);
 
 			// Commit the transaction

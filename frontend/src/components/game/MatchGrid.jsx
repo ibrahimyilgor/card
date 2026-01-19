@@ -89,7 +89,7 @@ export default function MatchGrid({ flashcards = [], onComplete, onMatch }) {
 						setTimeout(() => {
 							onComplete?.({
 								attempts: attempts + 1,
-								totalPairs: flashcards.length,
+								totalPairs: Math.min(flashcards.length, 6),
 							});
 						}, 500);
 					}
@@ -200,7 +200,7 @@ export default function MatchGrid({ flashcards = [], onComplete, onMatch }) {
 												? {
 														transform: "scale(1.05)",
 														boxShadow: "0 8px 20px rgba(59, 130, 246, 0.4)",
-												  }
+													}
 												: {},
 										transition: "all 0.2s ease",
 									}}
@@ -234,18 +234,18 @@ export default function MatchGrid({ flashcards = [], onComplete, onMatch }) {
 										background: isMatched(card.id)
 											? alpha("#22c55e", 0.15)
 											: card.type === "front"
-											? isDark
-												? "rgba(59, 130, 246, 0.15)"
-												: "rgba(59, 130, 246, 0.1)"
-											: isDark
-											? "rgba(139, 92, 246, 0.15)"
-											: "rgba(139, 92, 246, 0.1)",
+												? isDark
+													? "rgba(59, 130, 246, 0.15)"
+													: "rgba(59, 130, 246, 0.1)"
+												: isDark
+													? "rgba(139, 92, 246, 0.15)"
+													: "rgba(139, 92, 246, 0.1)",
 										border: `2px solid ${
 											isMatched(card.id)
 												? "#22c55e"
 												: card.type === "front"
-												? "#3b82f6"
-												: "#8b5cf6"
+													? "#3b82f6"
+													: "#8b5cf6"
 										}`,
 									}}
 								>

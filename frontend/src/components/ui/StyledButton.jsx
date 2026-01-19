@@ -20,7 +20,7 @@ const StyledButton = forwardRef(
 			sx = {},
 			...props
 		},
-		ref
+		ref,
 	) => {
 		const variants = {
 			primary: {
@@ -46,6 +46,14 @@ const StyledButton = forwardRef(
 				"&:hover": {
 					background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
 					boxShadow: "0 4px 20px rgba(239, 68, 68, 0.4)",
+				},
+			},
+			warning: {
+				background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+				color: "#ffffff",
+				"&:hover": {
+					background: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+					boxShadow: "0 4px 20px rgba(245, 158, 11, 0.4)",
 				},
 			},
 			success: {
@@ -122,7 +130,7 @@ const StyledButton = forwardRef(
 				)}
 			</MotionButton>
 		);
-	}
+	},
 );
 
 StyledButton.displayName = "StyledButton";

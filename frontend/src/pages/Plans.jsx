@@ -2,15 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useSEO } from "../utils/seo";
 import PageContainer from "../components/ui/PageContainer";
-import { StyledCard, StyledButton } from "../components/ui";
-import {
-	Typography,
-	Box,
-	Chip,
-	alpha,
-	useTheme,
-	Skeleton,
-} from "@mui/material";
+import { StyledCard, StyledButton, PlanSkeleton } from "../components/ui";
+import { Typography, Box, Chip, alpha, useTheme } from "@mui/material";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import StarIcon from "@mui/icons-material/Star";
@@ -71,8 +64,8 @@ function PlanCard({ plan, isCurrentPlan, delay = 0 }) {
 					background: isCurrentPlan
 						? `linear-gradient(135deg, ${alpha(planColor, 0.08)} 0%, ${alpha(
 								planColor,
-								0.02
-						  )} 100%)`
+								0.02,
+							)} 100%)`
 						: undefined,
 				}}
 			>
@@ -104,7 +97,7 @@ function PlanCard({ plan, isCurrentPlan, delay = 0 }) {
 						justifyContent: "center",
 						background: `linear-gradient(135deg, ${alpha(
 							planColor,
-							0.2
+							0.2,
 						)} 0%, ${alpha(planColor, 0.05)} 100%)`,
 						border: `1px solid ${alpha(planColor, 0.3)}`,
 						color: planColor,
@@ -220,8 +213,8 @@ function PlanCard({ plan, isCurrentPlan, delay = 0 }) {
 					{isCurrentPlan
 						? t("current_plan") || "Current Plan"
 						: plan.price_monthly === "0.00" || plan.price_monthly === 0
-						? t("get_started") || "Get Started"
-						: t("upgrade") || "Upgrade"}
+							? t("get_started") || "Get Started"
+							: t("upgrade") || "Upgrade"}
 				</StyledButton>
 			</StyledCard>
 		</MotionBox>
@@ -254,28 +247,11 @@ function FeatureItem({ icon, text, color }) {
 	);
 }
 
-// Loading skeleton
-function PlanSkeleton() {
-	return (
-		<StyledCard variant="default" sx={{ p: 3, height: 400 }}>
-			<Skeleton variant="rounded" width={64} height={64} sx={{ mb: 2 }} />
-			<Skeleton variant="text" width="60%" height={32} sx={{ mb: 1 }} />
-			<Skeleton variant="text" width="40%" height={40} sx={{ mb: 2 }} />
-			<Skeleton variant="text" width="100%" sx={{ mb: 1 }} />
-			<Skeleton variant="text" width="80%" sx={{ mb: 3 }} />
-			<Skeleton variant="text" width="70%" sx={{ mb: 1 }} />
-			<Skeleton variant="text" width="70%" sx={{ mb: 1 }} />
-			<Skeleton variant="text" width="70%" sx={{ mb: 3 }} />
-			<Skeleton variant="rounded" width="100%" height={42} />
-		</StyledCard>
-	);
-}
-
 export default function Plans() {
 	const { t } = useContext(I18nContext);
 
 	// SEO meta tags for plans page
-	useSEO('plans');
+	useSEO("plans");
 
 	const [plans, setPlans] = useState([]);
 	const [myPlan, setMyPlan] = useState(null);
@@ -378,7 +354,7 @@ export default function Plans() {
 								isCurrentPlan={myPlan?.code === plan.code}
 								delay={0.1 + index * 0.1}
 							/>
-					  ))}
+						))}
 			</Box>
 		</PageContainer>
 	);

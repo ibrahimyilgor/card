@@ -33,7 +33,7 @@ export default function DeckModal({
 	const [title, setTitle] = useState(initialTitle);
 	const [desc, setDesc] = useState(initialDesc);
 	const [difficultyEnabled, setDifficultyEnabled] = useState(
-		editDeck?.difficulty_enabled || false
+		editDeck?.difficulty_enabled || false,
 	);
 	const [mode, setMode] = useState(editDeck?.mode || "standard");
 
@@ -73,8 +73,8 @@ export default function DeckModal({
 						{loading
 							? t("saving") || "Saving..."
 							: editDeck
-							? t("edit") || "Edit"
-							: t("add") || "Add"}
+								? t("edit") || "Edit"
+								: t("add") || "Add"}
 					</StyledButton>
 				</>
 			}
@@ -168,12 +168,6 @@ export default function DeckModal({
 								>
 									<MenuItem value="standard">
 										{t("mode_standard") || "Standard Mode"}
-									</MenuItem>
-									<MenuItem value="timed">
-										{t("mode_timed") || "Timed Mode"}
-									</MenuItem>
-									<MenuItem value="survival">
-										{t("mode_survival") || "Survival Mode"}
 									</MenuItem>
 									<MenuItem value="write">
 										{t("mode_write") || "Write Mode"}

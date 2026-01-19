@@ -21,6 +21,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import {
@@ -28,6 +29,7 @@ import {
 	changePassword,
 	deleteAccount,
 	getMyPlan,
+	resetStatistics,
 } from "../services/accountServices";
 import { useNavigate } from "react-router-dom";
 import {
@@ -35,6 +37,7 @@ import {
 	StyledCard,
 	StyledButton,
 	ConfirmModal,
+	AccountSkeleton,
 } from "../components/ui";
 import { I18nContext } from "../utils/i18n";
 
@@ -69,7 +72,7 @@ function InfoCard({ icon: Icon, title, value, delay = 0 }) {
 						justifyContent: "center",
 						background: `linear-gradient(135deg, ${alpha(
 							theme.palette.primary.main,
-							0.15
+							0.15,
 						)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
 						border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
 					}}
@@ -135,7 +138,7 @@ export default function Account() {
 	const { t, lang } = useContext(I18nContext);
 
 	// SEO meta tags for account page
-	useSEO('account');
+	useSEO("account");
 
 	const [account, setAccount] = useState(null);
 	const [plan, setPlan] = useState(null);
@@ -160,6 +163,10 @@ export default function Account() {
 	// Delete account states
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
+
+	// Reset statistics states
+	const [resetModalOpen, setResetModalOpen] = useState(false);
+	const [resetLoading, setResetLoading] = useState(false);
 
 	useEffect(() => {
 		setLoading(true);
@@ -228,6 +235,31 @@ export default function Account() {
 		}
 	};
 
+	const handleResetStatistics = async () => {
+		setResetLoading(true);
+		try {
+			await resetStatistics();
+			setSnackbar({
+				open: true,
+				message:
+					t("statistics_reset_success") || "Statistics reset successfully",
+				severity: "success",
+			});
+			setResetModalOpen(false);
+		} catch (err) {
+			setSnackbar({
+				open: true,
+				message:
+					err?.response?.data?.error ||
+					t("statistics_reset_error") ||
+					"Failed to reset statistics",
+				severity: "error",
+			});
+		} finally {
+			setResetLoading(false);
+		}
+	};
+
 	const formatDate = (dateStr) => {
 		const date = new Date(dateStr);
 		const localeMap = {
@@ -280,53 +312,149 @@ export default function Account() {
 					</Alert>
 				)}
 
-				{/* Account Info Section */}
-				<SectionHeader title={t("account_info_section_title")} delay={0.1} />
-
 				{loading ? (
-					<Box sx={{ display: "flex", gap: 2 }}>
-						<StyledCard variant="default" sx={{ p: 3, flex: 1 }}>
-							<Typography color="text.cardSubtitle">{t("loading")}</Typography>
-						</StyledCard>
-					</Box>
+					<AccountSkeleton />
 				) : (
-					account && (
+					<>
+						{/* Account Info Section */}
+						<SectionHeader
+							title={t("account_info_section_title")}
+							delay={0.1}
+						/>
+
+						{account && (
+							<Box
+								sx={{
+									display: "grid",
+									gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+									gap: 2,
+								}}
+							>
+								<InfoCard
+									icon={PersonIcon}
+									title={t("username")}
+									value={account.accountname}
+									delay={0.15}
+								/>
+								<InfoCard
+									icon={CalendarTodayIcon}
+									title={t("account_created_at")}
+									value={formatDate(account.created_at)}
+									delay={0.2}
+								/>
+								{/* Subscription Card with Upgrade Button */}
+								<MotionBox
+									initial={{ y: 20 }}
+									animate={{ y: 0 }}
+									transition={{ delay: 0.25, duration: 0.4 }}
+								>
+									<StyledCard
+										variant="default"
+										sx={{
+											p: 3,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "space-between",
+											gap: 2,
+										}}
+									>
+										<Box
+											sx={{ display: "flex", alignItems: "center", gap: 2.5 }}
+										>
+											<Box
+												sx={{
+													width: 48,
+													height: 48,
+													borderRadius: "12px",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													background:
+														plan?.code === "free"
+															? `linear-gradient(135deg, ${alpha(theme.palette.text.secondary, 0.15)} 0%, ${alpha(theme.palette.text.secondary, 0.05)} 100%)`
+															: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.15)} 0%, ${alpha(theme.palette.warning.main, 0.05)} 100%)`,
+													border:
+														plan?.code === "free"
+															? `1px solid ${alpha(theme.palette.text.secondary, 0.2)}`
+															: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+												}}
+											>
+												{plan?.code === "free" ? (
+													<StarOutlineIcon
+														sx={{ fontSize: 24, color: "text.secondary" }}
+													/>
+												) : (
+													<StarIcon
+														sx={{ fontSize: 24, color: "warning.main" }}
+													/>
+												)}
+											</Box>
+											<Box>
+												<Typography
+													variant="body2"
+													sx={{
+														color: "text.cardSubtitle",
+														fontFamily: "Inter, sans-serif",
+														fontSize: "0.85rem",
+														mb: 0.5,
+													}}
+												>
+													{t("subscription")}
+												</Typography>
+												<Typography
+													variant="subtitle1"
+													sx={{
+														fontWeight: 600,
+														color: "text.cardTitle",
+														fontFamily: "Inter, sans-serif",
+													}}
+												>
+													{plan?.name || t("free_plan")}
+												</Typography>
+											</Box>
+										</Box>
+										<StyledButton
+											variant={plan?.code === "free" ? "contained" : "outlined"}
+											size="small"
+											onClick={() => navigate("/plans")}
+										>
+											{plan?.code === "free" ? t("upgrade") : t("view_plans")}
+										</StyledButton>
+									</StyledCard>
+								</MotionBox>
+							</Box>
+						)}
+
+						{/* Security Section - Change Password & Delete Account */}
+						<SectionHeader
+							title={t("security_section_title") || "Security"}
+							delay={0.25}
+						/>
+
 						<Box
 							sx={{
 								display: "grid",
-								gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-								gap: 2,
+								gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+								gap: 3,
+								alignItems: "stretch",
 							}}
 						>
-							<InfoCard
-								icon={PersonIcon}
-								title={t("username")}
-								value={account.accountname}
-								delay={0.15}
-							/>
-							<InfoCard
-								icon={CalendarTodayIcon}
-								title={t("account_created_at")}
-								value={formatDate(account.created_at)}
-								delay={0.2}
-							/>
-							{/* Subscription Card with Upgrade Button */}
+							{/* Change Password */}
 							<MotionBox
 								initial={{ y: 20 }}
 								animate={{ y: 0 }}
-								transition={{ delay: 0.25, duration: 0.4 }}
+								transition={{ delay: 0.3, duration: 0.4 }}
+								sx={{ height: "100%" }}
 							>
-								<StyledCard
-									variant="default"
-									sx={{
-										p: 3,
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "space-between",
-										gap: 2,
-									}}
-								>
-									<Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
+								<StyledCard variant="default" sx={{ p: 3, height: "100%" }}>
+									<Box
+										sx={{
+											display: "flex",
+											alignItems: "center",
+											gap: 2,
+											mb: 3,
+										}}
+									>
 										<Box
 											sx={{
 												width: 48,
@@ -335,32 +463,21 @@ export default function Account() {
 												display: "flex",
 												alignItems: "center",
 												justifyContent: "center",
-												background: plan?.code === "free"
-													? `linear-gradient(135deg, ${alpha(theme.palette.text.secondary, 0.15)} 0%, ${alpha(theme.palette.text.secondary, 0.05)} 100%)`
-													: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.15)} 0%, ${alpha(theme.palette.warning.main, 0.05)} 100%)`,
-												border: plan?.code === "free"
-													? `1px solid ${alpha(theme.palette.text.secondary, 0.2)}`
-													: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+												background: `linear-gradient(135deg, ${alpha(
+													theme.palette.warning.main,
+													0.15,
+												)} 0%, ${alpha(theme.palette.warning.main, 0.05)} 100%)`,
+												border: `1px solid ${alpha(
+													theme.palette.warning.main,
+													0.2,
+												)}`,
 											}}
 										>
-											{plan?.code === "free" ? (
-												<StarOutlineIcon sx={{ fontSize: 24, color: "text.secondary" }} />
-											) : (
-												<StarIcon sx={{ fontSize: 24, color: "warning.main" }} />
-											)}
+											<VpnKeyIcon
+												sx={{ fontSize: 24, color: "warning.main" }}
+											/>
 										</Box>
 										<Box>
-											<Typography
-												variant="body2"
-												sx={{
-													color: "text.cardSubtitle",
-													fontFamily: "Inter, sans-serif",
-													fontSize: "0.85rem",
-													mb: 0.5,
-												}}
-											>
-												{t("subscription")}
-											</Typography>
 											<Typography
 												variant="subtitle1"
 												sx={{
@@ -369,284 +486,316 @@ export default function Account() {
 													fontFamily: "Inter, sans-serif",
 												}}
 											>
-												{plan?.name || t("free_plan")}
+												{t("update_password_title")}
+											</Typography>
+											<Typography
+												variant="body2"
+												sx={{
+													color: "text.cardSubtitle",
+													fontFamily: "Inter, sans-serif",
+													fontSize: "0.85rem",
+												}}
+											>
+												{t("update_password_subtitle")}
 											</Typography>
 										</Box>
 									</Box>
-									<StyledButton
-										variant={plan?.code === "free" ? "contained" : "outlined"}
-										size="small"
-										onClick={() => navigate("/plans")}
+
+									{pwError && (
+										<Alert severity="error" sx={{ mb: 2 }}>
+											{pwError}
+										</Alert>
+									)}
+
+									<Box
+										component="form"
+										onSubmit={handleChangePassword}
+										sx={{ maxWidth: 400 }}
 									>
-										{plan?.code === "free" ? t("upgrade") : t("view_plans")}
-									</StyledButton>
+										<TextField
+											label={t("current_password")}
+											type={showOldPassword ? "text" : "password"}
+											value={oldPassword}
+											onChange={(e) => setOldPassword(e.target.value)}
+											fullWidth
+											sx={{ mb: 2 }}
+											required
+											InputProps={{
+												startAdornment: (
+													<InputAdornment position="start">
+														<LockIcon sx={{ color: "text.cardSubtitle" }} />
+													</InputAdornment>
+												),
+												endAdornment: (
+													<InputAdornment position="end">
+														<IconButton
+															onClick={() =>
+																setShowOldPassword(!showOldPassword)
+															}
+															edge="end"
+															size="small"
+														>
+															{showOldPassword ? (
+																<VisibilityOffIcon />
+															) : (
+																<VisibilityIcon />
+															)}
+														</IconButton>
+													</InputAdornment>
+												),
+											}}
+										/>
+										<TextField
+											label={t("new_password")}
+											type={showNewPassword ? "text" : "password"}
+											value={newPassword}
+											onChange={(e) => setNewPassword(e.target.value)}
+											fullWidth
+											sx={{ mb: 2 }}
+											required
+											helperText={t("password_rule_helper_text")}
+											InputProps={{
+												startAdornment: (
+													<InputAdornment position="start">
+														<LockIcon sx={{ color: "text.cardSubtitle" }} />
+													</InputAdornment>
+												),
+												endAdornment: (
+													<InputAdornment position="end">
+														<IconButton
+															onClick={() =>
+																setShowNewPassword(!showNewPassword)
+															}
+															edge="end"
+															size="small"
+														>
+															{showNewPassword ? (
+																<VisibilityOffIcon />
+															) : (
+																<VisibilityIcon />
+															)}
+														</IconButton>
+													</InputAdornment>
+												),
+											}}
+										/>
+										<TextField
+											label={t("new_password_repeat")}
+											type={showNewPasswordRepeat ? "text" : "password"}
+											value={newPasswordRepeat}
+											onChange={(e) => setNewPasswordRepeat(e.target.value)}
+											fullWidth
+											sx={{ mb: 3 }}
+											required
+											InputProps={{
+												startAdornment: (
+													<InputAdornment position="start">
+														<LockIcon sx={{ color: "text.cardSubtitle" }} />
+													</InputAdornment>
+												),
+												endAdornment: (
+													<InputAdornment position="end">
+														<IconButton
+															onClick={() =>
+																setShowNewPasswordRepeat(!showNewPasswordRepeat)
+															}
+															edge="end"
+															size="small"
+														>
+															{showNewPasswordRepeat ? (
+																<VisibilityOffIcon />
+															) : (
+																<VisibilityIcon />
+															)}
+														</IconButton>
+													</InputAdornment>
+												),
+											}}
+										/>
+										<StyledButton
+											type="submit"
+											variant="primary"
+											fullWidth
+											disabled={pwLoading}
+											startIcon={
+												pwLoading ? null : (
+													<CheckCircleIcon sx={{ fontSize: 20 }} />
+												)
+											}
+										>
+											{pwLoading ? t("changing") : t("change_password_button")}
+										</StyledButton>
+									</Box>
 								</StyledCard>
 							</MotionBox>
+
+							{/* Right Column - Danger Zone */}
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "column",
+									gap: 3,
+									height: "100%",
+								}}
+							>
+								{/* Reset Statistics */}
+								<MotionBox
+									initial={{ y: 20 }}
+									animate={{ y: 0 }}
+									transition={{ delay: 0.35, duration: 0.4 }}
+									sx={{ flex: 1 }}
+								>
+									<StyledCard
+										variant="default"
+										sx={{
+											p: 3,
+											height: "100%",
+											border: `1px solid ${alpha("#f59e0b", 0.3)}`,
+											background: alpha("#f59e0b", 0.02),
+											display: "flex",
+											flexDirection: "column",
+										}}
+									>
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												gap: 2,
+												mb: 2,
+											}}
+										>
+											<Box
+												sx={{
+													width: 48,
+													height: 48,
+													borderRadius: "12px",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													background: alpha("#f59e0b", 0.15),
+													border: `1px solid ${alpha("#f59e0b", 0.3)}`,
+												}}
+											>
+												<RestartAltIcon
+													sx={{ fontSize: 24, color: "#f59e0b" }}
+												/>
+											</Box>
+											<Box sx={{ flex: 1 }}>
+												<Typography
+													variant="subtitle1"
+													sx={{
+														fontWeight: 600,
+														color: "text.cardTitle",
+														fontFamily: "Inter, sans-serif",
+													}}
+												>
+													{t("reset_statistics_title") || "Reset Statistics"}
+												</Typography>
+												<Typography
+													variant="body2"
+													sx={{
+														color: "text.cardSubtitle",
+														fontFamily: "Inter, sans-serif",
+													}}
+												>
+													{t("reset_statistics_message") ||
+														"Reset all card statistics and delete study sessions."}
+												</Typography>
+											</Box>
+										</Box>
+										<Box sx={{ mt: "auto" }}>
+											<StyledButton
+												variant="warning"
+												onClick={() => setResetModalOpen(true)}
+												startIcon={<RestartAltIcon sx={{ fontSize: 20 }} />}
+											>
+												{t("reset_statistics") || "Reset Statistics"}
+											</StyledButton>
+										</Box>
+									</StyledCard>
+								</MotionBox>
+
+								{/* Delete Account */}
+								<MotionBox
+									initial={{ y: 20 }}
+									animate={{ y: 0 }}
+									transition={{ delay: 0.4, duration: 0.4 }}
+									sx={{ flex: 1 }}
+								>
+									<StyledCard
+										variant="default"
+										sx={{
+											p: 3,
+											height: "100%",
+											border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+											background: alpha(theme.palette.error.main, 0.02),
+											display: "flex",
+											flexDirection: "column",
+										}}
+									>
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												gap: 2,
+												mb: 2,
+											}}
+										>
+											<Box
+												sx={{
+													width: 48,
+													height: 48,
+													borderRadius: "12px",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													background: alpha(theme.palette.error.main, 0.15),
+													border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+												}}
+											>
+												<DeleteForeverIcon
+													sx={{ fontSize: 24, color: "error.main" }}
+												/>
+											</Box>
+											<Box sx={{ flex: 1 }}>
+												<Typography
+													variant="subtitle1"
+													sx={{
+														fontWeight: 600,
+														color: "text.cardTitle",
+														fontFamily: "Inter, sans-serif",
+													}}
+												>
+													{t("delete_account_title")}
+												</Typography>
+												<Typography
+													variant="body2"
+													sx={{
+														color: "text.cardSubtitle",
+														fontFamily: "Inter, sans-serif",
+													}}
+												>
+													{t("delete_account_message")}
+												</Typography>
+											</Box>
+										</Box>
+										<Box sx={{ mt: "auto" }}>
+											<StyledButton
+												variant="danger"
+												onClick={() => setDeleteModalOpen(true)}
+												startIcon={<DeleteForeverIcon sx={{ fontSize: 20 }} />}
+											>
+												{t("delete_account")}
+											</StyledButton>
+										</Box>
+									</StyledCard>
+								</MotionBox>
+							</Box>
+							{/* End Right Column */}
 						</Box>
-					)
+						{/* End Grid */}
+					</>
 				)}
-
-				{/* Security Section - Change Password & Delete Account */}
-				<SectionHeader
-					title={t("security_section_title") || "Security"}
-					delay={0.25}
-				/>
-
-				<Box
-					sx={{
-						display: "grid",
-						gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-						gap: 3,
-					}}
-				>
-					{/* Change Password */}
-					<MotionBox
-						initial={{ y: 20 }}
-						animate={{ y: 0 }}
-						transition={{ delay: 0.3, duration: 0.4 }}
-						sx={{ height: "100%" }}
-					>
-						<StyledCard variant="default" sx={{ p: 3, height: "100%" }}>
-							<Box
-								sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
-							>
-								<Box
-									sx={{
-										width: 48,
-										height: 48,
-										borderRadius: "12px",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										background: `linear-gradient(135deg, ${alpha(
-											theme.palette.warning.main,
-											0.15
-										)} 0%, ${alpha(theme.palette.warning.main, 0.05)} 100%)`,
-										border: `1px solid ${alpha(
-											theme.palette.warning.main,
-											0.2
-										)}`,
-									}}
-								>
-									<VpnKeyIcon sx={{ fontSize: 24, color: "warning.main" }} />
-								</Box>
-								<Box>
-									<Typography
-										variant="subtitle1"
-										sx={{
-											fontWeight: 600,
-											color: "text.cardTitle",
-											fontFamily: "Inter, sans-serif",
-										}}
-									>
-										{t("update_password_title")}
-									</Typography>
-									<Typography
-										variant="body2"
-										sx={{
-											color: "text.cardSubtitle",
-											fontFamily: "Inter, sans-serif",
-											fontSize: "0.85rem",
-										}}
-									>
-										{t("update_password_subtitle")}
-									</Typography>
-								</Box>
-							</Box>
-
-							{pwError && (
-								<Alert severity="error" sx={{ mb: 2 }}>
-									{pwError}
-								</Alert>
-							)}
-
-							<Box
-								component="form"
-								onSubmit={handleChangePassword}
-								sx={{ maxWidth: 400 }}
-							>
-								<TextField
-									label={t("current_password")}
-									type={showOldPassword ? "text" : "password"}
-									value={oldPassword}
-									onChange={(e) => setOldPassword(e.target.value)}
-									fullWidth
-									sx={{ mb: 2 }}
-									required
-									InputProps={{
-										startAdornment: (
-											<InputAdornment position="start">
-												<LockIcon sx={{ color: "text.cardSubtitle" }} />
-											</InputAdornment>
-										),
-										endAdornment: (
-											<InputAdornment position="end">
-												<IconButton
-													onClick={() => setShowOldPassword(!showOldPassword)}
-													edge="end"
-													size="small"
-												>
-													{showOldPassword ? (
-														<VisibilityOffIcon />
-													) : (
-														<VisibilityIcon />
-													)}
-												</IconButton>
-											</InputAdornment>
-										),
-									}}
-								/>
-								<TextField
-									label={t("new_password")}
-									type={showNewPassword ? "text" : "password"}
-									value={newPassword}
-									onChange={(e) => setNewPassword(e.target.value)}
-									fullWidth
-									sx={{ mb: 2 }}
-									required
-									helperText={t("password_rule_helper_text")}
-									InputProps={{
-										startAdornment: (
-											<InputAdornment position="start">
-												<LockIcon sx={{ color: "text.cardSubtitle" }} />
-											</InputAdornment>
-										),
-										endAdornment: (
-											<InputAdornment position="end">
-												<IconButton
-													onClick={() => setShowNewPassword(!showNewPassword)}
-													edge="end"
-													size="small"
-												>
-													{showNewPassword ? (
-														<VisibilityOffIcon />
-													) : (
-														<VisibilityIcon />
-													)}
-												</IconButton>
-											</InputAdornment>
-										),
-									}}
-								/>
-								<TextField
-									label={t("new_password_repeat")}
-									type={showNewPasswordRepeat ? "text" : "password"}
-									value={newPasswordRepeat}
-									onChange={(e) => setNewPasswordRepeat(e.target.value)}
-									fullWidth
-									sx={{ mb: 3 }}
-									required
-									InputProps={{
-										startAdornment: (
-											<InputAdornment position="start">
-												<LockIcon sx={{ color: "text.cardSubtitle" }} />
-											</InputAdornment>
-										),
-										endAdornment: (
-											<InputAdornment position="end">
-												<IconButton
-													onClick={() =>
-														setShowNewPasswordRepeat(!showNewPasswordRepeat)
-													}
-													edge="end"
-													size="small"
-												>
-													{showNewPasswordRepeat ? (
-														<VisibilityOffIcon />
-													) : (
-														<VisibilityIcon />
-													)}
-												</IconButton>
-											</InputAdornment>
-										),
-									}}
-								/>
-								<StyledButton
-									type="submit"
-									variant="primary"
-									fullWidth
-									disabled={pwLoading}
-									startIcon={
-										pwLoading ? null : <CheckCircleIcon sx={{ fontSize: 20 }} />
-									}
-								>
-									{pwLoading ? t("changing") : t("change_password_button")}
-								</StyledButton>
-							</Box>
-						</StyledCard>
-					</MotionBox>
-
-					{/* Danger Zone - Delete Account */}
-					<MotionBox
-						initial={{ y: 20 }}
-						animate={{ y: 0 }}
-						transition={{ delay: 0.4, duration: 0.4 }}
-						sx={{ height: "100%" }}
-					>
-						<StyledCard
-							variant="default"
-							sx={{
-								p: 3,
-								height: "100%",
-								border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
-								background: alpha(theme.palette.error.main, 0.02),
-								display: "flex",
-								flexDirection: "column",
-							}}
-						>
-							<Box
-								sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}
-							>
-								<Box
-									sx={{
-										width: 48,
-										height: 48,
-										borderRadius: "12px",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										background: alpha(theme.palette.error.main, 0.15),
-										border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
-									}}
-								>
-									<DeleteForeverIcon
-										sx={{ fontSize: 24, color: "error.main" }}
-									/>
-								</Box>
-								<Box sx={{ flex: 1 }}>
-									<Typography
-										variant="subtitle1"
-										sx={{
-											fontWeight: 600,
-											color: "text.cardTitle",
-											fontFamily: "Inter, sans-serif",
-										}}
-									>
-										{t("delete_account_title")}
-									</Typography>
-									<Typography
-										variant="body2"
-										sx={{
-											color: "text.cardSubtitle",
-											fontFamily: "Inter, sans-serif",
-										}}
-									>
-										{t("delete_account_message")}
-									</Typography>
-								</Box>
-							</Box>
-							<Box sx={{ mt: "auto" }}>
-								<StyledButton
-									variant="danger"
-									onClick={() => setDeleteModalOpen(true)}
-									startIcon={<DeleteForeverIcon sx={{ fontSize: 20 }} />}
-								>
-									{t("delete_account")}
-								</StyledButton>
-							</Box>
-						</StyledCard>
-					</MotionBox>
-				</Box>
 			</Box>
 
 			{/* Delete Account Confirmation Modal */}
@@ -663,6 +812,27 @@ export default function Account() {
 				variant="danger"
 				icon={DeleteForeverIcon}
 				loading={deleteLoading}
+			/>
+
+			{/* Reset Statistics Confirmation Modal */}
+			<ConfirmModal
+				open={resetModalOpen}
+				onClose={() => setResetModalOpen(false)}
+				onConfirm={handleResetStatistics}
+				title={t("reset_statistics_title") || "Reset Statistics"}
+				message={
+					t("reset_statistics_confirm") ||
+					"Are you sure you want to reset all statistics? This action cannot be undone."
+				}
+				confirmText={
+					resetLoading
+						? t("resetting") || "Resetting..."
+						: t("reset") || "Reset"
+				}
+				cancelText={t("cancel")}
+				variant="warning"
+				icon={RestartAltIcon}
+				loading={resetLoading}
 			/>
 
 			{/* Snackbar */}

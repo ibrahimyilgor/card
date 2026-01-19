@@ -24,7 +24,7 @@ export const updateSoundEffects = (sound_effects_enabled, accountId) =>
 
 export const updateKeyboardShortcuts = (
 	keyboard_shortcuts_enabled,
-	accountId
+	accountId,
 ) =>
 	api.put("/account/profile/keyboard", {
 		keyboard_shortcuts_enabled,
@@ -37,3 +37,6 @@ export const getMyPlan = () => api.get("/account/my-plan");
 
 // Delete account
 export const deleteAccount = () => api.delete("/account/delete");
+
+// Reset statistics
+export const resetStatistics = () => api.delete("/stats/reset");
