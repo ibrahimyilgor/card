@@ -21,10 +21,13 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import StarIcon from "@mui/icons-material/Star";
+import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import {
 	getAccountInfo,
 	changePassword,
 	deleteAccount,
+	getMyPlan,
 } from "../services/accountServices";
 import { useNavigate } from "react-router-dom";
 import {
@@ -135,6 +138,7 @@ export default function Account() {
 	useSEO('account');
 
 	const [account, setAccount] = useState(null);
+	const [plan, setPlan] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 
@@ -159,9 +163,10 @@ export default function Account() {
 
 	useEffect(() => {
 		setLoading(true);
-		getAccountInfo()
-			.then((res) => {
-				setAccount(res.data.account);
+		Promise.all([getAccountInfo(), getMyPlan()])
+			.then(([accountRes, planRes]) => {
+				setAccount(accountRes.data.account);
+				setPlan(planRes.data.plan);
 				setLoading(false);
 			})
 			.catch(() => {
@@ -305,6 +310,78 @@ export default function Account() {
 								value={formatDate(account.created_at)}
 								delay={0.2}
 							/>
+							{/* Subscription Card with Upgrade Button */}
+							<MotionBox
+								initial={{ y: 20 }}
+								animate={{ y: 0 }}
+								transition={{ delay: 0.25, duration: 0.4 }}
+							>
+								<StyledCard
+									variant="default"
+									sx={{
+										p: 3,
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "space-between",
+										gap: 2,
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
+										<Box
+											sx={{
+												width: 48,
+												height: 48,
+												borderRadius: "12px",
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												background: plan?.code === "free"
+													? `linear-gradient(135deg, ${alpha(theme.palette.text.secondary, 0.15)} 0%, ${alpha(theme.palette.text.secondary, 0.05)} 100%)`
+													: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.15)} 0%, ${alpha(theme.palette.warning.main, 0.05)} 100%)`,
+												border: plan?.code === "free"
+													? `1px solid ${alpha(theme.palette.text.secondary, 0.2)}`
+													: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+											}}
+										>
+											{plan?.code === "free" ? (
+												<StarOutlineIcon sx={{ fontSize: 24, color: "text.secondary" }} />
+											) : (
+												<StarIcon sx={{ fontSize: 24, color: "warning.main" }} />
+											)}
+										</Box>
+										<Box>
+											<Typography
+												variant="body2"
+												sx={{
+													color: "text.cardSubtitle",
+													fontFamily: "Inter, sans-serif",
+													fontSize: "0.85rem",
+													mb: 0.5,
+												}}
+											>
+												{t("subscription")}
+											</Typography>
+											<Typography
+												variant="subtitle1"
+												sx={{
+													fontWeight: 600,
+													color: "text.cardTitle",
+													fontFamily: "Inter, sans-serif",
+												}}
+											>
+												{plan?.name || t("free_plan")}
+											</Typography>
+										</Box>
+									</Box>
+									<StyledButton
+										variant={plan?.code === "free" ? "contained" : "outlined"}
+										size="small"
+										onClick={() => navigate("/plans")}
+									>
+										{plan?.code === "free" ? t("upgrade") : t("view_plans")}
+									</StyledButton>
+								</StyledCard>
+							</MotionBox>
 						</Box>
 					)
 				)}
