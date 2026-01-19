@@ -1,12 +1,18 @@
 -firebase authenticationa geçiş.
+    +login signup tamamen buradan
 
 -plana göre özelliklerin açılıp kapatılması.
+    +nelerin kısatlanacağına karar ver
+    +plan açıklamalarının düzenlemesi (mobil-web)
 
 -plana ekleme, plandan çıkarma vs
+    +google play bağlantısı ile planı ayarlama
 
 -oyun modlarının tekrar düzenlenmesi, buna bağlı olarak başarımların kontrolü
+    +süreliyi ve survivalı diğerlerine özellik olarak ekle
 
--mobil istatistiklerin webe göre yenilenmesi
+-istatistikler sayfası
+    +mobilin dosya ismi. stats_report_yyyy_mm_dd olmalı.
 
 -backend token alıp her şeyi değiştirebilme. (Zaten olduğu iddia ediliyor test et)
 

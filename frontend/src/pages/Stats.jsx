@@ -48,6 +48,8 @@ import ErrorIcon from "@mui/icons-material/Error";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { I18nContext } from "../utils/i18n";
 import { PageContainer, StyledCard, StatsSkeleton } from "../components/ui";
 import {
@@ -67,7 +69,7 @@ ChartJS.register(
 	Title,
 	ChartTooltip,
 	Legend,
-	Filler
+	Filler,
 );
 
 const MotionBox = motion.create(Box);
@@ -199,7 +201,7 @@ export default function Stats() {
 				grid: "rgba(255, 255, 255, 0.06)",
 				text: "#94a3b8",
 			},
-		[theme.palette.chart]
+		[theme.palette.chart],
 	);
 
 	// Format duration helper
@@ -253,7 +255,7 @@ export default function Stats() {
 			const range = getDateRangeFromPreset(preset);
 			setDateRange(range);
 		},
-		[getDateRangeFromPreset]
+		[getDateRangeFromPreset],
 	);
 
 	// Handle date picker change
@@ -332,7 +334,7 @@ export default function Stats() {
 				setSortOrder("desc");
 			}
 		},
-		[sortBy]
+		[sortBy],
 	);
 
 	// Refresh data
@@ -342,283 +344,376 @@ export default function Stats() {
 		}
 	}, [activePreset, handlePresetClick]);
 
-	// Download report as HTML file
-	const handleDownloadReport = useCallback(() => {
+	// Download report as PDF file
+	const handleDownloadReport = useCallback(async () => {
 		if (!filteredStats) return;
 
 		const total = (filteredStats.correct || 0) + (filteredStats.incorrect || 0);
-		const accuracyPercent = total > 0 ? Math.round((filteredStats.correct / total) * 100) : 0;
+		const accuracyPercent =
+			total > 0 ? Math.round((filteredStats.correct / total) * 100) : 0;
 		const hours = Math.floor((filteredStats.studyTimeSeconds || 0) / 3600);
-		const minutes = Math.floor(((filteredStats.studyTimeSeconds || 0) % 3600) / 60);
-		const studyTimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+		const minutes = Math.floor(
+			((filteredStats.studyTimeSeconds || 0) % 3600) / 60,
+		);
+		const studyTimeFormatted =
+			hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
-		const dateRangeText = dateRange[0] && dateRange[1]
-			? `${dateRange[0].format("DD/MM/YYYY")} - ${dateRange[1].format("DD/MM/YYYY")}`
-			: t("all_time") || "All Time";
+		const dateRangeText =
+			dateRange[0] && dateRange[1]
+				? `${dateRange[0].format("DD/MM/YYYY")} - ${dateRange[1].format("DD/MM/YYYY")}`
+				: t("all_time") || "All Time";
 
-		const selectedDeckName = selectedDeck === "all"
-			? t("all_decks") || "All Decks"
-			: decksData.find(d => d.id === selectedDeck)?.title || selectedDeck;
+		const selectedDeckName =
+			selectedDeck === "all"
+				? t("all_decks") || "All Decks"
+				: decksData.find((d) => d.id === selectedDeck)?.title || selectedDeck;
 
 		const reportDate = dayjs().format("DD/MM/YYYY HH:mm");
 
-		const htmlContent = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>${t("statistics") || "Statistics"} Report</title>
-	<style>
-		* { margin: 0; padding: 0; box-sizing: border-box; }
-		body {
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-			color: #e2e8f0;
-			min-height: 100vh;
-			padding: 40px 20px;
-		}
-		.container {
-			max-width: 800px;
-			margin: 0 auto;
-		}
-		.header {
-			text-align: center;
-			margin-bottom: 40px;
-			padding-bottom: 30px;
-			border-bottom: 2px solid rgba(255,255,255,0.1);
-		}
-		.header h1 {
-			font-size: 2.5rem;
-			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			margin-bottom: 10px;
-		}
-		.header p {
-			color: #94a3b8;
-			font-size: 0.9rem;
-		}
-		.meta-info {
-			display: flex;
-			justify-content: center;
-			gap: 30px;
-			margin-top: 20px;
-			flex-wrap: wrap;
-		}
-		.meta-item {
-			background: rgba(255,255,255,0.05);
-			padding: 10px 20px;
-			border-radius: 20px;
-			font-size: 0.85rem;
-		}
-		.meta-item span {
-			color: #667eea;
-			font-weight: 600;
-		}
-		.stats-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-			gap: 20px;
-			margin-bottom: 40px;
-		}
-		.stat-card {
-			background: rgba(255,255,255,0.05);
-			border-radius: 16px;
-			padding: 24px;
-			text-align: center;
-			transition: transform 0.3s;
-		}
-		.stat-card:hover {
-			transform: translateY(-5px);
-		}
-		.stat-value {
-			font-size: 2.5rem;
-			font-weight: 700;
-			margin-bottom: 8px;
-		}
-		.stat-label {
-			color: #94a3b8;
-			font-size: 0.9rem;
-			text-transform: uppercase;
-			letter-spacing: 1px;
-		}
-		.stat-card.primary .stat-value { color: #3b82f6; }
-		.stat-card.success .stat-value { color: #22c55e; }
-		.stat-card.error .stat-value { color: #ef4444; }
-		.stat-card.purple .stat-value { color: #8b5cf6; }
-		.stat-card.info .stat-value { color: #06b6d4; }
-		.stat-card.warning .stat-value { color: #f59e0b; }
-		.accuracy-section {
-			background: rgba(255,255,255,0.05);
-			border-radius: 16px;
-			padding: 30px;
-			margin-bottom: 40px;
-			text-align: center;
-		}
-		.accuracy-bar {
-			height: 20px;
-			background: rgba(239, 68, 68, 0.3);
-			border-radius: 10px;
-			overflow: hidden;
-			margin: 20px 0;
-		}
-		.accuracy-fill {
-			height: 100%;
-			background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%);
-			border-radius: 10px;
-			transition: width 0.5s;
-		}
-		.accuracy-label {
-			font-size: 3rem;
-			font-weight: 700;
-			background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-		}
-		.cards-section {
-			background: rgba(255,255,255,0.05);
-			border-radius: 16px;
-			padding: 30px;
-		}
-		.cards-section h3 {
-			margin-bottom: 20px;
-			color: #e2e8f0;
-		}
-		table {
-			width: 100%;
-			border-collapse: collapse;
-		}
-		th, td {
-			padding: 12px;
-			text-align: left;
-			border-bottom: 1px solid rgba(255,255,255,0.1);
-		}
-		th {
-			color: #94a3b8;
-			font-weight: 600;
-			text-transform: uppercase;
-			font-size: 0.75rem;
-			letter-spacing: 1px;
-		}
-		tr:hover {
-			background: rgba(255,255,255,0.02);
-		}
-		.badge {
-			padding: 4px 12px;
-			border-radius: 12px;
-			font-size: 0.8rem;
-			font-weight: 600;
-		}
-		.badge-success { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
-		.badge-error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-		.footer {
-			text-align: center;
-			margin-top: 40px;
-			padding-top: 30px;
-			border-top: 2px solid rgba(255,255,255,0.1);
-			color: #64748b;
-			font-size: 0.85rem;
-		}
-		@media print {
-			body { background: #1a1a2e; }
-			.stat-card:hover { transform: none; }
-		}
-	</style>
-</head>
-<body>
-	<div class="container">
-		<div class="header">
-			<h1>${t("statistics") || "Statistics"} Report</h1>
-			<p>${t("stats_subtitle") || "Track your learning progress"}</p>
-			<div class="meta-info">
-				<div class="meta-item"><span>${dateRangeText}</span></div>
-				<div class="meta-item"><span>${selectedDeckName}</span></div>
-				<div class="meta-item"><span>${reportDate}</span></div>
-			</div>
-		</div>
+		// Get chart images as base64 using ChartJS.getChart()
+		const getChartImage = (chartId) => {
+			try {
+				const chart = ChartJS.getChart(chartId);
+				if (!chart) return "";
+				return chart.toBase64Image("image/png", 1);
+			} catch (error) {
+				console.error(`Chart ${chartId} export failed:`, error);
+				return "";
+			}
+		};
 
-		<div class="stats-grid">
-			<div class="stat-card primary">
-				<div class="stat-value">${filteredStats.cardsStudied || 0}</div>
-				<div class="stat-label">${t("cards_studied") || "Cards Studied"}</div>
-			</div>
-			<div class="stat-card success">
-				<div class="stat-value">${filteredStats.correct || 0}</div>
-				<div class="stat-label">${t("correct_answers") || "Correct"}</div>
-			</div>
-			<div class="stat-card error">
-				<div class="stat-value">${filteredStats.incorrect || 0}</div>
-				<div class="stat-label">${t("wrong_answers") || "Incorrect"}</div>
-			</div>
-			<div class="stat-card purple">
-				<div class="stat-value">${accuracyPercent}%</div>
-				<div class="stat-label">${t("accuracy") || "Accuracy"}</div>
-			</div>
-			<div class="stat-card info">
-				<div class="stat-value">${studyTimeFormatted}</div>
-				<div class="stat-label">${t("study_time") || "Study Time"}</div>
-			</div>
-			<div class="stat-card warning">
-				<div class="stat-value">${filteredStats.sessions || 0}</div>
-				<div class="stat-label">${t("sessions") || "Sessions"}</div>
-			</div>
-		</div>
+		// Get all chart images by ID
+		const activityChartImage = getChartImage("activity-chart");
+		const accuracyChartImage = getChartImage("accuracy-chart");
+		const studyTimeChartImage = getChartImage("study-time-chart");
 
-		<div class="accuracy-section">
-			<h3>${t("accuracy") || "Accuracy"}</h3>
-			<div class="accuracy-label">${accuracyPercent}%</div>
-			<div class="accuracy-bar">
-				<div class="accuracy-fill" style="width: ${accuracyPercent}%"></div>
-			</div>
-			<p style="color: #94a3b8;">${filteredStats.correct || 0} ${t("correct") || "correct"} / ${total} ${t("total") || "total"}</p>
-		</div>
+		// Load logo image
+		const loadLogoImage = () => {
+			return new Promise((resolve) => {
+				const img = new Image();
+				img.crossOrigin = "Anonymous";
+				img.onload = () => {
+					const canvas = document.createElement("canvas");
+					canvas.width = img.width;
+					canvas.height = img.height;
+					const ctx = canvas.getContext("2d");
+					ctx.drawImage(img, 0, 0);
+					resolve(canvas.toDataURL("image/png"));
+				};
+				img.onerror = () => resolve(null);
+				img.src = "/images/logo/memodeck.png";
+			});
+		};
 
-		${cardsTable.length > 0 ? `
-		<div class="cards-section">
-			<h3>🃏 ${t("card_performance") || "Card Performance"} (Top 10)</h3>
-			<table>
-				<thead>
-					<tr>
-						<th>${t("card") || "Card"}</th>
-						<th>${t("times_played") || "Played"}</th>
-						<th>${t("correct") || "Correct"}</th>
-						<th>${t("incorrect") || "Incorrect"}</th>
-						<th>${t("accuracy") || "Accuracy"}</th>
-					</tr>
-				</thead>
-				<tbody>
-					${cardsTable.slice(0, 10).map(card => `
-						<tr>
-							<td>${(card.front || "").substring(0, 40)}${card.front?.length > 40 ? "..." : ""}</td>
-							<td>${card.times_played || 0}</td>
-							<td><span class="badge badge-success">${card.correct || 0}</span></td>
-							<td><span class="badge badge-error">${card.wrong || 0}</span></td>
-							<td>${card.accuracy || 0}%</td>
-						</tr>
-					`).join("")}
-				</tbody>
-			</table>
-		</div>
-		` : ""}
+		const logoImage = await loadLogoImage();
 
-		<div class="footer">
-			<p>Generated by Flashcard App • ${reportDate}</p>
-		</div>
-	</div>
-</body>
-</html>
-		`;
+		// Create PDF
+		const doc = new jsPDF();
+		const pageWidth = doc.internal.pageSize.getWidth();
+		const pageHeight = doc.internal.pageSize.getHeight();
 
-		const blob = new Blob([htmlContent], { type: "text/html" });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = `stats-report-${dayjs().format("YYYY-MM-DD")}.html`;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		URL.revokeObjectURL(url);
+		// Set dark background for all pages
+		const setPageBackground = () => {
+			doc.setFillColor(26, 26, 46); // #1a1a2e
+			doc.rect(0, 0, pageWidth, pageHeight, "F");
+		};
+		setPageBackground();
+
+		let yPos = 20;
+
+		// Add logo if available
+		if (logoImage) {
+			const logoSize = 20;
+			doc.addImage(
+				logoImage,
+				"PNG",
+				pageWidth / 2 - logoSize / 2,
+				yPos,
+				logoSize,
+				logoSize,
+			);
+			yPos += logoSize + 10;
+		}
+
+		// Title
+		doc.setFontSize(22);
+		doc.setTextColor(102, 126, 234);
+		doc.text(
+			t("statistics_report") || "Statistics Report",
+			pageWidth / 2,
+			yPos,
+			{ align: "center" },
+		);
+		yPos += 8;
+
+		// Subtitle
+		doc.setFontSize(10);
+		doc.setTextColor(148, 163, 184);
+		doc.text(
+			t("stats_subtitle") || "Track your learning progress",
+			pageWidth / 2,
+			yPos,
+			{ align: "center" },
+		);
+		yPos += 10;
+
+		// Meta info
+		doc.setFontSize(9);
+		doc.text(
+			`${dateRangeText}  •  ${selectedDeckName}  •  ${reportDate}`,
+			pageWidth / 2,
+			yPos,
+			{ align: "center" },
+		);
+		yPos += 15;
+
+		// Stats cards (PDF layout: 2 columns x 3 rows)
+		doc.setFillColor(30, 41, 59);
+		const cardWidth = 58;
+		const cardHeight = 25;
+		const cardGap = 5;
+		const cols = 2;
+		const startX = (pageWidth - (cardWidth * cols + cardGap * (cols - 1))) / 2;
+
+		const stats = [
+			{
+				label: t("cards_studied") || "Cards Studied",
+				value: String(filteredStats.cardsStudied || 0),
+				color: [59, 130, 246],
+			},
+			{
+				label: t("correct_answers") || "Correct",
+				value: String(filteredStats.correct || 0),
+				color: [34, 197, 94],
+			},
+			{
+				label: t("wrong_answers") || "Incorrect",
+				value: String(filteredStats.incorrect || 0),
+				color: [239, 68, 68],
+			},
+			{
+				label: t("accuracy") || "Accuracy",
+				value: `${accuracyPercent}%`,
+				color: [139, 92, 246],
+			},
+			{
+				label: t("study_time") || "Study Time",
+				value: studyTimeFormatted,
+				color: [6, 182, 212],
+			},
+			{
+				label: t("sessions") || "Sessions",
+				value: String(filteredStats.sessions || 0),
+				color: [245, 158, 11],
+			},
+		];
+
+		stats.forEach((stat, index) => {
+			const row = Math.floor(index / cols);
+			const col = index % cols;
+			const x = startX + col * (cardWidth + cardGap);
+			const y = yPos + row * (cardHeight + cardGap);
+
+			doc.setFillColor(30, 41, 59);
+			doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, "F");
+
+			doc.setFontSize(18);
+			doc.setTextColor(stat.color[0], stat.color[1], stat.color[2]);
+			doc.text(stat.value, x + cardWidth / 2, y + 12, { align: "center" });
+
+			doc.setFontSize(7);
+			doc.setTextColor(148, 163, 184);
+			doc.text(stat.label.toUpperCase(), x + cardWidth / 2, y + 20, {
+				align: "center",
+			});
+		});
+
+		const rows = Math.ceil(stats.length / cols);
+		yPos += rows * (cardHeight + cardGap) + 10;
+
+		// Charts - Alt alta, tam genişlikte (3 grafik)
+		const chartWidth = pageWidth - 30;
+		const chartHeight = 65; // increased height for better visibility
+
+		// All 3 charts with page break handling
+		const charts = [
+			{
+				image: activityChartImage,
+				title: t("study_activity") || "Study Activity",
+			},
+			{
+				image: accuracyChartImage,
+				title: t("accuracy_trend") || "Accuracy Trend",
+			},
+			{ image: studyTimeChartImage, title: t("study_time") || "Study Time" },
+		];
+
+		charts.forEach((chart) => {
+			if (chart.image) {
+				// Page break check
+				if (yPos + chartHeight + 20 > pageHeight - 20) {
+					doc.addPage();
+					setPageBackground();
+					yPos = 20;
+				}
+				doc.setFontSize(10);
+				doc.setTextColor(102, 126, 234);
+				doc.text(chart.title, 15, yPos);
+				yPos += 5;
+				doc.addImage(chart.image, "PNG", 15, yPos, chartWidth, chartHeight);
+				yPos += chartHeight + 8;
+			}
+		});
+
+		// Card Performance table
+		if (cardsTable.length > 0) {
+			// Check if we need a new page
+			if (yPos > 240) {
+				doc.addPage();
+				setPageBackground();
+				yPos = 20;
+			}
+
+			doc.setFontSize(11);
+			doc.setTextColor(226, 232, 240);
+			doc.text(t("card_performance") || "Card Performance", 15, yPos);
+			yPos += 2; // reduced spacing so title fits better
+
+			const tableData = cardsTable.map((card) => [
+				(card.front || "").substring(0, 35) +
+					(card.front?.length > 35 ? "..." : ""),
+				String(card.times_played || 0),
+				String(card.correct || 0),
+				String(card.wrong || 0),
+				`${card.accuracy || 0}%`,
+			]);
+
+			// Tablo için kart container çiz
+			const tableStartY = yPos;
+
+			autoTable(doc, {
+				startY: yPos + 3,
+				head: [
+					[
+						{
+							content: t("flashcards") || "Flashcards",
+							styles: { halign: "left" },
+						},
+						t("times_played") || "Played",
+						t("correct") || "Correct",
+						t("incorrect") || "Wrong",
+						t("accuracy") || "Accuracy",
+					],
+				],
+				body: tableData,
+				theme: "plain",
+				styles: {
+					fillColor: [30, 41, 59],
+					textColor: [226, 232, 240],
+					fontSize: 8,
+					font: "helvetica",
+					// Further reduced padding for tighter rows
+					cellPadding: { top: 3, right: 5, bottom: 3, left: 5 },
+					lineColor: [51, 65, 85],
+					lineWidth: 0.1,
+					valign: "middle",
+					overflow: "ellipsize",
+				},
+				headStyles: {
+					fillColor: [79, 70, 229], // Indigo gradient başlangıcı
+					textColor: [255, 255, 255],
+					fontSize: 9,
+					fontStyle: "bold",
+					halign: "center",
+					cellPadding: { top: 4, right: 6, bottom: 4, left: 6 },
+				},
+				alternateRowStyles: {
+					fillColor: [22, 33, 62],
+				},
+				columnStyles: {
+					0: { cellWidth: 80, halign: "left", fontStyle: "normal" },
+					1: { cellWidth: 28, halign: "center" },
+					2: { cellWidth: 28, halign: "center" },
+					3: { cellWidth: 28, halign: "center" },
+					4: { cellWidth: 28, halign: "center", fontStyle: "bold" },
+				},
+				didParseCell: (data) => {
+					// Correct sütunu yeşil
+					if (data.section === "body" && data.column.index === 2) {
+						data.cell.styles.textColor = [74, 222, 128]; // green-400
+					}
+					// Wrong sütunu kırmızı
+					if (data.section === "body" && data.column.index === 3) {
+						data.cell.styles.textColor = [248, 113, 113]; // red-400
+					}
+					// Accuracy sütununa değere göre renk
+					if (data.section === "body" && data.column.index === 4) {
+						const value = parseFloat(data.cell.raw) || 0;
+						if (value >= 80) {
+							data.cell.styles.textColor = [74, 222, 128]; // green-400
+						} else if (value >= 50) {
+							data.cell.styles.textColor = [251, 191, 36]; // amber-400
+						} else {
+							data.cell.styles.textColor = [248, 113, 113]; // red-400
+						}
+					}
+				},
+				didDrawCell: (data) => {
+					// Sıra numarası için sol kenara ince çizgi
+					if (data.section === "body" && data.column.index === 0) {
+						const accuracy = parseFloat(tableData[data.row.index]?.[4]) || 0;
+						let color;
+						if (accuracy >= 80) {
+							color = [74, 222, 128];
+						} else if (accuracy >= 50) {
+							color = [251, 191, 36];
+						} else {
+							color = [248, 113, 113];
+						}
+						doc.setFillColor(color[0], color[1], color[2]);
+						// smaller vertical inset to match reduced padding
+						doc.rect(
+							data.cell.x,
+							data.cell.y + 2,
+							2,
+							Math.max(6, data.cell.height - 4),
+							"F",
+						);
+					}
+				},
+				willDrawPage: (data) => {
+					// Her yeni sayfada içerik çizilmeden ÖNCE arka planı çiz
+					if (data.pageNumber > 1) {
+						doc.setFillColor(26, 26, 46);
+						doc.rect(0, 0, pageWidth, pageHeight, "F");
+					}
+				},
+				margin: { left: 15, right: 15 },
+				tableWidth: "auto",
+				showHead: "everyPage",
+			});
+			// move yPos after table so following content doesn't overlap
+			if (doc.lastAutoTable) {
+				yPos = doc.lastAutoTable.finalY + 6;
+			}
+		}
+
+		// Footer
+		const pageCount = doc.internal.getNumberOfPages();
+		for (let i = 1; i <= pageCount; i++) {
+			doc.setPage(i);
+			doc.setFontSize(8);
+			doc.setTextColor(100, 116, 139);
+			doc.text(
+				`Generated by MemoDeck App • ${reportDate}`,
+				pageWidth / 2,
+				doc.internal.pageSize.getHeight() - 10,
+				{ align: "center" },
+			);
+		}
+
+		// Save PDF
+		doc.save(`stats-report-${dayjs().format("YYYY-MM-DD")}.pdf`);
 	}, [filteredStats, cardsTable, dateRange, selectedDeck, decksData, t]);
 
 	// Line chart options
@@ -655,20 +750,20 @@ export default function Stats() {
 				point: { radius: 3, hoverRadius: 5 },
 			},
 		}),
-		[theme, chartColors]
+		[theme, chartColors],
 	);
 
 	// Activity line chart data
 	const activityChartData = useMemo(
 		() => ({
 			labels: (chartData.data || []).map((d) =>
-				formatDateLabel(d.date, chartData.grouping)
+				formatDateLabel(d.date, chartData.grouping),
 			),
 			datasets: [
 				{
 					label: t("cards_studied") || "Cards Studied",
 					data: (chartData.data || []).map(
-						(d) => parseInt(d.cardsStudied) || 0
+						(d) => parseInt(d.cardsStudied) || 0,
 					),
 					borderColor: chartColors.primary,
 					backgroundColor: `${chartColors.primary}20`,
@@ -677,14 +772,14 @@ export default function Stats() {
 				},
 			],
 		}),
-		[chartData, chartColors, t, formatDateLabel]
+		[chartData, chartColors, t, formatDateLabel],
 	);
 
 	// Accuracy trend chart data
 	const accuracyChartData = useMemo(
 		() => ({
 			labels: (chartData.data || []).map((d) =>
-				formatDateLabel(d.date, chartData.grouping)
+				formatDateLabel(d.date, chartData.grouping),
 			),
 			datasets: [
 				{
@@ -705,27 +800,27 @@ export default function Stats() {
 				},
 			],
 		}),
-		[chartData, chartColors, t, formatDateLabel]
+		[chartData, chartColors, t, formatDateLabel],
 	);
 
 	// Study time bar chart data
 	const studyTimeChartData = useMemo(
 		() => ({
 			labels: (chartData.data || []).map((d) =>
-				formatDateLabel(d.date, chartData.grouping)
+				formatDateLabel(d.date, chartData.grouping),
 			),
 			datasets: [
 				{
 					label: t("study_time") || "Study Time (min)",
 					data: (chartData.data || []).map((d) =>
-						Math.round((parseInt(d.studyTimeSeconds) || 0) / 60)
+						Math.round((parseInt(d.studyTimeSeconds) || 0) / 60),
 					),
 					backgroundColor: chartColors.secondary,
 					borderRadius: 8,
 				},
 			],
 		}),
-		[chartData, chartColors, t, formatDateLabel]
+		[chartData, chartColors, t, formatDateLabel],
 	);
 
 	// Bar chart options
@@ -750,7 +845,7 @@ export default function Stats() {
 				},
 			},
 		}),
-		[chartColors]
+		[chartColors],
 	);
 
 	// Calculate accuracy percentage
@@ -945,9 +1040,9 @@ export default function Stats() {
 										preset.key === "today"
 											? t("today") || "Today"
 											: preset.key === "all"
-											? t("all_time_short") || "All"
-											: t(`${preset.key.replace("d", "_days")}`) ||
-											  preset.key.toUpperCase()
+												? t("all_time_short") || "All"
+												: t(`${preset.key.replace("d", "_days")}`) ||
+													preset.key.toUpperCase()
 									}
 									active={activePreset === preset.key}
 									onClick={() => handlePresetClick(preset.key)}
@@ -958,15 +1053,11 @@ export default function Stats() {
 				</StyledCard>
 			</MotionBox>
 
-			{/* Stats Cards */}
+			{/* Stats Cards: 2 columns x 3 rows */}
 			<Box
 				sx={{
 					display: "grid",
-					gridTemplateColumns: {
-						xs: "1fr",
-						sm: "repeat(2, 1fr)",
-						lg: "repeat(4, 1fr)",
-					},
+					gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
 					gap: 2,
 					mb: 3,
 				}}
@@ -996,26 +1087,9 @@ export default function Stats() {
 					icon={EmojiEventsIcon}
 					title={t("accuracy") || "Accuracy"}
 					value={`${accuracy}%`}
-					// subtitle={`${filteredStats?.correct || 0}/${
-					// 	(filteredStats?.correct || 0) + (filteredStats?.incorrect || 0)
-					// }`}
 					color={chartColors.secondary}
 					delay={0.25}
 				/>
-			</Box>
-
-			{/* Secondary Stats */}
-			<Box
-				sx={{
-					display: "grid",
-					gridTemplateColumns: {
-						xs: "1fr",
-						sm: "repeat(2, 1fr)",
-					},
-					gap: 2,
-					mb: 3,
-				}}
-			>
 				<StatCard
 					icon={AccessTimeIcon}
 					title={t("study_time") || "Study Time"}
@@ -1067,7 +1141,11 @@ export default function Stats() {
 						</Typography>
 						<Box sx={{ height: 300 }}>
 							{chartData.data?.length > 0 ? (
-								<Line data={activityChartData} options={lineChartOptions} />
+								<Line
+									id="activity-chart"
+									data={activityChartData}
+									options={lineChartOptions}
+								/>
 							) : (
 								<Box
 									sx={{
@@ -1087,11 +1165,11 @@ export default function Stats() {
 				</MotionBox>
 			</Box>
 
-			{/* Charts Row 2 */}
+			{/* Charts Row 2 & 3: Each chart in its own row */}
 			<Box
 				sx={{
 					display: "grid",
-					gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+					gridTemplateColumns: "1fr",
 					gap: 3,
 					mb: 3,
 				}}
@@ -1116,6 +1194,7 @@ export default function Stats() {
 						<Box sx={{ height: 280 }}>
 							{chartData.data?.length > 0 ? (
 								<Line
+									id="accuracy-chart"
 									data={accuracyChartData}
 									options={{
 										...lineChartOptions,
@@ -1166,7 +1245,11 @@ export default function Stats() {
 						</Typography>
 						<Box sx={{ height: 280 }}>
 							{chartData.data?.length > 0 ? (
-								<Bar data={studyTimeChartData} options={barChartOptions} />
+								<Bar
+									id="study-time-chart"
+									data={studyTimeChartData}
+									options={barChartOptions}
+								/>
 							) : (
 								<Box
 									sx={{
@@ -1359,8 +1442,8 @@ export default function Stats() {
 																	card.accuracy >= 80
 																		? "success.main"
 																		: card.accuracy >= 50
-																		? "warning.main"
-																		: "error.main",
+																			? "warning.main"
+																			: "error.main",
 															},
 														}}
 													/>
