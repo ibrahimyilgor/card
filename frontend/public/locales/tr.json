@@ -130,6 +130,9 @@
 	"accuracy": "Doğruluk",
 	"welcome_back": "Tekrar hoş geldiniz",
 	"login_subtitle": "Öğrenme yolculuğunuza devam etmek için giriş yapın",
+	"welcome_to_memodeck": "MemoDeck'e hoş geldiniz",
+	"signin_with_google_desc": "Devam etmek için Google hesabınızla giriş yapın",
+	"terms_agreement": "",
 	"create_account": "Hesap Oluştur",
 	"signup_subtitle": "Öğrenme yolculuğunuza bugün başlayın",
 	"settings_subtitle": "Deneyiminizi özelleştirin",
@@ -226,7 +229,7 @@
 	"great_account_experience": "Kullanımı Kolay",
 	"great_account_experience_desc": "Dikkat dağıtıcı unsurlardan uzak, odaklanmış öğrenme için tasarlanmış temiz ve sezgisel arayüz",
 	"innovative_functionality": "Çoklu Oyun Modları",
-	"innovative_functionality_desc": "Zamanlı, hayatta kalma, test ve eşleştirme dahil 7 farklı oyun modu",
+	"innovative_functionality_desc": "Farklı oyun modları ile çalışma seanslarınızı ilgi çekici ve etkili hale getirin",
 	"signup_failed": "Kayıt başarısız",
 	"accountname_exists": "Bu kullanıcı adı zaten alınmış",
 	"network_error": "Ağ hatası. Lütfen tekrar deneyin.",
@@ -282,7 +285,6 @@
 	"deck_updated": "Deste başarıyla güncellendi",
 	"deck_deleted": "Deste başarıyla silindi",
 	"save_deck_error": "Deste kaydedilirken hata oluştu",
-	"network_error": "Ağ hatası",
 	"front": "Ön",
 	"back": "Arka",
 	"deck_description_placeholder": "Desteniz için isteğe bağlı açıklama...",
@@ -354,5 +356,7 @@
 	"end_date": "Bitiş Tarihi",
 	"no_cards_data": "Henüz kart performans verisi yok",
 	"monthly": "Aylık",
-	"card_title": "Kart"
+	"card_title": "Kart",
+	"continue_with_google": "Google ile devam et",
+	"google_signin_failed": "Google ile giriş başarısız"
 }

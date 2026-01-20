@@ -1,16 +1,6 @@
 import api from "./api";
 
-// Account info endpoint (name and created_at)
-export const getAccountInfo = () => api.get("/account/me");
-
-// Change password
-export const changePassword = (oldPassword, newPassword, newPasswordRepeat) =>
-	api.post("/account/change-password", {
-		oldPassword,
-		newPassword,
-		newPasswordRepeat,
-	});
-
+// Account profile endpoint
 export const getProfile = () => api.get("/account/profile");
 
 export const updateTheme = (theme_preference, accountId) =>
@@ -34,9 +24,6 @@ export const updateKeyboardShortcuts = (
 // Plans
 export const getAllPlans = () => api.get("/account/plans");
 export const getMyPlan = () => api.get("/account/my-plan");
-
-// Delete account
-export const deleteAccount = () => api.delete("/account/delete");
 
 // Reset statistics
 export const resetStatistics = () => api.delete("/stats/reset");

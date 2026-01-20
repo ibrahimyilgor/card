@@ -11,22 +11,25 @@ const pool = new Pool(
 		? {
 				connectionString: process.env.DATABASE_URL,
 				ssl: { rejectUnauthorized: false },
-		  }
+			}
 		: {
 				user: "postgres",
 				host: process.env.PGHOST || "db",
 				database: "postgres",
 				password: "postgres",
 				port: 5432,
-		  }
+			},
 );
 
 app.use(
 	cors({
 		origin: process.env.CORS_ORIGIN || "*",
 		credentials: true,
-	})
+	}),
 );
+
+// Make pool available to middleware
+app.set("pool", pool);
 
 const authRouter = require("./auth")(pool);
 const accountRouter = require("./account")(pool);
@@ -58,7 +61,7 @@ app.listen(port, () => {
 cron.schedule("0 3 * * *", async () => {
 	try {
 		const result = await pool.query(
-			"DELETE FROM refresh_token WHERE expires_at < NOW()"
+			"DELETE FROM refresh_token WHERE expires_at < NOW()",
 		);
 		console.log(`[Cron] Cleaned ${result.rowCount} expired refresh tokens`);
 	} catch (err) {

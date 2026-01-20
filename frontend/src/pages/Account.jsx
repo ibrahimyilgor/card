@@ -11,9 +11,11 @@ import {
 	alpha,
 	InputAdornment,
 	IconButton,
+	Avatar,
 } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LockIcon from "@mui/icons-material/Lock";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
@@ -24,13 +26,14 @@ import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
+import { getMyPlan, resetStatistics } from "../services/accountServices";
+import { deleteAccount } from "../services/authServices";
+import { firebaseAuth } from "../config/firebase";
 import {
-	getAccountInfo,
-	changePassword,
-	deleteAccount,
-	getMyPlan,
-	resetStatistics,
-} from "../services/accountServices";
+	EmailAuthProvider,
+	reauthenticateWithCredential,
+	updatePassword,
+} from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import {
 	PageContainer,
@@ -170,9 +173,16 @@ export default function Account() {
 
 	useEffect(() => {
 		setLoading(true);
-		Promise.all([getAccountInfo(), getMyPlan()])
-			.then(([accountRes, planRes]) => {
-				setAccount(accountRes.data.account);
+		const firebaseUser = firebaseAuth.getCurrentUser();
+
+		getMyPlan()
+			.then((planRes) => {
+				setAccount({
+					email: firebaseUser?.email,
+					displayName: firebaseUser?.displayName,
+					photoURL: firebaseUser?.photoURL,
+					created_at: firebaseUser?.metadata?.creationTime,
+				});
 				setPlan(planRes.data.plan);
 				setLoading(false);
 			})
@@ -202,7 +212,20 @@ export default function Account() {
 			return;
 		}
 		try {
-			await changePassword(oldPassword, newPassword, newPasswordRepeat);
+			const user = firebaseAuth.getCurrentUser();
+			if (!user || !user.email) {
+				setPwError(t("password_change_failed"));
+				setPwLoading(false);
+				return;
+			}
+
+			// Re-authenticate with current password
+			const credential = EmailAuthProvider.credential(user.email, oldPassword);
+			await reauthenticateWithCredential(user, credential);
+
+			// Update password
+			await updatePassword(user, newPassword);
+
 			setSnackbar({
 				open: true,
 				message: t("password_changed_success"),
@@ -212,7 +235,14 @@ export default function Account() {
 			setNewPassword("");
 			setNewPasswordRepeat("");
 		} catch (err) {
-			setPwError(err?.response?.data?.error || t("password_change_failed"));
+			console.error("Password change error:", err);
+			if (err.code === "auth/wrong-password") {
+				setPwError(t("invalid_credentials") || "Current password is incorrect");
+			} else if (err.code === "auth/weak-password") {
+				setPwError(t("password_rule_error") || "Password is too weak");
+			} else {
+				setPwError(t("password_change_failed"));
+			}
 		}
 		setPwLoading(false);
 	};
@@ -221,8 +251,7 @@ export default function Account() {
 		setDeleteLoading(true);
 		try {
 			await deleteAccount();
-			// Clear token and redirect to login
-			localStorage.removeItem("token");
+			// Redirect to login - authServices.deleteAccount handles cleanup
 			navigate("/login");
 		} catch (err) {
 			setSnackbar({
@@ -280,30 +309,50 @@ export default function Account() {
 			<Box sx={{ mx: "auto", pb: 4 }}>
 				{/* Header */}
 				<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 4 }}>
-					<Typography
-						variant="h4"
+					<Box
 						sx={{
-							fontWeight: 700,
-							color: "text.cardTitle",
-							fontFamily: "Inter, sans-serif",
 							display: "flex",
 							alignItems: "center",
-							gap: 1.5,
+							gap: 2,
 						}}
 					>
-						<AccountCircleIcon sx={{ color: "primary.light", fontSize: 32 }} />
-						{t("account")}
-					</Typography>
-					<Typography
-						variant="body2"
-						sx={{
-							color: "text.cardSubtitle",
-							mt: 0.5,
-							fontFamily: "Inter, sans-serif",
-						}}
-					>
-						{t("account_page_subtitle")}
-					</Typography>
+						{account?.photoURL ? (
+							<Avatar
+								src={account.photoURL}
+								alt={account.displayName || "Profile"}
+								sx={{
+									width: 48,
+									height: 48,
+									borderRadius: "12px",
+									boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+								}}
+							/>
+						) : (
+							<AccountCircleIcon sx={{ color: "primary.light", fontSize: 48 }} />
+						)}
+						<Box>
+							<Typography
+								variant="h4"
+								sx={{
+									fontWeight: 700,
+									color: "text.cardTitle",
+									fontFamily: "Inter, sans-serif",
+								}}
+							>
+								{account?.displayName || t("account")}
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{
+									color: "text.cardSubtitle",
+									mt: 0.5,
+									fontFamily: "Inter, sans-serif",
+								}}
+							>
+								{t("account_page_subtitle")}
+							</Typography>
+						</Box>
+					</Box>
 				</MotionBox>
 
 				{error && (
@@ -331,9 +380,9 @@ export default function Account() {
 								}}
 							>
 								<InfoCard
-									icon={PersonIcon}
-									title={t("username")}
-									value={account.accountname}
+									icon={EmailIcon}
+									title={t("email")}
+									value={account.email}
 									delay={0.15}
 								/>
 								<InfoCard

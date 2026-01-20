@@ -10,6 +10,7 @@ import {
 	useTheme,
 	Tooltip,
 	alpha,
+	Avatar,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -81,13 +82,18 @@ function NavButton({ icon: Icon, label, isActive, onClick, tooltip }) {
 	);
 }
 
-export default function Topbar({ onLogout, currentPath }) {
+export default function Topbar({ onLogout, currentPath, user }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 	const navigate = useNavigate();
 	const location = useLocation();
 
 	const [anchorEl, setAnchorEl] = useState(null);
+
+	// Get user's profile photo from props
+	const photoURL = user?.photoURL;
+	const displayName = user?.displayName;
+	const email = user?.email;
 
 	// Use location.pathname if currentPath not provided
 	const activePath = currentPath || location.pathname;
@@ -283,12 +289,24 @@ export default function Topbar({ onLogout, currentPath }) {
 							},
 						}}
 					>
-						<AccountCircleIcon
-							sx={{
-								fontSize: 28,
-								color: "primary.main",
-							}}
-						/>
+						{photoURL ? (
+							<Avatar
+								src={photoURL}
+								alt={displayName || "Profile"}
+								sx={{
+									width: 28,
+									height: 28,
+									borderRadius: "8px",
+								}}
+							/>
+						) : (
+							<AccountCircleIcon
+								sx={{
+									fontSize: 28,
+									color: "primary.main",
+								}}
+							/>
+						)}
 					</MotionIconButton>
 
 					<Popover
@@ -337,23 +355,38 @@ export default function Topbar({ onLogout, currentPath }) {
 										textAlign: "center",
 									}}
 								>
-									<Box
-										sx={{
-											width: 56,
-											height: 56,
-											borderRadius: "14px",
-											background:
-												"linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											mx: "auto",
-											mb: 1.5,
-											boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
-										}}
-									>
-										<AccountCircleIcon sx={{ fontSize: 32, color: "white" }} />
-									</Box>
+									{photoURL ? (
+										<Avatar
+											src={photoURL}
+											alt={displayName || "Profile"}
+											sx={{
+												width: 56,
+												height: 56,
+												borderRadius: "14px",
+												mx: "auto",
+												mb: 1.5,
+												boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+											}}
+										/>
+									) : (
+										<Box
+											sx={{
+												width: 56,
+												height: 56,
+												borderRadius: "14px",
+												background:
+													"linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												mx: "auto",
+												mb: 1.5,
+												boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+											}}
+										>
+											<AccountCircleIcon sx={{ fontSize: 32, color: "white" }} />
+										</Box>
+									)}
 									<Typography
 										variant="subtitle1"
 										sx={{
@@ -362,8 +395,20 @@ export default function Topbar({ onLogout, currentPath }) {
 											fontFamily: "Inter, sans-serif",
 										}}
 									>
-										{t("profile")}
+										{displayName || t("profile")}
 									</Typography>
+									{email && (
+										<Typography
+											variant="body2"
+											sx={{
+												color: "text.cardSubtitle",
+												fontFamily: "Inter, sans-serif",
+												fontSize: "0.75rem",
+											}}
+										>
+											{email}
+										</Typography>
+									)}
 								</Box>
 
 								{/* Actions */}

@@ -7,11 +7,10 @@
 		"test": "jest"
 	},
 	"dependencies": {
-		"bcrypt": "^6.0.0",
 		"cors": "^2.8.5",
 		"dotenv": "^17.2.3",
 		"express": "^4.18.2",
-		"jsonwebtoken": "^9.0.2",
+		"firebase-admin": "^12.0.0",
 		"node-cron": "^4.2.1",
 		"node-fetch": "^2.6.7",
 		"pg": "^8.11.3",

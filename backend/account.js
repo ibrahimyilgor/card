@@ -1,70 +1,8 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const authenticateToken = require("./middleware/authenticateToken");
-
-const bcrypt = require("bcrypt");
 
 module.exports = (pool) => {
 	const router = express.Router();
-
-	// Account info endpoint (name and created_at)
-	router.get("/me", authenticateToken, async (req, res) => {
-		try {
-			const result = await pool.query(
-				"SELECT accountname, created_at FROM account WHERE id = $1",
-				[req.user.accountId]
-			);
-			if (result.rows.length === 0)
-				return res.status(404).json({ error: "Account not found" });
-			res.json({ account: result.rows[0] });
-		} catch (err) {
-			res.status(500).json({ error: "Failed to fetch account info" });
-		}
-	});
-
-	// Change password endpoint
-	router.post("/change-password", authenticateToken, async (req, res) => {
-		const { oldPassword, newPassword, newPasswordRepeat } = req.body;
-		if (!oldPassword || !newPassword || !newPasswordRepeat) {
-			return res.status(400).json({ error: "All fields are required" });
-		}
-		if (newPassword !== newPasswordRepeat) {
-			return res.status(400).json({ error: "New passwords do not match" });
-		}
-		// Password rules (same as signup): min 8 characters, must contain letters and numbers
-		if (
-			newPassword.length < 8 ||
-			!/[A-Za-z]/.test(newPassword) ||
-			!/[0-9]/.test(newPassword)
-		) {
-			return res.status(400).json({
-				error:
-					"Password must be at least 8 characters and contain both letters and numbers",
-			});
-		}
-		try {
-			const result = await pool.query(
-				"SELECT password_hash FROM account WHERE id = $1",
-				[req.user.accountId]
-			);
-			if (result.rows.length === 0)
-				return res.status(404).json({ error: "Account not found" });
-			const valid = await bcrypt.compare(
-				oldPassword,
-				result.rows[0].password_hash
-			);
-			if (!valid)
-				return res.status(401).json({ error: "Old password is incorrect" });
-			const hash = await bcrypt.hash(newPassword, 10);
-			await pool.query("UPDATE account SET password_hash = $1 WHERE id = $2", [
-				hash,
-				req.user.accountId,
-			]);
-			res.json({ success: true, message: "Password changed successfully" });
-		} catch (err) {
-			res.status(500).json({ error: "Failed to change password" });
-		}
-	});
 
 	// Account profile endpoint
 	router.get("/profile", authenticateToken, async (req, res) => {
@@ -72,7 +10,7 @@ module.exports = (pool) => {
 			const accountId = req.user.accountId; // By token
 			const result = await pool.query(
 				"SELECT * FROM account_preferences WHERE account_id = $1",
-				[accountId]
+				[accountId],
 			);
 			if (result.rows.length === 0)
 				return res.status(404).json({ error: "Profile not found" });
@@ -91,7 +29,7 @@ module.exports = (pool) => {
 		try {
 			await pool.query(
 				"UPDATE account_preferences SET language = $1, updated_at = CURRENT_TIMESTAMP WHERE account_id = $2",
-				[language, accountId]
+				[language, accountId],
 			);
 			res.json({ success: true, language });
 		} catch (err) {
@@ -108,7 +46,7 @@ module.exports = (pool) => {
 		try {
 			await pool.query(
 				"UPDATE account_preferences SET theme_preference = $1, updated_at = CURRENT_TIMESTAMP WHERE account_id = $2",
-				[theme_preference, accountId]
+				[theme_preference, accountId],
 			);
 			res.json({ success: true, theme_preference });
 		} catch (err) {
@@ -127,7 +65,7 @@ module.exports = (pool) => {
 		try {
 			await pool.query(
 				"UPDATE account_preferences SET sound_effects_enabled = $1, updated_at = CURRENT_TIMESTAMP WHERE account_id = $2",
-				[sound_effects_enabled, accountId]
+				[sound_effects_enabled, accountId],
 			);
 			res.json({ success: true, sound_effects_enabled });
 		} catch (err) {
@@ -149,7 +87,7 @@ module.exports = (pool) => {
 		try {
 			await pool.query(
 				"UPDATE account_preferences SET keyboard_shortcuts_enabled = $1, updated_at = CURRENT_TIMESTAMP WHERE account_id = $2",
-				[keyboard_shortcuts_enabled, accountId]
+				[keyboard_shortcuts_enabled, accountId],
 			);
 			res.json({ success: true, keyboard_shortcuts_enabled });
 		} catch (err) {
@@ -164,7 +102,7 @@ module.exports = (pool) => {
 		try {
 			const result = await pool.query(
 				"SELECT * FROM account_daily_stats WHERE account_id = $1",
-				[req.user.accountId]
+				[req.user.accountId],
 			);
 			if (result.rows.length === 0)
 				return res.status(404).json({ error: "Stats not found" });
@@ -178,7 +116,7 @@ module.exports = (pool) => {
 	router.get("/plans", authenticateToken, async (req, res) => {
 		try {
 			const result = await pool.query(
-				"SELECT id, code, name, description, price_monthly, max_decks, max_flashcards, advanced_stats FROM plan ORDER BY price_monthly ASC"
+				"SELECT id, code, name, description, price_monthly, max_decks, max_flashcards, advanced_stats FROM plan ORDER BY price_monthly ASC",
 			);
 			res.json({ plans: result.rows });
 		} catch (err) {
@@ -196,12 +134,12 @@ module.exports = (pool) => {
 				 FROM account_plan ap
 				 JOIN plan p ON ap.plan_id = p.id
 				 WHERE ap.account_id = $1 AND ap.is_active = TRUE`,
-				[accountId]
+				[accountId],
 			);
 			if (result.rows.length === 0) {
 				// If no plan found, assign free plan
 				const freePlan = await pool.query(
-					"SELECT * FROM plan WHERE code = 'free'"
+					"SELECT * FROM plan WHERE code = 'free'",
 				);
 				return res.json({
 					plan: freePlan.rows[0] || null,
@@ -212,28 +150,6 @@ module.exports = (pool) => {
 		} catch (err) {
 			console.error(err);
 			res.status(500).json({ error: "Failed to fetch user plan" });
-		}
-	});
-
-	// Delete account endpoint - deletes account and all related data (CASCADE)
-	router.delete("/delete", authenticateToken, async (req, res) => {
-		try {
-			const accountId = req.user.accountId;
-
-			// Delete account - all related data will be deleted due to ON DELETE CASCADE
-			const result = await pool.query(
-				"DELETE FROM account WHERE id = $1 RETURNING id",
-				[accountId]
-			);
-
-			if (result.rows.length === 0) {
-				return res.status(404).json({ error: "Account not found" });
-			}
-
-			res.json({ success: true, message: "Account deleted successfully" });
-		} catch (err) {
-			console.error("Delete account error:", err);
-			res.status(500).json({ error: "Failed to delete account" });
 		}
 	});
 

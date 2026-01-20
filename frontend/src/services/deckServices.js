@@ -1,6 +1,7 @@
 import api from "./api";
 
-export const getDecks = (accountId) => api.get(`/decks/${accountId}`);
+// Get all decks for authenticated user (accountId from token)
+export const getDecks = () => api.get("/decks");
 export const createDeck = (deckData) => api.post("/decks/create", deckData);
 export const updateDeck = (deckId, deckData) =>
 	api.put(`/decks/${deckId}`, deckData);

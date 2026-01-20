@@ -73,12 +73,12 @@ const DeckCard = ({
 		const checkOverflow = () => {
 			if (titleRef.current) {
 				setIsTitleOverflow(
-					titleRef.current.scrollWidth > titleRef.current.clientWidth
+					titleRef.current.scrollWidth > titleRef.current.clientWidth,
 				);
 			}
 			if (descRef.current) {
 				setIsDescOverflow(
-					descRef.current.scrollWidth > descRef.current.clientWidth
+					descRef.current.scrollWidth > descRef.current.clientWidth,
 				);
 			}
 		};
@@ -347,7 +347,7 @@ export default function Info({ accountId, onStartGame }) {
 	const { t } = useContext(I18nContext);
 
 	// SEO meta tags for info/decks page
-	useSEO('info');
+	useSEO("info");
 
 	const [decks, setDecks] = useState(null);
 	const [loading, setLoading] = useState(true);
@@ -396,7 +396,7 @@ export default function Info({ accountId, onStartGame }) {
 			result = result.filter(
 				(deck) =>
 					deck.title.toLowerCase().includes(query) ||
-					(deck.description && deck.description.toLowerCase().includes(query))
+					(deck.description && deck.description.toLowerCase().includes(query)),
 			);
 		}
 
@@ -413,7 +413,7 @@ export default function Info({ accountId, onStartGame }) {
 				break;
 			case "cards":
 				result.sort(
-					(a, b) => (b.flashcards?.length || 0) - (a.flashcards?.length || 0)
+					(a, b) => (b.flashcards?.length || 0) - (a.flashcards?.length || 0),
 				);
 				break;
 			default:
@@ -437,7 +437,7 @@ export default function Info({ accountId, onStartGame }) {
 		try {
 			await deleteDeck(deckToDelete.id);
 			setDecks((prevDecks) =>
-				prevDecks.filter((d) => d.id !== deckToDelete.id)
+				prevDecks.filter((d) => d.id !== deckToDelete.id),
 			);
 			setDeleteModalOpen(false);
 			setDeckToDelete(null);
@@ -527,7 +527,7 @@ export default function Info({ accountId, onStartGame }) {
 			const { importedCount, skippedCount } = res.data;
 
 			// Refresh decks list
-			const decksRes = await getDecks(accountId);
+			const decksRes = await getDecks();
 			if (Array.isArray(decksRes.data.decks)) {
 				setDecks(decksRes.data.decks);
 			}
@@ -569,7 +569,7 @@ export default function Info({ accountId, onStartGame }) {
 					setLoading(false);
 					return;
 				}
-				const res = await getDecks(accountId);
+				const res = await getDecks();
 				if (Array.isArray(res.data.decks)) {
 					setDecks(res.data.decks);
 				} else {
@@ -831,6 +831,10 @@ export default function Info({ accountId, onStartGame }) {
 				}}
 				editDeck={editDeck}
 				onSave={async (title, desc, settings) => {
+					if (!accountId) {
+						setModalError("Please wait, account is being set up...");
+						return;
+					}
 					setModalLoading(true);
 					setModalError("");
 					try {
@@ -855,7 +859,7 @@ export default function Info({ accountId, onStartGame }) {
 							setModalOpen(false);
 							setModalError("");
 							setLoading(true);
-							const decksRes = await getDecks(accountId);
+							const decksRes = await getDecks();
 							setDecks(decksRes.data.decks || []);
 							setSnackbar({
 								open: true,
@@ -889,7 +893,7 @@ export default function Info({ accountId, onStartGame }) {
 				deckTitle={selectedDeck?.title}
 				onCardsChange={async () => {
 					try {
-						const decksRes = await getDecks(accountId);
+						const decksRes = await getDecks();
 						setDecks(decksRes.data.decks || []);
 					} catch (err) {
 						console.error("Error refreshing decks:", err);

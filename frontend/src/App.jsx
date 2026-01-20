@@ -9,8 +9,14 @@ import {
 } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { getProfile } from "./services/accountServices";
+import {
+	onAuthStateChanged,
+	signOut,
+	syncWithBackend,
+} from "./services/authServices";
+import { firebaseAuth } from "./config/firebase";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import VerifyEmail from "./pages/VerifyEmail";
 import Info from "./pages/Info";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
@@ -26,7 +32,7 @@ import { I18nProvider } from "./utils/i18n";
 import { AchievementProvider } from "./context/AchievementContext";
 import Topbar from "./components/Topbar";
 import AchievementModal from "./components/modals/AchievementModal";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/600.css";
@@ -68,17 +74,33 @@ const AnimatedPage = ({ children }) => (
 	</motion.div>
 );
 
-// Protected route wrapper
-const ProtectedRoute = ({ children }) => {
-	const token = localStorage.getItem("token");
-	if (!token) {
+// Protected route wrapper - uses Firebase auth state
+const ProtectedRoute = ({ children, user, loading }) => {
+	if (loading) {
+		return (
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "center",
+					alignItems: "center",
+					height: "100vh",
+				}}
+			>
+				<CircularProgress />
+			</Box>
+		);
+	}
+	if (!user) {
 		return <Navigate to="/login" replace />;
+	}
+	if (!user.emailVerified) {
+		return <Navigate to="/verify-email" replace />;
 	}
 	return children;
 };
 
 // Layout component with Topbar
-const MainLayout = ({ children, onLogout, themeMode }) => {
+const MainLayout = ({ children, onLogout, themeMode, user }) => {
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -105,6 +127,7 @@ const MainLayout = ({ children, onLogout, themeMode }) => {
 					onMainPage={() => navigate("/")}
 					onStats={() => navigate("/stats")}
 					currentPath={location.pathname}
+					user={user}
 				/>
 			</Box>
 			<Box
@@ -132,25 +155,45 @@ const MainLayout = ({ children, onLogout, themeMode }) => {
 // App content component (uses hooks that need Router context)
 const AppContent = () => {
 	const [themeMode, setThemeMode] = useState(
-		localStorage.getItem("theme") || "dark"
+		localStorage.getItem("theme") || "dark",
 	);
 	const [lang, setLang] = useState(null);
 	const [accountId, setAccountId] = useState(
-		() => localStorage.getItem("accountId") || null
+		() => localStorage.getItem("accountId") || null,
 	);
 	const [isInitialized, setIsInitialized] = useState(false);
+	const [user, setUser] = useState(null);
+	const [authLoading, setAuthLoading] = useState(true);
 
 	const navigate = useNavigate();
 	const location = useLocation();
 
 	const currentTheme = themeMode === "light" ? lightTheme : darkTheme;
 
-	// Fetch user profile on mount if token exists
+	// Listen to Firebase auth state changes
 	useEffect(() => {
-		const initializeApp = async () => {
-			const token = localStorage.getItem("token");
-			if (token) {
+		const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
+			setUser(firebaseUser);
+
+			if (firebaseUser && firebaseUser.emailVerified) {
 				try {
+					// Check if accountId already exists in localStorage (set during login)
+					let currentAccountId = localStorage.getItem("accountId");
+
+					if (!currentAccountId) {
+						// Sync with backend to get/create account
+						const syncResult = await syncWithBackend();
+						if (syncResult.accountId) {
+							currentAccountId = syncResult.accountId;
+							localStorage.setItem("accountId", syncResult.accountId);
+						}
+					}
+
+					if (currentAccountId) {
+						setAccountId(currentAccountId);
+					}
+
+					// Fetch user profile
 					const res = await getProfile();
 					const data = res.data;
 					if (data.profile) {
@@ -163,67 +206,34 @@ const AppContent = () => {
 						if (data.profile.language) {
 							setLang(data.profile.language);
 						}
-						if (data.profile.account_id) {
-							setAccountId(data.profile.account_id);
-							localStorage.setItem("accountId", data.profile.account_id);
-						}
 					}
 				} catch (err) {
-					// Token might be invalid, redirect to login
-					localStorage.removeItem("token");
-					navigate("/login");
+					console.error("Error syncing user:", err);
 				}
+			} else {
+				// User signed out or email not verified
+				setAccountId(null);
+				localStorage.removeItem("accountId");
 			}
-			setIsInitialized(true);
-		};
 
-		initializeApp();
-	}, [navigate]);
+			setAuthLoading(false);
+			setIsInitialized(true);
+		});
+
+		return () => unsubscribe();
+	}, []);
 
 	const handleLogin = useCallback(async () => {
-		try {
-			const res = await getProfile();
-			const data = res.data;
-			if (data.profile) {
-				if (data.profile.theme_preference) {
-					const theme =
-						data.profile.theme_preference === "light" ? "light" : "dark";
-					setThemeMode(theme);
-					localStorage.setItem("theme", theme);
-				}
-				if (data.profile.language) {
-					setLang(data.profile.language);
-				}
-				if (data.profile.account_id) {
-					setAccountId(data.profile.account_id);
-					localStorage.setItem("accountId", data.profile.account_id);
-				}
-			}
-		} catch (err) {
-			// Continue anyway
-		}
+		// Firebase auth state listener will handle the rest
 		navigate("/");
 	}, [navigate]);
 
 	const handleLogout = useCallback(async () => {
 		try {
-			const refreshToken = localStorage.getItem("refreshToken");
-			if (refreshToken) {
-				// Invalidate refresh token on server
-				await fetch(
-					`${window.location.protocol}//${window.location.hostname}/api/auth/logout`,
-					{
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ refreshToken }),
-					}
-				);
-			}
+			await signOut();
 		} catch (error) {
 			console.error("Error during logout:", error);
 		}
-		localStorage.removeItem("token");
-		localStorage.removeItem("refreshToken");
 		localStorage.removeItem("accountId");
 		navigate("/login");
 	}, [navigate]);
@@ -234,8 +244,8 @@ const AppContent = () => {
 	}, []);
 
 	// Determine if we should show the layout with Topbar
-	const isAuthPage = ["/login", "/signup", "/session-expired"].includes(
-		location.pathname
+	const isAuthPage = ["/login", "/session-expired", "/verify-email"].includes(
+		location.pathname,
 	);
 
 	// Use dark theme for auth pages
@@ -261,21 +271,7 @@ const AppContent = () => {
 										path="/login"
 										element={
 											<AnimatedPage>
-												<Login
-													onLogin={handleLogin}
-													onSwitch={() => navigate("/signup")}
-												/>
-											</AnimatedPage>
-										}
-									/>
-									<Route
-										path="/signup"
-										element={
-											<AnimatedPage>
-												<Signup
-													onSignup={() => navigate("/login")}
-													onSwitch={() => navigate("/login")}
-												/>
+												<Login onLogin={handleLogin} />
 											</AnimatedPage>
 										}
 									/>
@@ -287,16 +283,24 @@ const AppContent = () => {
 											</AnimatedPage>
 										}
 									/>
+									<Route
+										path="/verify-email"
+										element={
+											<AnimatedPage>
+												<VerifyEmail />
+											</AnimatedPage>
+										}
+									/>
 								</Routes>
 							</AnimatePresence>
 						</Box>
 					) : (
-						<MainLayout onLogout={handleLogout} themeMode={themeMode}>
+						<MainLayout onLogout={handleLogout} themeMode={themeMode} user={user}>
 							<Routes location={location} key={location.pathname}>
 								<Route
 									path="/"
 									element={
-										<ProtectedRoute>
+										<ProtectedRoute user={user} loading={authLoading}>
 											<AnimatedPage>
 												<Info
 													accountId={accountId}
@@ -311,7 +315,7 @@ const AppContent = () => {
 								<Route
 									path="/stats"
 									element={
-										<ProtectedRoute>
+										<ProtectedRoute user={user} loading={authLoading}>
 											<AnimatedPage>
 												<Stats accountId={accountId} />
 											</AnimatedPage>
@@ -321,7 +325,7 @@ const AppContent = () => {
 								<Route
 									path="/achievements"
 									element={
-										<ProtectedRoute>
+										<ProtectedRoute user={user} loading={authLoading}>
 											<AnimatedPage>
 												<Achievements />
 											</AnimatedPage>
@@ -331,7 +335,7 @@ const AppContent = () => {
 								<Route
 									path="/plans"
 									element={
-										<ProtectedRoute>
+										<ProtectedRoute user={user} loading={authLoading}>
 											<AnimatedPage>
 												<Plans />
 											</AnimatedPage>
@@ -341,7 +345,7 @@ const AppContent = () => {
 								<Route
 									path="/account"
 									element={
-										<ProtectedRoute>
+										<ProtectedRoute user={user} loading={authLoading}>
 											<AnimatedPage>
 												<Account />
 											</AnimatedPage>
@@ -351,7 +355,7 @@ const AppContent = () => {
 								<Route
 									path="/game/:deckId"
 									element={
-										<ProtectedRoute>
+										<ProtectedRoute user={user} loading={authLoading}>
 											<AnimatedPage>
 												<Game onBackToDecks={() => navigate("/")} />
 											</AnimatedPage>
@@ -361,7 +365,7 @@ const AppContent = () => {
 								<Route
 									path="/settings"
 									element={
-										<ProtectedRoute>
+										<ProtectedRoute user={user} loading={authLoading}>
 											<AnimatedPage>
 												<Settings
 													currentTheme={themeMode}

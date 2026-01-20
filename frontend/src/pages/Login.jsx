@@ -1,14 +1,15 @@
 import React, { useState, useContext } from "react";
 import { motion } from "framer-motion";
-import { login } from "../services/authServices";
+import { signInWithGoogle } from "../services/authServices";
 import { I18nContext } from "../utils/i18n";
 import { useSEO } from "../utils/seo";
-import { Box, Typography, Alert, Link } from "@mui/material";
+import { Box, Typography, Alert } from "@mui/material";
 import BoltIcon from "@mui/icons-material/Bolt";
 import BuildIcon from "@mui/icons-material/Build";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import { StyledButton, StyledTextField, StyledCard } from "../components/ui";
+import GoogleIcon from "@mui/icons-material/Google";
+import { StyledButton, StyledCard } from "../components/ui";
 
 const MotionBox = motion.create(Box);
 
@@ -66,48 +67,31 @@ const FeatureItem = ({ icon: Icon, title, description, delay }) => (
 	</MotionBox>
 );
 
-export default function Login({ onLogin, onSwitch }) {
-	const [accountname, setAccountname] = useState("");
-	const [password, setPassword] = useState("");
+export default function Login({ onLogin }) {
 	const [error, setError] = useState("");
-	const [loading, setLoading] = useState(false);
+	const [googleLoading, setGoogleLoading] = useState(false);
 	const { t } = useContext(I18nContext);
 
 	// SEO meta tags for login page
-	useSEO('login');
+	useSEO("login");
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
+	const handleGoogleSignIn = async () => {
 		setError("");
-		setLoading(true);
+		setGoogleLoading(true);
 		try {
-			const res = await login(accountname, password);
-			const data = res.data;
-			if (res.status === 200 && data.token) {
-				localStorage.setItem("token", data.token);
-				if (data.refreshToken) {
-					localStorage.setItem("refreshToken", data.refreshToken);
-				}
-				if (data.accountId) {
-					localStorage.setItem("accountId", data.accountId);
-				}
-				onLogin();
-			} else {
-				setError(data.error || t("login_failed"));
-			}
+			await signInWithGoogle();
+			onLogin();
 		} catch (err) {
-			if (err.response?.data?.error) {
-				const errorKey = err.response.data.error;
-				if (errorKey === "Invalid credentials") {
-					setError(t("invalid_credentials"));
-				} else {
-					setError(errorKey);
-				}
-			} else {
-				setError(t("network_error"));
+			console.error("Google sign-in error:", err);
+			if (err.code === "auth/popup-closed-by-user") {
+				// User closed popup, don't show error
+				return;
 			}
+			setError(
+				t("google_signin_failed") || "Google sign-in failed. Please try again.",
+			);
 		} finally {
-			setLoading(false);
+			setGoogleLoading(false);
 		}
 	};
 
@@ -328,108 +312,68 @@ export default function Login({ onLogin, onSwitch }) {
 								fontWeight: 700,
 								color: "text.cardTitle",
 								mb: 1,
+								textAlign: "center",
 								fontFamily: "Inter, sans-serif",
 							}}
 						>
-							{t("welcome_back") || "Welcome back"}
+							{t("welcome_to_memodeck") || "Welcome to MemoDeck"}
 						</Typography>
 						<Typography
 							variant="body2"
 							sx={{
 								color: "text.cardSubtitle",
 								mb: 4,
+								textAlign: "center",
 								fontFamily: "Inter, sans-serif",
 							}}
 						>
-							{t("login_subtitle") || "Enter your credentials to continue"}
+							{t("signin_with_google_desc") ||
+								"Sign in with your Google account to continue"}
 						</Typography>
 
-						<Box
-							component="form"
-							onSubmit={handleSubmit}
-							sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}
-						>
-							<StyledTextField
-								label={t("email") || "Email"}
-								variant="outlined"
-								value={accountname}
-								onChange={(e) => setAccountname(e.target.value)}
-								fullWidth
-								autoComplete="email"
-							/>
-
-							<StyledTextField
-								label={t("password") || "Password"}
-								type="password"
-								variant="outlined"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								fullWidth
-								autoComplete="current-password"
-							/>
-
-							{error && (
-								<MotionBox initial={{ y: -10 }} animate={{ y: 0 }}>
-									<Alert
-										severity="error"
-										sx={{
-											borderRadius: "12px",
-											fontFamily: "Inter, sans-serif",
-										}}
-									>
-										{error}
-									</Alert>
-								</MotionBox>
-							)}
-
-							<StyledButton
-								type="submit"
-								variant="primary"
-								size="large"
-								fullWidth
-								loading={loading}
-								sx={{ mt: 1 }}
-							>
-								{t("login") || "Sign In"}
-							</StyledButton>
-						</Box>
-
-						<Box
-							sx={{
-								mt: 4,
-								pt: 3,
-								borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-								textAlign: "center",
-							}}
-						>
-							<Typography
-								variant="body2"
-								sx={{
-									color: "text.cardSubtitle",
-									fontFamily: "Inter, sans-serif",
-								}}
-							>
-								{t("no_account") || "Don't have an account?"}{" "}
-								<Link
-									component="button"
-									variant="body2"
-									onClick={onSwitch}
-									underline="none"
+						{error && (
+							<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 3 }}>
+								<Alert
+									severity="error"
 									sx={{
-										color: "primary.light",
-										fontWeight: 600,
-										cursor: "pointer",
-										transition: "color 0.2s",
-										"&:hover": {
-											color: "primary.main",
-										},
-										verticalAlign: "unset",
+										borderRadius: "12px",
+										fontFamily: "Inter, sans-serif",
 									}}
 								>
-									{t("signup") || "Create account"}
-								</Link>
-							</Typography>
-						</Box>
+									{error}
+								</Alert>
+							</MotionBox>
+						)}
+
+						{/* Google Sign-In Button */}
+						<StyledButton
+							variant="primary"
+							size="large"
+							fullWidth
+							loading={googleLoading}
+							onClick={handleGoogleSignIn}
+							sx={{
+								py: 1.5,
+								fontSize: "1rem",
+							}}
+							startIcon={<GoogleIcon />}
+						>
+							{t("continue_with_google") || "Continue with Google"}
+						</StyledButton>
+
+						{/* <Typography
+							variant="caption"
+							sx={{
+								color: "text.cardSubtitle",
+								textAlign: "center",
+								display: "block",
+								mt: 3,
+								fontFamily: "Inter, sans-serif",
+							}}
+						>
+							{t("terms_agreement") ||
+								"By continuing, you agree to our Terms of Service and Privacy Policy"}
+						</Typography> */}
 					</StyledCard>
 				</MotionBox>
 			</Box>

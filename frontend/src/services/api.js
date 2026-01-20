@@ -1,4 +1,5 @@
 import axios from "axios";
+import { firebaseAuth } from "../config/firebase";
 
 const baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -6,21 +7,28 @@ const api = axios.create({
 	baseURL: baseURL,
 });
 
-// Add token
-api.interceptors.request.use((config) => {
-	const token = localStorage.getItem("token");
-	if (token) config.headers.Authorization = "Bearer " + token;
+// Add Firebase token to requests
+api.interceptors.request.use(async (config) => {
+	try {
+		const token = await firebaseAuth.getIdToken();
+		if (token) {
+			config.headers.Authorization = "Bearer " + token;
+		}
+	} catch (error) {
+		// User not logged in or token error - continue without token
+		console.debug("No auth token available:", error.message);
+	}
 	return config;
 });
 
-// Response interceptor - refresh token on 401
+// Response interceptor - handle auth errors
 api.interceptors.response.use(
 	(response) => response,
 	async (error) => {
 		const originalRequest = error.config;
 		const isAuthRequest = originalRequest?.url?.includes("/auth/");
 
-		// Try to refresh token on 401 (but not for auth requests)
+		// Handle 401 errors (token expired or invalid)
 		if (
 			error.response?.status === 401 &&
 			!isAuthRequest &&
@@ -29,39 +37,34 @@ api.interceptors.response.use(
 			originalRequest._retry = true;
 
 			try {
-				const refreshToken = localStorage.getItem("refreshToken");
-
-				if (refreshToken) {
-					// Try to refresh the access token
-					const response = await axios.post(`${baseURL}/auth/refresh`, {
-						refreshToken,
-					});
-					const { token } = response.data;
-
-					// Store new access token
-					localStorage.setItem("token", token);
-
-					// Retry original request with new token
-					originalRequest.headers.Authorization = "Bearer " + token;
+				// Firebase automatically refreshes tokens, just get a new one
+				const user = firebaseAuth.getCurrentUser();
+				if (user) {
+					// Force token refresh
+					const newToken = await user.getIdToken(true);
+					originalRequest.headers.Authorization = "Bearer " + newToken;
 					return api(originalRequest);
 				}
 			} catch (refreshError) {
-				// Refresh failed - clear auth and redirect
-				localStorage.removeItem("token");
-				localStorage.removeItem("refreshToken");
-				localStorage.removeItem("accountId");
-				window.location.href = "/session-expired";
-				return Promise.reject(refreshError);
+				console.error("Token refresh failed:", refreshError);
 			}
 
-			// No refresh token available - redirect to session expired
-			localStorage.removeItem("token");
-			localStorage.removeItem("refreshToken");
+			// No valid user - redirect to login
 			localStorage.removeItem("accountId");
 			window.location.href = "/session-expired";
 		}
+
+		// Handle 403 with EMAIL_NOT_VERIFIED code
+		if (
+			error.response?.status === 403 &&
+			error.response?.data?.code === "EMAIL_NOT_VERIFIED"
+		) {
+			window.location.href = "/verify-email";
+			return Promise.reject(error);
+		}
+
 		return Promise.reject(error);
-	}
+	},
 );
 
 export default api;
