@@ -295,7 +295,11 @@ const AppContent = () => {
 							</AnimatePresence>
 						</Box>
 					) : (
-						<MainLayout onLogout={handleLogout} themeMode={themeMode} user={user}>
+						<MainLayout
+							onLogout={handleLogout}
+							themeMode={themeMode}
+							user={user}
+						>
 							<Routes location={location} key={location.pathname}>
 								<Route
 									path="/"

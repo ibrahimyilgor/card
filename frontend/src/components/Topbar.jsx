@@ -45,8 +45,8 @@ function NavButton({ icon: Icon, label, isActive, onClick, tooltip }) {
 							? "#ffffff"
 							: "#1e293b"
 						: isDark
-						? "rgba(255, 255, 255, 0.6)"
-						: "rgba(30, 41, 59, 0.6)",
+							? "rgba(255, 255, 255, 0.6)"
+							: "rgba(30, 41, 59, 0.6)",
 					backgroundColor: isActive
 						? isDark
 							? "rgba(255, 255, 255, 0.12)"
@@ -117,7 +117,7 @@ export default function Topbar({ onLogout, currentPath, user }) {
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
 						body: JSON.stringify({ refreshToken }),
-					}
+					},
 				);
 			}
 		} catch (error) {
@@ -384,7 +384,9 @@ export default function Topbar({ onLogout, currentPath, user }) {
 												boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
 											}}
 										>
-											<AccountCircleIcon sx={{ fontSize: 32, color: "white" }} />
+											<AccountCircleIcon
+												sx={{ fontSize: 32, color: "white" }}
+											/>
 										</Box>
 									)}
 									<Typography

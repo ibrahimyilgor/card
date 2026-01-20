@@ -328,7 +328,9 @@ export default function Account() {
 								}}
 							/>
 						) : (
-							<AccountCircleIcon sx={{ color: "primary.light", fontSize: 48 }} />
+							<AccountCircleIcon
+								sx={{ color: "primary.light", fontSize: 48 }}
+							/>
 						)}
 						<Box>
 							<Typography
