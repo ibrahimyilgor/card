@@ -19,7 +19,28 @@ module.exports = (pool) => {
 		};
 	};
 
-	// Get all decks by accountId
+	// Get all decks for authenticated user
+	router.get("/", authenticateToken, async (req, res) => {
+		const accountId = req.user.accountId;
+		try {
+			const result = await pool.query(
+				`
+				SELECT d.*, COUNT(f.id) as flashcard_count 
+				FROM deck d 
+				LEFT JOIN flashcard f ON d.id = f.deck_id 
+				WHERE d.account_id = $1 
+				GROUP BY d.id 
+				ORDER BY d.id ASC
+			`,
+				[accountId],
+			);
+			res.json({ decks: result.rows });
+		} catch (err) {
+			res.status(500).json({ error: "Failed to fetch decks" });
+		}
+	});
+
+	// Legacy: Get all decks by accountId (for backwards compatibility)
 	router.get("/:accountId", authenticateToken, async (req, res) => {
 		const { accountId } = req.params;
 		// Verify user can only access their own decks

@@ -130,6 +130,9 @@
 	"accuracy": "Accuracy",
 	"welcome_back": "Welcome back",
 	"login_subtitle": "Sign in to continue your learning journey",
+	"welcome_to_memodeck": "Welcome to MemoDeck",
+	"signin_with_google_desc": "Sign in with your Google account to continue",
+	"terms_agreement": "",
 	"create_account": "Create Account",
 	"signup_subtitle": "Start your learning journey today",
 	"settings_subtitle": "Customize your experience",
@@ -226,7 +229,7 @@
 	"great_account_experience": "Easy to Use",
 	"great_account_experience_desc": "Clean, intuitive interface designed for focused learning without distractions",
 	"innovative_functionality": "Multiple Game Modes",
-	"innovative_functionality_desc": "7 different game modes including timed, survival, quiz, and matching games",
+	"innovative_functionality_desc": "Different game modes to keep your study sessions engaging and effective",
 	"signup_failed": "Signup failed",
 	"accountname_exists": "This username is already taken",
 	"network_error": "Network error. Please try again.",
@@ -282,7 +285,6 @@
 	"deck_updated": "Deck updated successfully",
 	"deck_deleted": "Deck deleted successfully",
 	"save_deck_error": "Error saving deck",
-	"network_error": "Network error",
 	"front": "Front",
 	"back": "Back",
 	"deck_description_placeholder": "Optional description for your deck...",
@@ -354,5 +356,7 @@
 	"end_date": "End Date",
 	"no_cards_data": "No card performance data yet",
 	"monthly": "Monthly",
-	"card_title": "Card"
+	"card_title": "Card",
+	"continue_with_google": "Continue with Google",
+	"google_signin_failed": "Google sign-in failed"
 }

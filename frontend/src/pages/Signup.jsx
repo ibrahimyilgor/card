@@ -1,10 +1,12 @@
 import React, { useState, useContext } from "react";
 import { motion } from "framer-motion";
-import { register } from "../services/authServices";
+import { signUp, signInWithGoogle } from "../services/authServices";
 import { I18nContext } from "../utils/i18n";
 import { useSEO } from "../utils/seo";
-import { Box, Typography, Alert, Link } from "@mui/material";
+import { Box, Typography, Alert, Link, Divider } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import GoogleIcon from "@mui/icons-material/Google";
 import { StyledButton, StyledTextField, StyledCard } from "../components/ui";
 
 const MotionBox = motion.create(Box);
@@ -13,14 +15,15 @@ export default function Signup({ onSignup, onSwitch }) {
 	const { t } = useContext(I18nContext);
 
 	// SEO meta tags for signup page
-	useSEO('signup');
+	useSEO("signup");
 
-	const [accountname, setAccountname] = useState("");
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [googleLoading, setGoogleLoading] = useState(false);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -32,43 +35,57 @@ export default function Signup({ onSignup, onSwitch }) {
 			return;
 		}
 
-		if (
-			password.length < 8 ||
-			!/[A-Za-z]/.test(password) ||
-			!/[0-9]/.test(password)
-		) {
+		if (password.length < 8) {
 			setError(
-				t("password_too_short") ||
-					"Password must be at least 8 characters and include letters and numbers."
+				t("password_too_short") || "Password must be at least 8 characters.",
 			);
 			return;
 		}
 
 		setLoading(true);
 		try {
-			const res = await register(accountname, password);
-			const data = res.data;
-			if (res.status === 200 || res.status === 201) {
-				setSuccess(true);
-				setTimeout(() => {
-					onSignup && onSignup(accountname);
-				}, 2000);
-			} else {
-				setError(data.error || t("signup_failed"));
-			}
+			await signUp(email, password);
+			setSuccess(true);
+			// Don't auto-redirect - user needs to verify email first
 		} catch (err) {
-			if (err.response?.data?.error) {
-				const errorKey = err.response.data.error;
-				if (errorKey === "accountname already exists") {
-					setError(t("accountname_exists"));
-				} else {
-					setError(errorKey);
-				}
+			console.error("Signup error:", err);
+			const errorCode = err.code;
+
+			if (errorCode === "auth/email-already-in-use") {
+				setError(t("email_exists") || "Email is already in use");
+			} else if (errorCode === "auth/invalid-email") {
+				setError(t("invalid_email") || "Invalid email address");
+			} else if (errorCode === "auth/weak-password") {
+				setError(
+					t("weak_password") ||
+						"Password is too weak. Use at least 6 characters.",
+				);
+			} else if (errorCode === "auth/operation-not-allowed") {
+				setError(t("signup_disabled") || "Sign up is currently disabled");
 			} else {
-				setError(t("network_error"));
+				setError(err.message || t("signup_failed") || "Sign up failed");
 			}
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const handleGoogleSignIn = async () => {
+		setError("");
+		setGoogleLoading(true);
+		try {
+			await signInWithGoogle();
+			onSignup && onSignup();
+		} catch (err) {
+			console.error("Google sign-in error:", err);
+			if (err.code === "auth/popup-closed-by-user") {
+				return;
+			}
+			setError(
+				t("google_signin_failed") || "Google sign-in failed. Please try again.",
+			);
+		} finally {
+			setGoogleLoading(false);
 		}
 	};
 
@@ -199,14 +216,14 @@ export default function Signup({ onSignup, onSwitch }) {
 									height: 80,
 									borderRadius: "50%",
 									background:
-										"linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 100%)",
+										"linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%)",
 									display: "flex",
 									alignItems: "center",
 									justifyContent: "center",
 									mb: 3,
 								}}
 							>
-								<CheckCircleIcon sx={{ fontSize: 40, color: "success.main" }} />
+								<MailOutlineIcon sx={{ fontSize: 40, color: "primary.main" }} />
 							</MotionBox>
 							<Typography
 								variant="h6"
@@ -217,17 +234,22 @@ export default function Signup({ onSignup, onSwitch }) {
 									fontFamily: "Inter, sans-serif",
 								}}
 							>
-								{t("account_created") || "Account Created!"}
+								{t("verify_your_email") || "Verify Your Email"}
 							</Typography>
 							<Typography
 								variant="body2"
 								sx={{
 									color: "text.cardSubtitle",
 									fontFamily: "Inter, sans-serif",
+									mb: 3,
 								}}
 							>
-								{t("redirecting_to_login") || "Redirecting you to login..."}
+								{t("verification_email_sent_desc") ||
+									"We've sent a verification link to your email. Please check your inbox and click the link to activate your account."}
 							</Typography>
+							<StyledButton variant="outlined" onClick={onSwitch}>
+								{t("go_to_login") || "Go to Login"}
+							</StyledButton>
 						</MotionBox>
 					) : (
 						<>
@@ -256,6 +278,37 @@ export default function Signup({ onSignup, onSwitch }) {
 									"Start mastering anything with flashcards"}
 							</Typography>
 
+							{/* Google Sign-In Button */}
+							<StyledButton
+								variant="outlined"
+								size="large"
+								fullWidth
+								loading={googleLoading}
+								onClick={handleGoogleSignIn}
+								disabled={loading}
+								sx={{
+									mb: 3,
+									borderColor: "divider",
+									color: "text.primary",
+									"&:hover": {
+										borderColor: "primary.main",
+										backgroundColor: "action.hover",
+									},
+								}}
+								startIcon={<GoogleIcon sx={{ color: "#4285F4" }} />}
+							>
+								{t("continue_with_google") || "Continue with Google"}
+							</StyledButton>
+
+							<Divider sx={{ mb: 3 }}>
+								<Typography
+									variant="body2"
+									sx={{ color: "text.secondary", px: 2 }}
+								>
+									{t("or") || "or"}
+								</Typography>
+							</Divider>
+
 							<Box
 								component="form"
 								onSubmit={handleSubmit}
@@ -263,9 +316,10 @@ export default function Signup({ onSignup, onSwitch }) {
 							>
 								<StyledTextField
 									label={t("email") || "Email"}
+									type="email"
 									variant="outlined"
-									value={accountname}
-									onChange={(e) => setAccountname(e.target.value)}
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
 									fullWidth
 									autoComplete="email"
 								/>
@@ -279,8 +333,7 @@ export default function Signup({ onSignup, onSwitch }) {
 									fullWidth
 									autoComplete="new-password"
 									helperText={
-										t("password_rule_helper_text") ||
-										"At least 8 characters, must include letters and numbers"
+										t("password_rule_helper_text") || "At least 8 characters"
 									}
 								/>
 
@@ -314,6 +367,7 @@ export default function Signup({ onSignup, onSwitch }) {
 									size="large"
 									fullWidth
 									loading={loading}
+									disabled={googleLoading}
 									sx={{ mt: 1 }}
 								>
 									{t("signup") || "Create Account"}

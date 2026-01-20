@@ -843,12 +843,19 @@ module.exports = (pool) => {
 				[accountId],
 			);
 
+			// Delete all earned achievements for the account
+			const achievementsResult = await client.query(
+				`DELETE FROM account_achievements WHERE account_id = $1 RETURNING id`,
+				[accountId],
+			);
+
 			await client.query("COMMIT");
 
 			res.json({
 				success: true,
-				message: "Statistics reset successfully",
+				message: "Statistics and achievements reset successfully",
 				deletedSessions: sessionsResult.rowCount,
+				deletedAchievements: achievementsResult.rowCount,
 			});
 		} catch (err) {
 			await client.query("ROLLBACK");

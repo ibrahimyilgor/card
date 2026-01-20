@@ -11,8 +11,6 @@
 -istatistikler sayfası
     +mobilin dosya ismi. stats_report_yyyy_mm_dd olmalı.
 
--backend token alıp her şeyi değiştirebilme. (Zaten olduğu iddia ediliyor test et)
-
 -reklam ekleme
 
 -test ekleme

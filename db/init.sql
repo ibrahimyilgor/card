@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS account (
   id SERIAL PRIMARY KEY,
-  accountname VARCHAR(255) UNIQUE NOT NULL,
+  firebase_uid VARCHAR(128) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
+  display_name VARCHAR(255),
+  photo_url TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   last_login_date TIMESTAMP
 );
@@ -131,14 +132,3 @@ CREATE TABLE IF NOT EXISTS account_plan_history (
   -- upgrade, downgrade, cancel, expired, trial_end vb.
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TABLE IF NOT EXISTS refresh_token (
-  id SERIAL PRIMARY KEY,
-  token VARCHAR(255) UNIQUE NOT NULL,
-  account_id INT REFERENCES account(id) ON DELETE CASCADE,
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_refresh_token_token ON refresh_token(token);
-CREATE INDEX IF NOT EXISTS idx_refresh_token_expires ON refresh_token(expires_at);
