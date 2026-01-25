@@ -16,7 +16,7 @@ module.exports = (pool) => {
 	const verifyDeckOwnership = async (deckId, accountId) => {
 		const result = await pool.query(
 			"SELECT account_id FROM deck WHERE id = $1",
-			[deckId]
+			[deckId],
 		);
 		if (result.rows.length === 0) return { exists: false, isOwner: false };
 		return {
@@ -31,12 +31,62 @@ module.exports = (pool) => {
 			`SELECT d.account_id FROM flashcard f 
              JOIN deck d ON f.deck_id = d.id 
              WHERE f.id = $1`,
-			[flashcardId]
+			[flashcardId],
 		);
 		if (result.rows.length === 0) return { exists: false, isOwner: false };
 		return {
 			exists: true,
 			isOwner: parseInt(result.rows[0].account_id) === parseInt(accountId),
+		};
+	};
+
+	// Helper function to check plan limits for flashcard creation
+	const checkFlashcardLimit = async (accountId, additionalCount = 1) => {
+		// Get user's plan
+		const planResult = await pool.query(
+			`SELECT p.max_flashcards 
+			 FROM account_plan ap
+			 JOIN plan p ON ap.plan_id = p.id
+			 WHERE ap.account_id = $1 AND ap.is_active = TRUE`,
+			[accountId],
+		);
+
+		let maxFlashcards;
+		if (planResult.rows.length === 0) {
+			// Default to free plan limits
+			const freePlan = await pool.query(
+				"SELECT max_flashcards FROM plan WHERE code = 'free'",
+			);
+			maxFlashcards = freePlan.rows[0]?.max_flashcards ?? 100;
+		} else {
+			maxFlashcards = planResult.rows[0].max_flashcards;
+		}
+
+		// If maxFlashcards is null, it means unlimited
+		if (maxFlashcards === null) {
+			return {
+				canCreate: true,
+				currentFlashcards: 0,
+				maxFlashcards: null,
+				availableSlots: Infinity,
+			};
+		}
+
+		// Get current total flashcard count
+		const flashcardCountResult = await pool.query(
+			`SELECT COUNT(*) as count FROM flashcard f 
+			 JOIN deck d ON f.deck_id = d.id 
+			 WHERE d.account_id = $1`,
+			[accountId],
+		);
+		const currentFlashcards = parseInt(flashcardCountResult.rows[0].count);
+		const availableSlots = maxFlashcards - currentFlashcards;
+
+		return {
+			canCreate: currentFlashcards + additionalCount <= maxFlashcards,
+			currentFlashcards,
+			maxFlashcards,
+			availableSlots,
 		};
 	};
 
@@ -47,14 +97,14 @@ module.exports = (pool) => {
 			// Verify deck ownership
 			const { exists, isOwner } = await verifyDeckOwnership(
 				parseInt(deckId),
-				req.user.accountId
+				req.user.accountId,
 			);
 			if (!exists) return res.status(404).json({ error: "Deck not found" });
 			if (!isOwner) return res.status(403).json({ error: "Access denied" });
 
 			const result = await pool.query(
 				"SELECT * FROM flashcard WHERE deck_id = $1 ORDER BY id ASC",
-				[deckId]
+				[deckId],
 			);
 			res.json({ decks: result.rows });
 		} catch (err) {
@@ -74,14 +124,27 @@ module.exports = (pool) => {
 			// Verify deck ownership before creating flashcard
 			const { exists, isOwner } = await verifyDeckOwnership(
 				parseInt(deckId),
-				req.user.accountId
+				req.user.accountId,
 			);
 			if (!exists) return res.status(404).json({ error: "Deck not found" });
 			if (!isOwner) return res.status(403).json({ error: "Access denied" });
 
+			// Check plan limits before creating flashcard
+			const limitCheck = await checkFlashcardLimit(req.user.accountId);
+			if (!limitCheck.canCreate) {
+				return res.status(403).json({
+					error: "Flashcard limit reached",
+					message: `You have reached your flashcard limit. Current: ${limitCheck.currentFlashcards}, Limit: ${limitCheck.maxFlashcards}. Please delete some flashcards or upgrade your plan.`,
+					limitInfo: {
+						currentFlashcards: limitCheck.currentFlashcards,
+						maxFlashcards: limitCheck.maxFlashcards,
+					},
+				});
+			}
+
 			const result = await pool.query(
 				"INSERT INTO flashcard (deck_id, front_text, back_text) VALUES ($1, $2, $3) RETURNING *",
-				[deckId, frontText, backText]
+				[deckId, frontText, backText],
 			);
 			res.status(201).json({ flashcard: result.rows[0] });
 		} catch (err) {
@@ -100,7 +163,7 @@ module.exports = (pool) => {
 			// Verify flashcard ownership
 			const { exists, isOwner } = await verifyFlashcardOwnership(
 				parseInt(flashcardId),
-				req.user.accountId
+				req.user.accountId,
 			);
 			if (!exists)
 				return res.status(404).json({ error: "Flashcard not found" });
@@ -108,7 +171,7 @@ module.exports = (pool) => {
 
 			const result = await pool.query(
 				"UPDATE flashcard SET front_text = $1, back_text = $2 WHERE id = $3 RETURNING *",
-				[frontText || "", backText || "", flashcardId]
+				[frontText || "", backText || "", flashcardId],
 			);
 			res.json({ flashcard: result.rows[0] });
 		} catch (err) {
@@ -123,7 +186,7 @@ module.exports = (pool) => {
 			// Verify flashcard ownership
 			const { exists, isOwner } = await verifyFlashcardOwnership(
 				parseInt(flashcardId),
-				req.user.accountId
+				req.user.accountId,
 			);
 			if (!exists)
 				return res.status(404).json({ error: "Flashcard not found" });
@@ -131,7 +194,7 @@ module.exports = (pool) => {
 
 			const result = await pool.query(
 				"DELETE FROM flashcard WHERE id = $1 RETURNING *",
-				[flashcardId]
+				[flashcardId],
 			);
 			res.json({
 				message: "Flashcard deleted successfully",
@@ -157,6 +220,53 @@ module.exports = (pool) => {
 			return res.status(400).json({ error: "No valid flashcards to import" });
 		}
 
+		// Check deck limit first
+		const deckLimitResult = await pool.query(
+			`SELECT p.max_decks FROM account_plan ap
+			 JOIN plan p ON ap.plan_id = p.id
+			 WHERE ap.account_id = $1 AND ap.is_active = TRUE`,
+			[accountId],
+		);
+		let maxDecks = deckLimitResult.rows[0]?.max_decks;
+		if (maxDecks === undefined) {
+			const freePlan = await pool.query(
+				"SELECT max_decks FROM plan WHERE code = 'free'",
+			);
+			maxDecks = freePlan.rows[0]?.max_decks ?? 3;
+		}
+		if (maxDecks !== null) {
+			const deckCountResult = await pool.query(
+				"SELECT COUNT(*) as count FROM deck WHERE account_id = $1",
+				[accountId],
+			);
+			const currentDecks = parseInt(deckCountResult.rows[0].count);
+			if (currentDecks >= maxDecks) {
+				return res.status(403).json({
+					error: "Deck limit reached",
+					message: `You have reached your deck limit. Current: ${currentDecks}, Limit: ${maxDecks}. Please delete some decks or upgrade your plan.`,
+					limitInfo: { currentDecks, maxDecks },
+				});
+			}
+		}
+
+		// Check flashcard limit
+		const flashcardLimitCheck = await checkFlashcardLimit(
+			accountId,
+			flashcards.length,
+		);
+		if (!flashcardLimitCheck.canCreate) {
+			return res.status(403).json({
+				error: "Flashcard limit reached",
+				message: `You can only add ${flashcardLimitCheck.availableSlots} more flashcards. Current: ${flashcardLimitCheck.currentFlashcards}, Limit: ${flashcardLimitCheck.maxFlashcards}. Please delete some flashcards or upgrade your plan.`,
+				limitInfo: {
+					currentFlashcards: flashcardLimitCheck.currentFlashcards,
+					maxFlashcards: flashcardLimitCheck.maxFlashcards,
+					availableSlots: flashcardLimitCheck.availableSlots,
+					requestedCount: flashcards.length,
+				},
+			});
+		}
+
 		const client = await pool.connect();
 
 		try {
@@ -170,7 +280,7 @@ module.exports = (pool) => {
 
 			const deckResult = await client.query(
 				"INSERT INTO deck (account_id, title, description) VALUES ($1, $2, $3) RETURNING *",
-				[accountId, sanitizedTitle, sanitizedDescription]
+				[accountId, sanitizedTitle, sanitizedDescription],
 			);
 			const newDeck = deckResult.rows[0];
 
@@ -193,7 +303,7 @@ module.exports = (pool) => {
 				// Sanitize and truncate
 				const sanitizedFront = sanitizeText(front).substring(
 					0,
-					MAX_TEXT_LENGTH
+					MAX_TEXT_LENGTH,
 				);
 				const sanitizedBack = sanitizeText(back).substring(0, MAX_TEXT_LENGTH);
 
@@ -205,7 +315,7 @@ module.exports = (pool) => {
 
 				await client.query(
 					"INSERT INTO flashcard (deck_id, front_text, back_text) VALUES ($1, $2, $3)",
-					[newDeck.id, sanitizedFront, sanitizedBack]
+					[newDeck.id, sanitizedFront, sanitizedBack],
 				);
 				importedCount++;
 			}

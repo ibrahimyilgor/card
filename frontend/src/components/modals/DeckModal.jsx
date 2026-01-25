@@ -13,7 +13,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import StyleIcon from "@mui/icons-material/Style";
 import TuneIcon from "@mui/icons-material/Tune";
 import { I18nContext } from "../../utils/i18n";
-import { StyledModal, StyledTextField, StyledButton } from "../ui";
+import {
+	StyledModal,
+	StyledTextField,
+	StyledButton,
+	LimitWarningModal,
+} from "../ui";
+import { usePlan } from "../../context/PlanContext";
 
 const MotionBox = motion.create(Box);
 
@@ -29,6 +35,7 @@ export default function DeckModal({
 }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
+	const { canCreateDeck, limitStatus } = usePlan();
 
 	const [title, setTitle] = useState(initialTitle);
 	const [desc, setDesc] = useState(initialDesc);
@@ -36,6 +43,7 @@ export default function DeckModal({
 		editDeck?.difficulty_enabled || false,
 	);
 	const [mode, setMode] = useState(editDeck?.mode || "standard");
+	const [showLimitModal, setShowLimitModal] = useState(false);
 
 	useEffect(() => {
 		setTitle(initialTitle);
@@ -46,6 +54,11 @@ export default function DeckModal({
 
 	const handleSave = () => {
 		if (title.trim()) {
+			// If editing, always allow; if creating new, check limit
+			if (!editDeck && !canCreateDeck) {
+				setShowLimitModal(true);
+				return;
+			}
 			onSave(title, desc, {
 				difficulty_enabled: difficultyEnabled,
 				mode,
@@ -211,6 +224,20 @@ export default function DeckModal({
 					)}
 				</AnimatePresence>
 			</Box>
+
+			{/* Limit Warning Modal */}
+			<LimitWarningModal
+				open={showLimitModal}
+				onClose={() => setShowLimitModal(false)}
+				currentDecks={limitStatus?.currentDecks}
+				maxDecks={limitStatus?.maxDecks}
+				deckOverage={limitStatus?.deckOverage}
+				currentFlashcards={limitStatus?.currentFlashcards}
+				maxFlashcards={limitStatus?.maxFlashcards}
+				flashcardOverage={limitStatus?.flashcardOverage}
+				planCode={limitStatus?.planCode}
+				warningType="deck"
+			/>
 		</StyledModal>
 	);
 }

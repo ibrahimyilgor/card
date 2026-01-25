@@ -30,7 +30,9 @@ import {
 	StyledCard,
 	EmptyState,
 	StyledTextField,
+	LimitWarningModal,
 } from "../ui";
+import { usePlan } from "../../context/PlanContext";
 
 const MotionBox = motion.create(Box);
 
@@ -176,6 +178,7 @@ export default function FlashcardModal({
 }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
+	const { canCreateFlashcard, limitStatus, fetchLimitStatus } = usePlan();
 
 	const [flashcards, setFlashcards] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -184,6 +187,7 @@ export default function FlashcardModal({
 	const [error, setError] = useState("");
 	const [editFlashcard, setEditFlashcard] = useState(null);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [showLimitModal, setShowLimitModal] = useState(false);
 
 	// Filter flashcards based on search query
 	const filteredFlashcards = flashcards.filter((flashcard) => {
@@ -200,6 +204,8 @@ export default function FlashcardModal({
 			await deleteFlashcard(flashcardId);
 			setFlashcards((prev) => prev.filter((f) => f.id !== flashcardId));
 			if (onCardsChange) onCardsChange();
+			// Refresh limit status after deletion
+			fetchLimitStatus();
 		} catch (err) {
 			console.error("Error deleting flashcard:", err);
 		}
@@ -219,8 +225,8 @@ export default function FlashcardModal({
 						prev.map((f) =>
 							f.id === editFlashcard.id
 								? { ...f, front_text: front, back_text: back }
-								: f
-						)
+								: f,
+						),
 					);
 					setAddModalOpen(false);
 					setEditFlashcard(null);
@@ -243,6 +249,8 @@ export default function FlashcardModal({
 					setFlashcards((prev) => [...prev, res.data.flashcard]);
 					setAddModalOpen(false);
 					if (onCardsChange) onCardsChange();
+					// Refresh limit status after adding flashcard
+					fetchLimitStatus();
 				} else {
 					setError(res.data?.error || "Failed to add flashcard");
 				}
@@ -287,6 +295,21 @@ export default function FlashcardModal({
 		setAddModalOpen(true);
 	};
 
+	// Handle add flashcard button click with limit check
+	const handleAddFlashcardClick = () => {
+		// If editing, always allow
+		if (editFlashcard) {
+			setAddModalOpen(true);
+			return;
+		}
+		// Check limit for new flashcard
+		if (!canCreateFlashcard) {
+			setShowLimitModal(true);
+			return;
+		}
+		setAddModalOpen(true);
+	};
+
 	return (
 		<>
 			<StyledModal
@@ -302,7 +325,7 @@ export default function FlashcardModal({
 						</StyledButton>
 						<StyledButton
 							variant="success"
-							onClick={() => setAddModalOpen(true)}
+							onClick={handleAddFlashcardClick}
 							startIcon={<AddIcon />}
 						>
 							{t("add_flashcard") || "Add Card"}
@@ -386,7 +409,7 @@ export default function FlashcardModal({
 						title={t("no_flashcards") || "No flashcards yet"}
 						description="Add your first flashcard to get started learning!"
 						actionLabel={t("add_flashcard") || "Add Flashcard"}
-						onAction={() => setAddModalOpen(true)}
+						onAction={handleAddFlashcardClick}
 					/>
 				) : filteredFlashcards.length === 0 ? (
 					<EmptyState
@@ -448,6 +471,20 @@ export default function FlashcardModal({
 				loading={addLoading}
 				error={error}
 				editFlashcard={editFlashcard}
+			/>
+
+			{/* Limit Warning Modal */}
+			<LimitWarningModal
+				open={showLimitModal}
+				onClose={() => setShowLimitModal(false)}
+				currentDecks={limitStatus?.currentDecks}
+				maxDecks={limitStatus?.maxDecks}
+				deckOverage={limitStatus?.deckOverage}
+				currentFlashcards={limitStatus?.currentFlashcards}
+				maxFlashcards={limitStatus?.maxFlashcards}
+				flashcardOverage={limitStatus?.flashcardOverage}
+				planCode={limitStatus?.planCode}
+				warningType="flashcard"
 			/>
 		</>
 	);

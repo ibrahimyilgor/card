@@ -19,6 +19,47 @@ module.exports = (pool) => {
 		};
 	};
 
+	// Helper function to check plan limits for deck creation
+	const checkDeckLimit = async (accountId) => {
+		// Get user's plan
+		const planResult = await pool.query(
+			`SELECT p.max_decks 
+			 FROM account_plan ap
+			 JOIN plan p ON ap.plan_id = p.id
+			 WHERE ap.account_id = $1 AND ap.is_active = TRUE`,
+			[accountId],
+		);
+
+		let maxDecks;
+		if (planResult.rows.length === 0) {
+			// Default to free plan limits
+			const freePlan = await pool.query(
+				"SELECT max_decks FROM plan WHERE code = 'free'",
+			);
+			maxDecks = freePlan.rows[0]?.max_decks ?? 3;
+		} else {
+			maxDecks = planResult.rows[0].max_decks;
+		}
+
+		// If maxDecks is null, it means unlimited
+		if (maxDecks === null) {
+			return { canCreate: true, currentDecks: 0, maxDecks: null };
+		}
+
+		// Get current deck count
+		const deckCountResult = await pool.query(
+			"SELECT COUNT(*) as count FROM deck WHERE account_id = $1",
+			[accountId],
+		);
+		const currentDecks = parseInt(deckCountResult.rows[0].count);
+
+		return {
+			canCreate: currentDecks < maxDecks,
+			currentDecks,
+			maxDecks,
+		};
+	};
+
 	// Get all decks for authenticated user
 	router.get("/", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
@@ -75,6 +116,19 @@ module.exports = (pool) => {
 			return res.status(400).json({ error: "title required" });
 		}
 		try {
+			// Check plan limits before creating deck
+			const limitCheck = await checkDeckLimit(accountId);
+			if (!limitCheck.canCreate) {
+				return res.status(403).json({
+					error: "Deck limit reached",
+					message: `You have reached your deck limit. Current: ${limitCheck.currentDecks}, Limit: ${limitCheck.maxDecks}. Please delete some decks or upgrade your plan.`,
+					limitInfo: {
+						currentDecks: limitCheck.currentDecks,
+						maxDecks: limitCheck.maxDecks,
+					},
+				});
+			}
+
 			const result = await pool.query(
 				"INSERT INTO deck (account_id, title, description, difficulty_enabled, mode, card_direction) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
 				[

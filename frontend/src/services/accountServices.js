@@ -3,6 +3,9 @@ import api from "./api";
 // Account profile endpoint
 export const getProfile = () => api.get("/account/profile");
 
+// Get current user info including role
+export const getMe = () => api.get("/account/me");
+
 export const updateTheme = (theme_preference, accountId) =>
 	api.put("/account/profile/theme", { theme_preference, accountId });
 
@@ -24,6 +27,7 @@ export const updateKeyboardShortcuts = (
 // Plans
 export const getAllPlans = () => api.get("/account/plans");
 export const getMyPlan = () => api.get("/account/my-plan");
+export const getLimitStatus = () => api.get("/account/limit-status");
 
 // Reset statistics
 export const resetStatistics = () => api.delete("/stats/reset");

@@ -12,6 +12,7 @@ import {
 import { recordSession } from "../services/statsServices";
 import { checkAchievements } from "../services/achievementServices";
 import { AchievementContext } from "../context/AchievementContext";
+import { usePlan } from "../context/PlanContext";
 import { Box, Typography } from "@mui/material";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
@@ -31,7 +32,12 @@ import {
 } from "../components/game";
 import { useGameTimer, useGameLives } from "../hooks";
 import { I18nContext } from "../utils/i18n";
-import { PageContainer, EmptyState } from "../components/ui";
+import {
+	PageContainer,
+	EmptyState,
+	VideoAdOverlay,
+	LimitWarningModal,
+} from "../components/ui";
 import { playSound, SOUNDS } from "../utils/sounds";
 
 const MotionBox = motion.create(Box);
@@ -41,6 +47,27 @@ export default function Game({ onBackToDecks }) {
 	const location = useLocation();
 	const { t } = useContext(I18nContext);
 	const { processNewAchievements } = useContext(AchievementContext);
+
+	// Plan context for ads and limit checks
+	const {
+		hasAds,
+		isOverLimit,
+		canPlay,
+		currentDecks,
+		maxDecks,
+		deckOverage,
+		currentFlashcards,
+		maxFlashcards,
+		flashcardOverage,
+		planCode,
+	} = usePlan();
+
+	// Ad overlay state
+	const [showAdOverlay, setShowAdOverlay] = useState(false);
+	const [adShown, setAdShown] = useState(false);
+
+	// Limit warning modal state
+	const [limitWarningOpen, setLimitWarningOpen] = useState(false);
 
 	// SEO meta tags for game page
 	useSEO("game");
@@ -114,6 +141,13 @@ export default function Game({ onBackToDecks }) {
 			}
 		} catch (err) {
 			console.error("Error fetching flashcards:", err);
+			// Check if it's a plan limit error (403)
+			if (
+				err.response?.status === 403 &&
+				err.response?.data?.error === "Plan limit exceeded"
+			) {
+				setLimitWarningOpen(true);
+			}
 			setFlashcards([]);
 		} finally {
 			setLoading(false);
@@ -197,8 +231,14 @@ export default function Game({ onBackToDecks }) {
 					}
 				})
 				.catch((err) => console.error("Error checking achievements:", err));
+
+			// Show ad overlay for free plan users when game ends
+			if (hasAds && !adShown) {
+				setShowAdOverlay(true);
+				setAdShown(true);
+			}
 		}
-	}, [gameEnded]);
+	}, [gameEnded, hasAds, adShown]);
 
 	// Handle answer
 	const handleAnswer = useCallback(
@@ -470,14 +510,34 @@ export default function Game({ onBackToDecks }) {
 					actionLabel={t("back_to_decks") || "Back to Decks"}
 					onAction={onBackToDecks}
 				/>
+				{/* Limit Warning Modal */}
+				<LimitWarningModal
+					open={limitWarningOpen}
+					onClose={() => {
+						setLimitWarningOpen(false);
+						onBackToDecks();
+					}}
+					currentDecks={currentDecks}
+					maxDecks={maxDecks}
+					deckOverage={deckOverage}
+					currentFlashcards={currentFlashcards}
+					maxFlashcards={maxFlashcards}
+					flashcardOverage={flashcardOverage}
+					planCode={planCode}
+				/>
 			</PageContainer>
 		);
 	}
 
-	// Game ended - show summary
+	// Game ended - show summary (with ad overlay for free plan)
 	if (gameEnded) {
 		return (
 			<PageContainer centered>
+				{/* Video Ad Overlay for free plan users */}
+				<VideoAdOverlay
+					open={showAdOverlay}
+					onClose={() => setShowAdOverlay(false)}
+				/>
 				<GameSummary
 					correctCount={scores.correct}
 					incorrectCount={scores.incorrect}

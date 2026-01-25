@@ -47,7 +47,7 @@ async function authenticateToken(req, res, next) {
 		const pool = req.app.get("pool");
 		if (pool) {
 			const result = await pool.query(
-				"SELECT id FROM account WHERE firebase_uid = $1",
+				"SELECT id, role FROM account WHERE firebase_uid = $1",
 				[decodedToken.uid],
 			);
 
@@ -56,6 +56,7 @@ async function authenticateToken(req, res, next) {
 					accountId: result.rows[0].id,
 					firebaseUid: decodedToken.uid,
 					email: decodedToken.email,
+					role: result.rows[0].role || "user",
 				};
 			} else {
 				// Account not synced yet - let the request continue
