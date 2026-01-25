@@ -1,4 +1,5 @@
 import { useEffect, useState, useContext, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
 	Box,
@@ -19,6 +20,7 @@ import {
 	Tooltip,
 	IconButton,
 	TableSortLabel,
+	Button,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -48,10 +50,13 @@ import ErrorIcon from "@mui/icons-material/Error";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
+import LockIcon from "@mui/icons-material/Lock";
+import UpgradeIcon from "@mui/icons-material/Upgrade";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { I18nContext } from "../utils/i18n";
 import { PageContainer, StyledCard, StatsSkeleton } from "../components/ui";
+import { usePlan } from "../context/PlanContext";
 import {
 	getDecksStats,
 	getFilteredStats,
@@ -171,6 +176,10 @@ const PresetButton = ({ label, active, onClick }) => (
 export default function Stats() {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
+	const navigate = useNavigate();
+
+	// Plan context for access control
+	const { advancedStats, planCode, loading: planLoading } = usePlan();
 
 	// Filter states
 	const [selectedDeck, setSelectedDeck] = useState("all");
@@ -187,6 +196,96 @@ export default function Stats() {
 	// Table sorting
 	const [sortBy, setSortBy] = useState("times_played");
 	const [sortOrder, setSortOrder] = useState("desc");
+
+	// If user doesn't have advanced stats access, show upgrade prompt
+	if (!planLoading && !advancedStats) {
+		return (
+			<PageContainer centered>
+				<MotionBox
+					initial={{ scale: 0.95, opacity: 0 }}
+					animate={{ scale: 1, opacity: 1 }}
+					transition={{ duration: 0.3 }}
+					sx={{
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						gap: 3,
+						textAlign: "center",
+						maxWidth: 450,
+						p: 4,
+					}}
+				>
+					<Box
+						sx={{
+							width: 100,
+							height: 100,
+							borderRadius: "24px",
+							background:
+								"linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+						}}
+					>
+						<LockIcon sx={{ fontSize: 48, color: "warning.main" }} />
+					</Box>
+					<Typography
+						variant="h4"
+						sx={{
+							fontWeight: 700,
+							color: "text.cardTitle",
+							fontFamily: "Inter, sans-serif",
+						}}
+					>
+						{t("stats_locked_title", "Statistics Locked")}
+					</Typography>
+					<Typography
+						variant="body1"
+						sx={{
+							color: "text.cardSubtitle",
+							fontFamily: "Inter, sans-serif",
+						}}
+					>
+						{t(
+							"stats_locked_description",
+							"Advanced statistics are available for Pro and Premium plan users. Upgrade your plan to access detailed insights, charts, and performance tracking.",
+						)}
+					</Typography>
+					<Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+						<Button
+							variant="contained"
+							color="primary"
+							startIcon={<UpgradeIcon />}
+							onClick={() => navigate("/plans")}
+							sx={{
+								py: 1.5,
+								px: 4,
+								fontWeight: 600,
+								borderRadius: 2,
+							}}
+						>
+							{t("upgrade_plan", "Upgrade Plan")}
+						</Button>
+						<Button
+							variant="outlined"
+							onClick={() => navigate("/")}
+							sx={{
+								py: 1.5,
+								px: 3,
+								borderRadius: 2,
+							}}
+						>
+							{t("back_to_decks", "Back to Decks")}
+						</Button>
+					</Box>
+					<Typography variant="caption" sx={{ color: "text.disabled", mt: 1 }}>
+						{t("current_plan", "Current plan")}:{" "}
+						{planCode?.charAt(0).toUpperCase() + planCode?.slice(1)}
+					</Typography>
+				</MotionBox>
+			</PageContainer>
+		);
+	}
 
 	// Chart colors from theme
 	const chartColors = useMemo(

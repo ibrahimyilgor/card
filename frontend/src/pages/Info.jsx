@@ -48,7 +48,9 @@ import {
 	EmptyState,
 	CardSkeleton,
 	ConfirmModal,
+	LimitWarningModal,
 } from "../components/ui";
+import { usePlan } from "../context/PlanContext";
 
 const MotionBox = motion.create(Box);
 
@@ -346,6 +348,25 @@ export default function Info({ accountId, onStartGame }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 
+	// Plan context for limit checks
+	const {
+		canCreateDeck,
+		canPlay,
+		isOverLimit,
+		currentDecks,
+		maxDecks,
+		deckOverage,
+		currentFlashcards,
+		maxFlashcards,
+		flashcardOverage,
+		planCode,
+		fetchLimitStatus,
+	} = usePlan();
+
+	// Limit warning modal state
+	const [limitWarningOpen, setLimitWarningOpen] = useState(false);
+	const [limitWarningTitle, setLimitWarningTitle] = useState("");
+
 	// SEO meta tags for info/decks page
 	useSEO("info");
 
@@ -441,6 +462,8 @@ export default function Info({ accountId, onStartGame }) {
 			);
 			setDeleteModalOpen(false);
 			setDeckToDelete(null);
+			// Refresh limit status after deletion
+			fetchLimitStatus();
 			setSnackbar({
 				open: true,
 				message: t("deck_deleted") || "Deck deleted successfully",
@@ -712,6 +735,13 @@ export default function Info({ accountId, onStartGame }) {
 						variant="primary"
 						startIcon={<AddIcon />}
 						onClick={() => {
+							if (!canCreateDeck) {
+								setLimitWarningTitle(
+									t("limitWarningTitle", "Deck Limit Reached"),
+								);
+								setLimitWarningOpen(true);
+								return;
+							}
 							setEditDeck(null);
 							setModalOpen(true);
 						}}
@@ -721,7 +751,16 @@ export default function Info({ accountId, onStartGame }) {
 					<StyledButton
 						variant="secondary"
 						startIcon={<UploadFileIcon />}
-						onClick={() => setImportModalOpen(true)}
+						onClick={() => {
+							if (!canCreateDeck) {
+								setLimitWarningTitle(
+									t("limitWarningTitle", "Deck Limit Reached"),
+								);
+								setLimitWarningOpen(true);
+								return;
+							}
+							setImportModalOpen(true);
+						}}
 					>
 						{t("import") || "Import"}
 					</StyledButton>
@@ -861,6 +900,10 @@ export default function Info({ accountId, onStartGame }) {
 							setLoading(true);
 							const decksRes = await getDecks();
 							setDecks(decksRes.data.decks || []);
+							// Refresh limit status after deck creation
+							if (!editDeck) {
+								await fetchLimitStatus();
+							}
 							setSnackbar({
 								open: true,
 								message: editDeck
@@ -939,6 +982,21 @@ export default function Info({ accountId, onStartGame }) {
 				cancelText={t("cancel") || "Cancel"}
 				variant="danger"
 				loading={deleteLoading}
+			/>
+
+			{/* Limit Warning Modal */}
+			<LimitWarningModal
+				open={limitWarningOpen}
+				onClose={() => setLimitWarningOpen(false)}
+				title={limitWarningTitle}
+				currentDecks={currentDecks}
+				maxDecks={maxDecks}
+				deckOverage={deckOverage}
+				currentFlashcards={currentFlashcards}
+				maxFlashcards={maxFlashcards}
+				flashcardOverage={flashcardOverage}
+				planCode={planCode}
+				warningType="deck"
 			/>
 
 			{/* Snackbar for notifications */}

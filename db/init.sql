@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS account (
   email VARCHAR(255) UNIQUE,
   display_name VARCHAR(255),
   photo_url TEXT,
+  role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   last_login_date TIMESTAMP
 );
@@ -104,14 +105,15 @@ CREATE TABLE IF NOT EXISTS plan (
   max_decks INT,
   max_flashcards INT,
   advanced_stats BOOLEAN DEFAULT FALSE,
+  has_ads BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO plan (code, name, description, price_monthly, max_decks, max_flashcards, advanced_stats)
+INSERT INTO plan (code, name, description, price_monthly, max_decks, max_flashcards, advanced_stats, has_ads)
 VALUES
-('free', 'Free', 'Basic features for getting started', 0, 5, 100, false),
-('pro', 'Pro', 'Advanced features for regular learners', 9.99, 50, 5000, true),
-('premium', 'Premium', 'Unlimited access to all features', 19.99, NULL, NULL, true);
+('free', 'Free', 'Basic features for getting started', 0, 3, 100, false, true),
+('pro', 'Pro', 'Advanced features for regular learners', 9.99, 50, 5000, true, false),
+('premium', 'Premium', 'Unlimited access to all features', 19.99, NULL, NULL, true, false);
 
 CREATE TABLE IF NOT EXISTS account_plan (
   account_id INT PRIMARY KEY REFERENCES account(id) ON DELETE CASCADE,

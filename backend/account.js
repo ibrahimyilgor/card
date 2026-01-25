@@ -130,7 +130,7 @@ module.exports = (pool) => {
 		try {
 			const accountId = req.user.accountId;
 			const result = await pool.query(
-				`SELECT ap.*, p.code, p.name, p.description, p.price_monthly, p.max_decks, p.max_flashcards, p.advanced_stats
+				`SELECT ap.*, p.code, p.name, p.description, p.price_monthly, p.max_decks, p.max_flashcards, p.advanced_stats, p.has_ads
 				 FROM account_plan ap
 				 JOIN plan p ON ap.plan_id = p.id
 				 WHERE ap.account_id = $1 AND ap.is_active = TRUE`,
@@ -150,6 +150,103 @@ module.exports = (pool) => {
 		} catch (err) {
 			console.error(err);
 			res.status(500).json({ error: "Failed to fetch user plan" });
+		}
+	});
+
+	// Get user's limit status (deck/flashcard counts vs plan limits)
+	router.get("/limit-status", authenticateToken, async (req, res) => {
+		try {
+			const accountId = req.user.accountId;
+
+			// Get user's plan
+			const planResult = await pool.query(
+				`SELECT p.code, p.max_decks, p.max_flashcards, p.advanced_stats, p.has_ads
+				 FROM account_plan ap
+				 JOIN plan p ON ap.plan_id = p.id
+				 WHERE ap.account_id = $1 AND ap.is_active = TRUE`,
+				[accountId],
+			);
+
+			let plan;
+			if (planResult.rows.length === 0) {
+				// Default to free plan
+				const freePlan = await pool.query(
+					"SELECT code, max_decks, max_flashcards, advanced_stats, has_ads FROM plan WHERE code = 'free'",
+				);
+				plan = freePlan.rows[0];
+			} else {
+				plan = planResult.rows[0];
+			}
+
+			// Get current deck count
+			const deckCountResult = await pool.query(
+				"SELECT COUNT(*) as count FROM deck WHERE account_id = $1",
+				[accountId],
+			);
+			const currentDecks = parseInt(deckCountResult.rows[0].count);
+
+			// Get total flashcard count across all decks
+			const flashcardCountResult = await pool.query(
+				`SELECT COUNT(*) as count FROM flashcard f 
+				 JOIN deck d ON f.deck_id = d.id 
+				 WHERE d.account_id = $1`,
+				[accountId],
+			);
+			const currentFlashcards = parseInt(flashcardCountResult.rows[0].count);
+
+			// Calculate limits and overages
+			const maxDecks = plan.max_decks; // null means unlimited
+			const maxFlashcards = plan.max_flashcards; // null means unlimited
+
+			const deckOverage =
+				maxDecks !== null ? Math.max(0, currentDecks - maxDecks) : 0;
+			const flashcardOverage =
+				maxFlashcards !== null
+					? Math.max(0, currentFlashcards - maxFlashcards)
+					: 0;
+
+			const canPlay = deckOverage === 0 && flashcardOverage === 0;
+			const canCreateDeck = maxDecks === null || currentDecks < maxDecks;
+			const canCreateFlashcard =
+				maxFlashcards === null || currentFlashcards < maxFlashcards;
+
+			res.json({
+				planCode: plan.code,
+				currentDecks,
+				currentFlashcards,
+				maxDecks,
+				maxFlashcards,
+				deckOverage,
+				flashcardOverage,
+				canPlay,
+				canCreateDeck,
+				canCreateFlashcard,
+				advancedStats: plan.advanced_stats,
+				hasAds: plan.has_ads,
+			});
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Failed to fetch limit status" });
+		}
+	});
+
+	// Get current user info including role
+	router.get("/me", authenticateToken, async (req, res) => {
+		try {
+			const accountId = req.user.accountId;
+			const result = await pool.query(
+				"SELECT id, email, display_name, photo_url, role, created_at FROM account WHERE id = $1",
+				[accountId],
+			);
+
+			if (result.rows.length === 0) {
+				return res.status(404).json({ error: "Account not found" });
+			}
+
+			res.json({ account: result.rows[0] });
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ error: "Failed to fetch account info" });
 		}
 	});
 
