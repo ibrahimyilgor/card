@@ -54,15 +54,6 @@ api.interceptors.response.use(
 			window.location.href = "/session-expired";
 		}
 
-		// Handle 403 with EMAIL_NOT_VERIFIED code
-		if (
-			error.response?.status === 403 &&
-			error.response?.data?.code === "EMAIL_NOT_VERIFIED"
-		) {
-			window.location.href = "/verify-email";
-			return Promise.reject(error);
-		}
-
 		return Promise.reject(error);
 	},
 );

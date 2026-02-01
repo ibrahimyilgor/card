@@ -4,6 +4,12 @@ const authenticateToken = require("./middleware/authenticateToken");
 module.exports = (pool) => {
 	const router = express.Router();
 
+	// Logging helpers
+	const logInfo = (ctx, info) => console.info(`[stats] ${ctx}`, info);
+	const logError = (ctx, err) => {
+		console.error(`[stats] ${ctx} - ${err && err.message ? err.message : err}`);
+		if (err && err.stack) console.error(err.stack);
+	};
 	// Get comprehensive overview stats
 	router.get("/overview", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
@@ -149,7 +155,7 @@ module.exports = (pool) => {
 				),
 			});
 		} catch (err) {
-			console.error("Error fetching overview stats:", err);
+			logError("fetching overview stats", err);
 			res.status(500).json({ error: "Failed to fetch stats" });
 		}
 	});
@@ -198,7 +204,7 @@ module.exports = (pool) => {
 
 			res.json({ daily: dailyStats.rows });
 		} catch (err) {
-			console.error("Error fetching daily stats:", err);
+			logError("fetching daily stats", err);
 			res.status(500).json({ error: "Failed to fetch daily stats" });
 		}
 	});
@@ -233,7 +239,7 @@ module.exports = (pool) => {
 
 			res.json({ decks: deckStats.rows });
 		} catch (err) {
-			console.error("Error fetching deck stats:", err);
+			logError("fetching deck stats", err);
 			res.status(500).json({ error: "Failed to fetch deck stats" });
 		}
 	});
@@ -377,7 +383,7 @@ module.exports = (pool) => {
 				easiestCards: easiestCards.rows,
 			});
 		} catch (err) {
-			console.error("Error fetching deck detailed stats:", err);
+			logError("fetching deck detailed stats", err);
 			res.status(500).json({ error: "Failed to fetch deck stats" });
 		}
 	});
@@ -432,7 +438,7 @@ module.exports = (pool) => {
 
 			res.json({ cards: cards.rows });
 		} catch (err) {
-			console.error("Error fetching card stats:", err);
+			logError("fetching card stats", err);
 			res.status(500).json({ error: "Failed to fetch card stats" });
 		}
 	});
@@ -449,6 +455,17 @@ module.exports = (pool) => {
 			wrongAnswers,
 			durationSeconds,
 		} = req.body;
+
+		// Log incoming session data for debugging (avoid sensitive data)
+		logInfo("record-session-request", {
+			accountId,
+			deckId,
+			gameMode,
+			cardsStudied,
+			correctAnswers,
+			wrongAnswers,
+			durationSeconds,
+		});
 
 		try {
 			// Verify deck ownership
@@ -481,7 +498,7 @@ module.exports = (pool) => {
 
 			res.status(201).json({ session: result.rows[0] });
 		} catch (err) {
-			console.error("Error recording session:", err);
+			logError("recording session", err);
 			res.status(500).json({ error: "Failed to record session" });
 		}
 	});
@@ -506,7 +523,7 @@ module.exports = (pool) => {
 
 			res.json({ heatmap: heatmap.rows });
 		} catch (err) {
-			console.error("Error fetching heatmap:", err);
+			logError("fetching heatmap", err);
 			res.status(500).json({ error: "Failed to fetch heatmap" });
 		}
 	});
@@ -621,7 +638,7 @@ module.exports = (pool) => {
 				mostActiveMode: mostActiveMode.rows[0] || null,
 			});
 		} catch (err) {
-			console.error("Error fetching insights:", err);
+			logError("fetching insights", err);
 			res.status(500).json({ error: "Failed to fetch insights" });
 		}
 	});
@@ -674,7 +691,7 @@ module.exports = (pool) => {
 				sessions: parseInt(result.rows[0].sessions) || 0,
 			});
 		} catch (err) {
-			console.error("Error fetching filtered stats:", err);
+			logError("fetching filtered stats", err);
 			res.status(500).json({ error: "Failed to fetch filtered stats" });
 		}
 	});
@@ -753,7 +770,7 @@ module.exports = (pool) => {
 				grouping: daysDiff <= 30 ? "daily" : "monthly",
 			});
 		} catch (err) {
-			console.error("Error fetching chart data:", err);
+			logError("fetching chart data", err);
 			res.status(500).json({ error: "Failed to fetch chart data" });
 		}
 	});
@@ -813,7 +830,7 @@ module.exports = (pool) => {
 
 			res.json({ cards: result.rows });
 		} catch (err) {
-			console.error("Error fetching cards table:", err);
+			logError("fetching cards table", err);
 			res.status(500).json({ error: "Failed to fetch cards table" });
 		}
 	});
@@ -822,6 +839,8 @@ module.exports = (pool) => {
 	router.delete("/reset", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
 		const client = await pool.connect();
+
+		logInfo("reset-request", { accountId });
 
 		try {
 			await client.query("BEGIN");
@@ -859,8 +878,8 @@ module.exports = (pool) => {
 			});
 		} catch (err) {
 			await client.query("ROLLBACK");
-			console.error("Error resetting statistics:", err);
-			res.status(500).json({ error: "Failed to reset statistics" });
+			logError("resetting statistics", err);
+			res.status(500).json({ error: "Failed to reset statistics", details: err.message });
 		} finally {
 			client.release();
 		}
