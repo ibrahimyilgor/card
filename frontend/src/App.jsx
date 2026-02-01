@@ -16,7 +16,6 @@ import {
 } from "./services/authServices";
 import { firebaseAuth } from "./config/firebase";
 import Login from "./pages/Login";
-import VerifyEmail from "./pages/VerifyEmail";
 import Info from "./pages/Info";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
@@ -95,9 +94,6 @@ const ProtectedRoute = ({ children, user, loading }) => {
 	if (!user) {
 		return <Navigate to="/login" replace />;
 	}
-	if (!user.emailVerified) {
-		return <Navigate to="/verify-email" replace />;
-	}
 	return children;
 };
 
@@ -119,9 +115,6 @@ const AdminRoute = ({ children, user, loading, userRole }) => {
 	}
 	if (!user) {
 		return <Navigate to="/login" replace />;
-	}
-	if (!user.emailVerified) {
-		return <Navigate to="/verify-email" replace />;
 	}
 	if (userRole !== "admin") {
 		return <Navigate to="/" replace />;
@@ -206,7 +199,7 @@ const AppContent = () => {
 		const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
 			setUser(firebaseUser);
 
-			if (firebaseUser && firebaseUser.emailVerified) {
+			if (firebaseUser) {
 				try {
 					// Check if accountId already exists in localStorage (set during login)
 					let currentAccountId = localStorage.getItem("accountId");
@@ -252,7 +245,7 @@ const AppContent = () => {
 					console.error("Error syncing user:", err);
 				}
 			} else {
-				// User signed out or email not verified
+				// User signed out
 				setAccountId(null);
 				setUserRole(null);
 				localStorage.removeItem("accountId");
@@ -286,7 +279,7 @@ const AppContent = () => {
 	}, []);
 
 	// Determine if we should show the layout with Topbar
-	const isAuthPage = ["/login", "/session-expired", "/verify-email"].includes(
+	const isAuthPage = ["/login", "/session-expired"].includes(
 		location.pathname,
 	);
 
@@ -323,14 +316,6 @@ const AppContent = () => {
 											element={
 												<AnimatedPage>
 													<SessionExpired />
-												</AnimatedPage>
-											}
-										/>
-										<Route
-											path="/verify-email"
-											element={
-												<AnimatedPage>
-													<VerifyEmail />
 												</AnimatedPage>
 											}
 										/>
