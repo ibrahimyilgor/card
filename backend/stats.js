@@ -864,7 +864,7 @@ module.exports = (pool) => {
 
 			// Delete all earned achievements for the account
 			const achievementsResult = await client.query(
-				`DELETE FROM account_achievements WHERE account_id = $1 RETURNING id`,
+				`DELETE FROM account_achievements WHERE account_id = $1 RETURNING achievement_id`,
 				[accountId],
 			);
 
@@ -879,7 +879,9 @@ module.exports = (pool) => {
 		} catch (err) {
 			await client.query("ROLLBACK");
 			logError("resetting statistics", err);
-			res.status(500).json({ error: "Failed to reset statistics", details: err.message });
+			res
+				.status(500)
+				.json({ error: "Failed to reset statistics", details: err.message });
 		} finally {
 			client.release();
 		}
