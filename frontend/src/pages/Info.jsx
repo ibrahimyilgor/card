@@ -1,4 +1,11 @@
-import { useEffect, useState, useContext, useMemo, useRef } from "react";
+import {
+	useEffect,
+	useState,
+	useContext,
+	useMemo,
+	useRef,
+	forwardRef,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSEO } from "../utils/seo";
 import {
@@ -26,6 +33,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CloseIcon from "@mui/icons-material/Close";
 import StyleIcon from "@mui/icons-material/Style";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import SearchIcon from "@mui/icons-material/Search";
@@ -55,294 +63,288 @@ import { usePlan } from "../context/PlanContext";
 const MotionBox = motion.create(Box);
 
 // Deck card component with animation
-const DeckCard = ({
-	deck,
-	index,
-	onEdit,
-	onCards,
-	onPlay,
-	onDelete,
-	onDownload,
-	t,
-}) => {
-	const theme = useTheme();
-	const titleRef = useRef(null);
-	const descRef = useRef(null);
-	const [isTitleOverflow, setIsTitleOverflow] = useState(false);
-	const [isDescOverflow, setIsDescOverflow] = useState(false);
+const DeckCard = forwardRef(
+	({ deck, index, onEdit, onCards, onPlay, onDelete, onDownload, t }, ref) => {
+		const theme = useTheme();
+		const titleRef = useRef(null);
+		const descRef = useRef(null);
+		const [isTitleOverflow, setIsTitleOverflow] = useState(false);
+		const [isDescOverflow, setIsDescOverflow] = useState(false);
 
-	useEffect(() => {
-		const checkOverflow = () => {
-			if (titleRef.current) {
-				setIsTitleOverflow(
-					titleRef.current.scrollWidth > titleRef.current.clientWidth,
-				);
-			}
-			if (descRef.current) {
-				setIsDescOverflow(
-					descRef.current.scrollWidth > descRef.current.clientWidth,
-				);
-			}
-		};
-		checkOverflow();
-		window.addEventListener("resize", checkOverflow);
-		return () => window.removeEventListener("resize", checkOverflow);
-	}, [deck.title, deck.description]);
+		useEffect(() => {
+			const checkOverflow = () => {
+				if (titleRef.current) {
+					setIsTitleOverflow(
+						titleRef.current.scrollWidth > titleRef.current.clientWidth,
+					);
+				}
+				if (descRef.current) {
+					setIsDescOverflow(
+						descRef.current.scrollWidth > descRef.current.clientWidth,
+					);
+				}
+			};
+			checkOverflow();
+			window.addEventListener("resize", checkOverflow);
+			return () => window.removeEventListener("resize", checkOverflow);
+		}, [deck.title, deck.description]);
 
-	return (
-		<MotionBox
-			initial={{ opacity: 0, x: 50 }}
-			animate={{ opacity: 1, x: 0 }}
-			exit={{ opacity: 0, scale: 0.95 }}
-			transition={{ duration: 0.3, delay: index * 0.05 }}
-			layout
-			sx={{ minWidth: 0, width: "100%", overflow: "hidden", p: "2px" }}
-		>
-			<StyledCard
-				variant="default"
-				padding={0}
-				sx={{
-					overflow: "hidden",
-					height: 200,
-					display: "flex",
-					flexDirection: "column",
-					width: "100%",
-					minWidth: 0,
-				}}
+		return (
+			<MotionBox
+				ref={ref}
+				initial={{ opacity: 0, x: 50 }}
+				animate={{ opacity: 1, x: 0 }}
+				exit={{ opacity: 0, scale: 0.95 }}
+				transition={{ duration: 0.3, delay: index * 0.05 }}
+				layout
+				sx={{ minWidth: 0, width: "100%", overflow: "hidden", p: "2px" }}
 			>
-				{/* Card Header with gradient accent */}
-				<Box
+				<StyledCard
+					variant="default"
+					padding={0}
 					sx={{
-						height: 4,
-						background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
+						overflow: "hidden",
+						height: 200,
+						display: "flex",
+						flexDirection: "column",
+						width: "100%",
+						minWidth: 0,
 					}}
-				/>
-
-				<Box sx={{ p: 2.5, overflow: "hidden", flex: 1, minWidth: 0 }}>
-					{/* Title and Actions Row */}
+				>
+					{/* Card Header with gradient accent */}
 					<Box
 						sx={{
-							display: "flex",
-							alignItems: "flex-start",
-							justifyContent: "space-between",
-							mb: 1.5,
-							minWidth: 0,
+							height: 4,
+							background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
 						}}
-					>
-						<Box sx={{ flex: 1, minWidth: 0, pr: 2 }}>
-							<Tooltip
-								title={deck.title}
-								arrow
-								enterDelay={500}
-								disableHoverListener={!isTitleOverflow}
-							>
-								<Typography
-									ref={titleRef}
-									variant="h6"
-									sx={{
-										fontWeight: 600,
-										color: "text.cardTitle",
-										fontFamily: "Inter, sans-serif",
-										textOverflow: "ellipsis",
-										overflow: "hidden",
-										whiteSpace: "nowrap",
-										fontSize: "1.1rem",
-									}}
+					/>
+
+					<Box sx={{ p: 2.5, overflow: "hidden", flex: 1, minWidth: 0 }}>
+						{/* Title and Actions Row */}
+						<Box
+							sx={{
+								display: "flex",
+								alignItems: "flex-start",
+								justifyContent: "space-between",
+								mb: 1.5,
+								minWidth: 0,
+							}}
+						>
+							<Box sx={{ flex: 1, minWidth: 0, pr: 2 }}>
+								<Tooltip
+									title={deck.title}
+									arrow
+									enterDelay={500}
+									disableHoverListener={!isTitleOverflow}
 								>
-									{deck.title}
-								</Typography>
-							</Tooltip>
+									<Typography
+										ref={titleRef}
+										variant="h6"
+										sx={{
+											fontWeight: 600,
+											color: "text.cardTitle",
+											fontFamily: "Inter, sans-serif",
+											textOverflow: "ellipsis",
+											overflow: "hidden",
+											whiteSpace: "nowrap",
+											fontSize: "1.1rem",
+										}}
+									>
+										{deck.title}
+									</Typography>
+								</Tooltip>
+							</Box>
+
+							{/* Quick Actions */}
+							<Box sx={{ display: "flex", gap: 0.5 }}>
+								<Tooltip title={t("play_deck") || "Play"} arrow>
+									<IconButton
+										onClick={() => onPlay(deck)}
+										size="small"
+										sx={{
+											color: "success.main",
+											bgcolor: "rgba(34, 197, 94, 0.1)",
+											"&:hover": {
+												bgcolor: "rgba(34, 197, 94, 0.2)",
+												transform: "scale(1.1)",
+											},
+											transition: "all 0.2s",
+										}}
+									>
+										<PlayArrowIcon fontSize="small" />
+									</IconButton>
+								</Tooltip>
+							</Box>
 						</Box>
 
-						{/* Quick Actions */}
-						<Box sx={{ display: "flex", gap: 0.5 }}>
-							<Tooltip title={t("play_deck") || "Play"} arrow>
+						{/* Description */}
+						<Tooltip
+							title={deck.description || ""}
+							arrow
+							enterDelay={500}
+							disableHoverListener={!isDescOverflow}
+						>
+							<Typography
+								ref={descRef}
+								variant="body2"
+								sx={{
+									color: "text.cardSubtitle",
+									fontFamily: "Inter, sans-serif",
+									textOverflow: "ellipsis",
+									overflow: "hidden",
+									whiteSpace: "nowrap",
+									mb: 2,
+									minHeight: "1.5em",
+								}}
+							>
+								{deck.description || t("no_description") || "No description"}
+							</Typography>
+						</Tooltip>
+
+						{/* Card count chip */}
+						<Box
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								gap: 1,
+								mb: 2,
+								flexWrap: "nowrap",
+							}}
+						>
+							<Chip
+								icon={<StyleIcon sx={{ fontSize: 16 }} />}
+								label={`${deck.flashcard_count || 0} ${t("cards") || "cards"}`}
+								size="small"
+								sx={{
+									bgcolor: (theme) =>
+										theme.palette.mode === "dark"
+											? "rgba(59, 130, 246, 0.15)"
+											: "rgba(59, 130, 246, 0.1)",
+									color: "primary.light",
+									fontWeight: 500,
+									fontFamily: "Inter, sans-serif",
+									"& .MuiChip-icon": {
+										color: "primary.light",
+									},
+								}}
+							/>
+							{deck.difficulty_enabled && (
+								<Tooltip title={t("hard_mode") || "Hard Mode"} arrow>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: "8px",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											bgcolor: (theme) =>
+												theme.palette.mode === "dark"
+													? "rgba(249, 115, 22, 0.15)"
+													: "rgba(249, 115, 22, 0.1)",
+											cursor: "default",
+										}}
+									>
+										<WhatshotIcon sx={{ fontSize: 16, color: "#f97316" }} />
+									</Box>
+								</Tooltip>
+							)}
+							{deck.card_direction === "reverse" && (
+								<Tooltip title={t("direction_reverse") || "Reverse"} arrow>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: "8px",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											bgcolor: (theme) =>
+												theme.palette.mode === "dark"
+													? "rgba(6, 182, 212, 0.15)"
+													: "rgba(6, 182, 212, 0.1)",
+											cursor: "default",
+										}}
+									>
+										<SwapHorizIcon sx={{ fontSize: 16, color: "#06b6d4" }} />
+									</Box>
+								</Tooltip>
+							)}
+						</Box>
+
+						{/* Action Buttons */}
+						<Box
+							sx={{
+								display: "flex",
+								gap: 1,
+								pt: 1,
+								borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+							}}
+						>
+							<Tooltip title={t("edit_deck") || "Edit"} arrow>
 								<IconButton
-									onClick={() => onPlay(deck)}
+									onClick={() => onEdit(deck)}
+									size="small"
+									sx={{
+										color: "warning.main",
+										"&:hover": {
+											bgcolor: "rgba(251, 191, 36, 0.1)",
+										},
+									}}
+								>
+									<EditIcon fontSize="small" />
+								</IconButton>
+							</Tooltip>
+							<Tooltip title={t("manage_flashcards") || "Cards"} arrow>
+								<IconButton
+									onClick={() => onCards(deck)}
+									size="small"
+									sx={{
+										color: "primary.light",
+										"&:hover": {
+											bgcolor: "rgba(59, 130, 246, 0.1)",
+										},
+									}}
+								>
+									<StyleIcon fontSize="small" />
+								</IconButton>
+							</Tooltip>
+							<Tooltip title={t("download_csv") || "Download CSV"} arrow>
+								<IconButton
+									onClick={() => onDownload(deck)}
 									size="small"
 									sx={{
 										color: "success.main",
-										bgcolor: "rgba(34, 197, 94, 0.1)",
 										"&:hover": {
-											bgcolor: "rgba(34, 197, 94, 0.2)",
-											transform: "scale(1.1)",
+											bgcolor: "rgba(34, 197, 94, 0.1)",
 										},
-										transition: "all 0.2s",
 									}}
 								>
-									<PlayArrowIcon fontSize="small" />
+									<DownloadIcon fontSize="small" />
+								</IconButton>
+							</Tooltip>
+							<Box sx={{ flex: 1 }} />
+							<Tooltip title={t("delete_deck") || "Delete"} arrow>
+								<IconButton
+									onClick={() => onDelete(deck)}
+									size="small"
+									sx={{
+										color: "error.main",
+										"&:hover": {
+											bgcolor: "rgba(239, 68, 68, 0.1)",
+										},
+									}}
+								>
+									<DeleteIcon fontSize="small" />
 								</IconButton>
 							</Tooltip>
 						</Box>
 					</Box>
-
-					{/* Description */}
-					<Tooltip
-						title={deck.description || ""}
-						arrow
-						enterDelay={500}
-						disableHoverListener={!isDescOverflow}
-					>
-						<Typography
-							ref={descRef}
-							variant="body2"
-							sx={{
-								color: "text.cardSubtitle",
-								fontFamily: "Inter, sans-serif",
-								textOverflow: "ellipsis",
-								overflow: "hidden",
-								whiteSpace: "nowrap",
-								mb: 2,
-								minHeight: "1.5em",
-							}}
-						>
-							{deck.description || t("no_description") || "No description"}
-						</Typography>
-					</Tooltip>
-
-					{/* Card count chip */}
-					<Box
-						sx={{
-							display: "flex",
-							alignItems: "center",
-							gap: 1,
-							mb: 2,
-							flexWrap: "nowrap",
-						}}
-					>
-						<Chip
-							icon={<StyleIcon sx={{ fontSize: 16 }} />}
-							label={`${deck.flashcard_count || 0} ${t("cards") || "cards"}`}
-							size="small"
-							sx={{
-								bgcolor: (theme) =>
-									theme.palette.mode === "dark"
-										? "rgba(59, 130, 246, 0.15)"
-										: "rgba(59, 130, 246, 0.1)",
-								color: "primary.light",
-								fontWeight: 500,
-								fontFamily: "Inter, sans-serif",
-								"& .MuiChip-icon": {
-									color: "primary.light",
-								},
-							}}
-						/>
-						{deck.difficulty_enabled && (
-							<Tooltip title={t("hard_mode") || "Hard Mode"} arrow>
-								<Box
-									sx={{
-										width: 28,
-										height: 28,
-										borderRadius: "8px",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										bgcolor: (theme) =>
-											theme.palette.mode === "dark"
-												? "rgba(249, 115, 22, 0.15)"
-												: "rgba(249, 115, 22, 0.1)",
-										cursor: "default",
-									}}
-								>
-									<WhatshotIcon sx={{ fontSize: 16, color: "#f97316" }} />
-								</Box>
-							</Tooltip>
-						)}
-						{deck.card_direction === "reverse" && (
-							<Tooltip title={t("direction_reverse") || "Reverse"} arrow>
-								<Box
-									sx={{
-										width: 28,
-										height: 28,
-										borderRadius: "8px",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										bgcolor: (theme) =>
-											theme.palette.mode === "dark"
-												? "rgba(6, 182, 212, 0.15)"
-												: "rgba(6, 182, 212, 0.1)",
-										cursor: "default",
-									}}
-								>
-									<SwapHorizIcon sx={{ fontSize: 16, color: "#06b6d4" }} />
-								</Box>
-							</Tooltip>
-						)}
-					</Box>
-
-					{/* Action Buttons */}
-					<Box
-						sx={{
-							display: "flex",
-							gap: 1,
-							pt: 1,
-							borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-						}}
-					>
-						<Tooltip title={t("edit_deck") || "Edit"} arrow>
-							<IconButton
-								onClick={() => onEdit(deck)}
-								size="small"
-								sx={{
-									color: "warning.main",
-									"&:hover": {
-										bgcolor: "rgba(251, 191, 36, 0.1)",
-									},
-								}}
-							>
-								<EditIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-						<Tooltip title={t("manage_flashcards") || "Cards"} arrow>
-							<IconButton
-								onClick={() => onCards(deck)}
-								size="small"
-								sx={{
-									color: "primary.light",
-									"&:hover": {
-										bgcolor: "rgba(59, 130, 246, 0.1)",
-									},
-								}}
-							>
-								<StyleIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-						<Tooltip title={t("download_csv") || "Download CSV"} arrow>
-							<IconButton
-								onClick={() => onDownload(deck)}
-								size="small"
-								sx={{
-									color: "success.main",
-									"&:hover": {
-										bgcolor: "rgba(34, 197, 94, 0.1)",
-									},
-								}}
-							>
-								<DownloadIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-						<Box sx={{ flex: 1 }} />
-						<Tooltip title={t("delete_deck") || "Delete"} arrow>
-							<IconButton
-								onClick={() => onDelete(deck)}
-								size="small"
-								sx={{
-									color: "error.main",
-									"&:hover": {
-										bgcolor: "rgba(239, 68, 68, 0.1)",
-									},
-								}}
-							>
-								<DeleteIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-					</Box>
-				</Box>
-			</StyledCard>
-		</MotionBox>
-	);
-};
+				</StyledCard>
+			</MotionBox>
+		);
+	},
+);
 
 export default function Info({ accountId, onStartGame }) {
 	const theme = useTheme();
@@ -426,17 +428,35 @@ export default function Info({ accountId, onStartGame }) {
 			case "newest":
 				result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 				break;
+
 			case "oldest":
 				result.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 				break;
+
 			case "name":
 				result.sort((a, b) => a.title.localeCompare(b.title));
 				break;
+
+			case "name_desc":
+				result.sort((a, b) => b.title.localeCompare(a.title));
+				break;
+
 			case "cards":
 				result.sort(
-					(a, b) => (b.flashcards?.length || 0) - (a.flashcards?.length || 0),
+					(a, b) =>
+						(parseInt(b.flashcard_count) || 0) -
+						(parseInt(a.flashcard_count) || 0),
 				);
 				break;
+
+			case "cards_desc":
+				result.sort(
+					(a, b) =>
+						(parseInt(a.flashcard_count) || 0) -
+						(parseInt(b.flashcard_count) || 0),
+				);
+				break;
+
 			default:
 				break;
 		}
@@ -655,7 +675,14 @@ export default function Info({ accountId, onStartGame }) {
 							fontFamily: "Inter, sans-serif",
 						}}
 					>
-						{decks?.length || 0} {t("decks_total") || "decks total"}
+						{(() => {
+							const total = decks?.length || 0;
+							const filtered = filteredDecks?.length || 0;
+							if (total > 0 && filtered !== total) {
+								return `${filtered} / ${total} ${t("decks_total") || "decks total"}`;
+							}
+							return `${total} ${t("decks_total") || "decks total"}`;
+						})()}
 					</Typography>
 				</Box>
 
@@ -681,6 +708,19 @@ export default function Info({ accountId, onStartGame }) {
 									/>
 								</InputAdornment>
 							),
+							endAdornment: searchQuery ? (
+								<InputAdornment position="end">
+									<IconButton
+										size="small"
+										onClick={() => setSearchQuery("")}
+										aria-label={t("clear_search") || "Clear search"}
+									>
+										<CloseIcon
+											sx={{ color: "text.cardSubtitle", fontSize: 18 }}
+										/>
+									</IconButton>
+								</InputAdornment>
+							) : null,
 						}}
 						sx={{ width: { xs: "100%", sm: 250 } }}
 					/>
@@ -724,9 +764,15 @@ export default function Info({ accountId, onStartGame }) {
 						>
 							<MenuItem value="newest">{t("sort_newest") || "Newest"}</MenuItem>
 							<MenuItem value="oldest">{t("sort_oldest") || "Oldest"}</MenuItem>
-							<MenuItem value="name">{t("sort_name") || "Name"}</MenuItem>
+							<MenuItem value="name">{t("sort_name") || "Name (A-Z)"}</MenuItem>
+							<MenuItem value="name_desc">
+								{t("sort_name_desc") || "Name (Z-A)"}
+							</MenuItem>
 							<MenuItem value="cards">
 								{t("sort_cards") || "Most Cards"}
+							</MenuItem>
+							<MenuItem value="cards_desc">
+								{t("sort_cards_desc") || "Fewest Cards"}
 							</MenuItem>
 						</Select>
 					</FormControl>
@@ -1010,7 +1056,7 @@ export default function Info({ accountId, onStartGame }) {
 					onClose={handleCloseSnackbar}
 					severity={snackbar.severity}
 					variant="filled"
-					sx={{ width: "100%" }}
+					sx={{ width: "100%", color: "#fff" }}
 				>
 					{snackbar.message}
 				</Alert>

@@ -13,6 +13,8 @@ import {
 	alpha,
 	useTheme,
 	InputAdornment,
+	Snackbar,
+	Alert,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import EditIcon from "@mui/icons-material/Edit";
@@ -188,6 +190,13 @@ export default function FlashcardModal({
 	const [editFlashcard, setEditFlashcard] = useState(null);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showLimitModal, setShowLimitModal] = useState(false);
+	const [snackbar, setSnackbar] = useState({
+		open: false,
+		message: "",
+		severity: "success",
+	});
+
+	const handleCloseSnackbar = () => setSnackbar((s) => ({ ...s, open: false }));
 
 	// Filter flashcards based on search query
 	const filteredFlashcards = flashcards.filter((flashcard) => {
@@ -206,8 +215,21 @@ export default function FlashcardModal({
 			if (onCardsChange) onCardsChange();
 			// Refresh limit status after deletion
 			fetchLimitStatus();
+			setSnackbar({
+				open: true,
+				message: t("flashcard_deleted") || "Flashcard deleted",
+				severity: "success",
+			});
 		} catch (err) {
 			console.error("Error deleting flashcard:", err);
+			setSnackbar({
+				open: true,
+				message:
+					err?.response?.data?.error ||
+					t("delete_flashcard_error") ||
+					"Error deleting flashcard",
+				severity: "error",
+			});
 		}
 	};
 
@@ -230,11 +252,24 @@ export default function FlashcardModal({
 					);
 					setAddModalOpen(false);
 					setEditFlashcard(null);
+					setSnackbar({
+						open: true,
+						message: t("flashcard_updated") || "Flashcard updated",
+						severity: "success",
+					});
 				} else {
 					setError(res.data?.error || "Failed to update flashcard");
 				}
 			} catch (err) {
 				setError("Network error");
+				setSnackbar({
+					open: true,
+					message:
+						err?.response?.data?.error ||
+						t("flashcard_error") ||
+						"Error saving flashcard",
+					severity: "error",
+				});
 			} finally {
 				setAddLoading(false);
 			}
@@ -248,6 +283,11 @@ export default function FlashcardModal({
 				if (res.data && res.data.flashcard) {
 					setFlashcards((prev) => [...prev, res.data.flashcard]);
 					setAddModalOpen(false);
+					setSnackbar({
+						open: true,
+						message: t("flashcard_added") || "Flashcard added",
+						severity: "success",
+					});
 					if (onCardsChange) onCardsChange();
 					// Refresh limit status after adding flashcard
 					fetchLimitStatus();
@@ -256,6 +296,14 @@ export default function FlashcardModal({
 				}
 			} catch (err) {
 				setError("Network error");
+				setSnackbar({
+					open: true,
+					message:
+						err?.response?.data?.error ||
+						t("flashcard_error") ||
+						"Error saving flashcard",
+					severity: "error",
+				});
 			} finally {
 				setAddLoading(false);
 			}
@@ -471,6 +519,7 @@ export default function FlashcardModal({
 				loading={addLoading}
 				error={error}
 				editFlashcard={editFlashcard}
+				onDelete={() => handleDeleteFlashcard(editFlashcard?.id)}
 			/>
 
 			{/* Limit Warning Modal */}
@@ -486,6 +535,22 @@ export default function FlashcardModal({
 				planCode={limitStatus?.planCode}
 				warningType="flashcard"
 			/>
+
+			<Snackbar
+				open={snackbar.open}
+				autoHideDuration={4000}
+				onClose={handleCloseSnackbar}
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+			>
+				<Alert
+					onClose={handleCloseSnackbar}
+					severity={snackbar.severity}
+					variant="filled"
+					sx={{ width: "100%", color: "#fff" }}
+				>
+					{snackbar.message}
+				</Alert>
+			</Snackbar>
 		</>
 	);
 }

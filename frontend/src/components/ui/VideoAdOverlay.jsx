@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Box, IconButton, Typography, CircularProgress } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,21 +10,45 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 	const { t } = useContext(I18nContext);
 	const [isVideoLoaded, setIsVideoLoaded] = useState(false);
 	const [isVideoEnded, setIsVideoEnded] = useState(false);
+	const [remainingTime, setRemainingTime] = useState(0);
+	const videoRef = useRef(null);
 
 	// Reset states when overlay opens
 	useEffect(() => {
 		if (open) {
 			setIsVideoLoaded(false);
 			setIsVideoEnded(false);
+			setRemainingTime(0);
 		}
 	}, [open]);
 
+	// Update remaining time every second while video is playing
+	useEffect(() => {
+		let interval;
+		if (isVideoLoaded && !isVideoEnded && videoRef.current) {
+			interval = setInterval(() => {
+				const video = videoRef.current;
+				if (video.duration && video.currentTime) {
+					const remaining = Math.ceil(video.duration - video.currentTime);
+					setRemainingTime(remaining);
+				}
+			}, 1000);
+		}
+		return () => {
+			if (interval) clearInterval(interval);
+		};
+	}, [isVideoLoaded, isVideoEnded]);
+
 	const handleVideoLoaded = () => {
 		setIsVideoLoaded(true);
+		if (videoRef.current && videoRef.current.duration) {
+			setRemainingTime(Math.ceil(videoRef.current.duration));
+		}
 	};
 
 	const handleVideoEnded = () => {
 		setIsVideoEnded(true);
+		setRemainingTime(0);
 	};
 
 	const handleClose = () => {
@@ -76,23 +100,43 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 						flexDirection: "column",
 					}}
 				>
-					{/* Close button - always visible */}
-					<IconButton
-						onClick={handleClose}
-						sx={{
-							position: "absolute",
-							top: { xs: 16, sm: 24 },
-							right: { xs: 16, sm: 24 },
-							color: "white",
-							bgcolor: "rgba(255, 255, 255, 0.1)",
-							"&:hover": {
-								bgcolor: "rgba(255, 255, 255, 0.2)",
-							},
-							zIndex: 10000,
-						}}
-					>
-						<CloseIcon />
-					</IconButton>
+					{/* Close button - only visible when video ends */}
+					{isVideoEnded && (
+						<IconButton
+							onClick={handleClose}
+							sx={{
+								position: "absolute",
+								top: { xs: 16, sm: 24 },
+								right: { xs: 16, sm: 24 },
+								color: "white",
+								bgcolor: "rgba(255, 255, 255, 0.1)",
+								"&:hover": {
+									bgcolor: "rgba(255, 255, 255, 0.2)",
+								},
+								zIndex: 10000,
+							}}
+						>
+							<CloseIcon />
+						</IconButton>
+					)}
+
+					{/* Remaining time display - visible while video is playing */}
+					{isVideoLoaded && !isVideoEnded && remainingTime > 0 && (
+						<Typography
+							variant="h4"
+							sx={{
+								position: "absolute",
+								top: { xs: 16, sm: 24 },
+								right: { xs: 16, sm: 24 },
+								color: "white",
+								fontWeight: "bold",
+								textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+								zIndex: 10000,
+							}}
+						>
+							{remainingTime}s
+						</Typography>
+					)}
 
 					{/* Ad label */}
 					<Typography
@@ -143,6 +187,7 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 
 						{/* Video element */}
 						<video
+							ref={videoRef}
 							src={placeholderVideoUrl}
 							autoPlay
 							playsInline
