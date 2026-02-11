@@ -1,13 +1,12 @@
 import { initializeApp } from "firebase/app";
 import {
 	getAuth,
-	signInWithEmailAndPassword,
-	createUserWithEmailAndPassword,
 	signInWithPopup,
 	GoogleAuthProvider,
 	signOut,
-	sendEmailVerification,
 	onAuthStateChanged,
+	browserLocalPersistence,
+	setPersistence,
 } from "firebase/auth";
 
 // Firebase configuration - Replace with your Firebase project config
@@ -25,7 +24,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Auth functions
+// Set persistence to LOCAL - user stays logged in even after browser close
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+	console.error("Failed to set auth persistence:", error);
+});
+
+// Auth functions - Google Sign-In only
 export const firebaseAuth = {
 	// Get current user
 	getCurrentUser: () => auth.currentUser,
@@ -37,26 +41,11 @@ export const firebaseAuth = {
 		return user.getIdToken();
 	},
 
-	// Sign up with email/password
-	signUp: async (email, password) => {
-		const userCredential = await createUserWithEmailAndPassword(
-			auth,
-			email,
-			password,
-		);
-		// Send email verification
-		await sendEmailVerification(userCredential.user);
-		return userCredential.user;
-	},
-
-	// Sign in with email/password
-	signIn: async (email, password) => {
-		const userCredential = await signInWithEmailAndPassword(
-			auth,
-			email,
-			password,
-		);
-		return userCredential.user;
+	// Force refresh ID token
+	getIdTokenForced: async () => {
+		const user = auth.currentUser;
+		if (!user) return null;
+		return user.getIdToken(true);
 	},
 
 	// Sign in with Google
@@ -70,28 +59,9 @@ export const firebaseAuth = {
 		await signOut(auth);
 	},
 
-	// Send email verification
-	sendVerificationEmail: async () => {
-		const user = auth.currentUser;
-		if (user && !user.emailVerified) {
-			await sendEmailVerification(user);
-		}
-	},
-
-	// Check if email is verified
-	isEmailVerified: () => {
-		const user = auth.currentUser;
-		return user?.emailVerified ?? false;
-	},
-
-	// Reload user to get latest email verification status
-	reloadUser: async () => {
-		const user = auth.currentUser;
-		if (user) {
-			await user.reload();
-			return auth.currentUser;
-		}
-		return null;
+	// Check if user is authenticated
+	isAuthenticated: () => {
+		return auth.currentUser !== null;
 	},
 
 	// Listen to auth state changes

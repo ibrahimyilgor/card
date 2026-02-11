@@ -2,53 +2,21 @@ import { firebaseAuth } from "../config/firebase";
 import api from "./api";
 
 /**
- * Firebase Authentication Services
+ * Firebase Authentication Services - Google Sign-In Only
  *
- * All authentication is handled by Firebase. After successful auth,
- * we sync the user with our backend database.
+ * All authentication is handled by Firebase with Google provider.
+ * After successful auth, we sync the user with our backend database.
+ * Session persistence is set to LOCAL - user stays logged in.
  */
-
-// Sign up with email and password
-export const signUp = async (email, password) => {
-	const user = await firebaseAuth.signUp(email, password);
-	return {
-		user,
-		emailVerificationSent: true,
-		message: "Verification email sent. Please check your inbox.",
-	};
-};
-
-// Sign in with email and password
-export const signIn = async (email, password) => {
-	const user = await firebaseAuth.signIn(email, password);
-
-	// Check if email is verified
-	if (!user.emailVerified) {
-		return {
-			user,
-			emailVerified: false,
-			error: "Please verify your email before signing in.",
-		};
-	}
-
-	// Sync with backend
-	const syncResult = await syncWithBackend();
-	return {
-		user,
-		emailVerified: true,
-		...syncResult,
-	};
-};
 
 // Sign in with Google
 export const signInWithGoogle = async () => {
 	const user = await firebaseAuth.signInWithGoogle();
 
-	// Google accounts are always verified
+	// Sync with backend
 	const syncResult = await syncWithBackend();
 	return {
 		user,
-		emailVerified: true,
 		...syncResult,
 	};
 };
@@ -59,24 +27,14 @@ export const signOut = async () => {
 	localStorage.removeItem("accountId");
 };
 
-// Send verification email
-export const sendVerificationEmail = async () => {
-	await firebaseAuth.sendVerificationEmail();
-};
-
-// Reload user to check verification status
-export const reloadUser = async () => {
-	return await firebaseAuth.reloadUser();
-};
-
-// Check if email is verified
-export const isEmailVerified = () => {
-	return firebaseAuth.isEmailVerified();
-};
-
 // Get current user
 export const getCurrentUser = () => {
 	return firebaseAuth.getCurrentUser();
+};
+
+// Check if user is authenticated
+export const isAuthenticated = () => {
+	return firebaseAuth.isAuthenticated();
 };
 
 // Sync Firebase user with backend database
@@ -121,7 +79,5 @@ export const onAuthStateChanged = (callback) => {
 	return firebaseAuth.onAuthStateChanged(callback);
 };
 
-// Legacy exports for backward compatibility during migration
-export const login = signIn;
-export const register = signUp;
+// Legacy export for backward compatibility
 export const logout = signOut;
