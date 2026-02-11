@@ -104,10 +104,12 @@
 	"search_decks": "Search decks...",
 	"search_flashcards": "Search flashcards...",
 	"no_search_results_flashcards": "No flashcards match your search",
-	"sort_newest": "Newest First",
-	"sort_oldest": "Oldest First",
+	"sort_newest": "Newest",
+	"sort_oldest": "Oldest",
 	"sort_name": "Name (A-Z)",
+	"sort_name_desc": "Name (Z-A)",
 	"sort_cards": "Most Cards",
+	"sort_cards_desc": "Fewest Cards",
 	"no_decks_yet": "Create your first Deck",
 	"no_results": "No results found",
 	"no_results_desc": "Try adjusting your search or create a new deck",
@@ -376,5 +378,10 @@
 	"current": "Current",
 	"deckLimitReachedMessage": "You have reached the deck limit for your current plan.",
 	"flashcardLimitReachedMessage": "You have reached the flashcard limit for your current plan.",
-	"maximum": "Maximum"
+	"maximum": "Maximum",
+	"flashcard_added": "Flashcard added successfully",
+	"flashcard_updated": "Flashcard updated successfully",
+	"flashcard_deleted": "Flashcard deleted successfully",
+	"plans_mobile_only": "This operation can be done only by mobile",
+	"downgrade": "Downgrade"
 }

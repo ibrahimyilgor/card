@@ -3,7 +3,15 @@ import { motion } from "framer-motion";
 import { useSEO } from "../utils/seo";
 import PageContainer from "../components/ui/PageContainer";
 import { StyledCard, StyledButton, PlanSkeleton } from "../components/ui";
-import { Typography, Box, Chip, alpha, useTheme } from "@mui/material";
+import {
+	Typography,
+	Box,
+	Chip,
+	alpha,
+	useTheme,
+	Snackbar,
+	Alert,
+} from "@mui/material";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import StarIcon from "@mui/icons-material/Star";
@@ -15,7 +23,13 @@ import { I18nContext } from "../utils/i18n";
 const MotionBox = motion.create(Box);
 
 // Plan card component
-function PlanCard({ plan, isCurrentPlan, delay = 0 }) {
+function PlanCard({
+	plan,
+	isCurrentPlan,
+	delay = 0,
+	onButtonClick,
+	currentPlanCode,
+}) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 
@@ -42,6 +56,25 @@ function PlanCard({ plan, isCurrentPlan, delay = 0 }) {
 	};
 
 	const planColor = getPlanColor(plan.code);
+
+	const planOrder = ["free", "pro", "premium"];
+	const currentIndex = planOrder.indexOf(currentPlanCode);
+	const planIndex = planOrder.indexOf(plan.code);
+
+	let buttonText;
+	let isDisabled = false;
+	let onClick;
+
+	if (currentIndex === planIndex) {
+		buttonText = t("current_plan") || "Current Plan";
+		isDisabled = true;
+	} else if (planIndex > currentIndex) {
+		buttonText = t("upgrade") || "Upgrade";
+		onClick = onButtonClick;
+	} else {
+		buttonText = t("downgrade") || "Downgrade";
+		onClick = onButtonClick;
+	}
 
 	return (
 		<MotionBox
@@ -198,23 +231,18 @@ function PlanCard({ plan, isCurrentPlan, delay = 0 }) {
 
 				{/* Action button */}
 				<StyledButton
-					variant={isCurrentPlan ? "secondary" : "primary"}
+					variant={isDisabled ? "secondary" : "primary"}
 					fullWidth
-					disabled={isCurrentPlan}
+					disabled={isDisabled}
+					onClick={onClick}
 					sx={{
-						backgroundColor: isCurrentPlan ? undefined : planColor,
+						backgroundColor: isDisabled ? undefined : planColor,
 						"&:hover": {
-							backgroundColor: isCurrentPlan
-								? undefined
-								: alpha(planColor, 0.9),
+							backgroundColor: isDisabled ? undefined : alpha(planColor, 0.9),
 						},
 					}}
 				>
-					{isCurrentPlan
-						? t("current_plan") || "Current Plan"
-						: plan.price_monthly === "0.00" || plan.price_monthly === 0
-							? t("get_started") || "Get Started"
-							: t("upgrade") || "Upgrade"}
+					{buttonText}
 				</StyledButton>
 			</StyledCard>
 		</MotionBox>
@@ -257,6 +285,7 @@ export default function Plans() {
 	const [myPlan, setMyPlan] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
+	const [snackbarOpen, setSnackbarOpen] = useState(false);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -277,6 +306,10 @@ export default function Plans() {
 		};
 		fetchData();
 	}, []);
+
+	const handleButtonClick = () => {
+		setSnackbarOpen(true);
+	};
 
 	return (
 		<PageContainer>
@@ -353,9 +386,25 @@ export default function Plans() {
 								plan={plan}
 								isCurrentPlan={myPlan?.code === plan.code}
 								delay={0.1 + index * 0.1}
+								onButtonClick={handleButtonClick}
+								currentPlanCode={myPlan?.code}
 							/>
 						))}
 			</Box>
+			<Snackbar
+				open={snackbarOpen}
+				autoHideDuration={6000}
+				onClose={() => setSnackbarOpen(false)}
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+			>
+				<Alert
+					onClose={() => setSnackbarOpen(false)}
+					severity="info"
+					sx={{ width: "100%" }}
+				>
+					{t("plans_mobile_only") || "This can be done only by mobile"}
+				</Alert>
+			</Snackbar>
 		</PageContainer>
 	);
 }

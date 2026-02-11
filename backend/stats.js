@@ -839,13 +839,13 @@ module.exports = (pool) => {
 
 			// Delete all study sessions
 			const sessionsResult = await client.query(
-				`DELETE FROM study_session WHERE account_id = $1 RETURNING id`,
+				`DELETE FROM study_session WHERE account_id = $1 RETURNING account_id`,
 				[accountId],
 			);
 
 			// Delete all earned achievements for the account
 			const achievementsResult = await client.query(
-				`DELETE FROM account_achievements WHERE account_id = $1 RETURNING id`,
+				`DELETE FROM account_achievements WHERE account_id = $1 RETURNING account_id`,
 				[accountId],
 			);
 

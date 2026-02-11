@@ -235,7 +235,7 @@ export default function Game({ onBackToDecks }) {
 			// Show ad overlay for free plan users when game ends
 			if (hasAds && !adShown) {
 				setShowAdOverlay(true);
-				setAdShown(true);
+				// setAdShown(true);
 			}
 		}
 	}, [gameEnded, hasAds, adShown]);

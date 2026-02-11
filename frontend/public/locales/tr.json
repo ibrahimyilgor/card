@@ -107,7 +107,9 @@
 	"sort_newest": "En Yeni",
 	"sort_oldest": "En Eski",
 	"sort_name": "İsim (A-Z)",
+	"sort_name_desc": "İsim (Z-A)",
 	"sort_cards": "En Çok Kart",
+	"sort_cards_desc": "En Az Kart",
 	"no_decks_yet": "İlk Destenizi Oluşturun",
 	"no_results": "Sonuç bulunamadı",
 	"no_results_desc": "Aramanızı düzenleyin veya yeni bir deste oluşturun",
@@ -376,5 +378,10 @@
 	"current": "Mevcut",
 	"deckLimitReachedMessage": "Mevcut planınızın deste limiti doldu.",
 	"flashcardLimitReachedMessage": "Mevcut planınızın kart limiti doldu.",
-	"maximum": "Maksimum"
+	"maximum": "Maksimum",
+	"flashcard_added": "Kart başarıyla eklendi",
+	"flashcard_updated": "Kart başarıyla güncellendi",
+	"flashcard_deleted": "Kart başarıyla silindi",
+	"plans_mobile_only": "Bu işlem yalnızca mobil cihazlarda yapılabilir",
+	"downgrade": "Planı Düşür"
 }

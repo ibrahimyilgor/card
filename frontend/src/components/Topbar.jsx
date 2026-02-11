@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
 	AppBar,
 	Toolbar,
@@ -88,6 +88,8 @@ export default function Topbar({ onLogout, currentPath, user }) {
 	const navigate = useNavigate();
 	const location = useLocation();
 
+	const [navLoading, setNavLoading] = useState(false);
+
 	const [anchorEl, setAnchorEl] = useState(null);
 
 	// Get user's profile photo from props
@@ -97,6 +99,16 @@ export default function Topbar({ onLogout, currentPath, user }) {
 
 	// Use location.pathname if currentPath not provided
 	const activePath = currentPath || location.pathname;
+
+	const handleNavigate = (path) => {
+		if (navLoading || activePath === path) return;
+		setNavLoading(true);
+		navigate(path);
+	};
+
+	useEffect(() => {
+		setNavLoading(false);
+	}, [location.pathname]);
 
 	const handleProfileClick = (event) => {
 		setAnchorEl(event.currentTarget);
@@ -232,35 +244,40 @@ export default function Topbar({ onLogout, currentPath, user }) {
 						label="Home"
 						tooltip={t("home") || "Home"}
 						isActive={activePath === "/"}
-						onClick={() => navigate("/")}
+						onClick={() => handleNavigate("/")}
+						disabled={navLoading}
 					/>
 					<NavButton
 						icon={BarChartIcon}
 						label="Stats"
 						tooltip={t("statistics") || "Statistics"}
 						isActive={activePath === "/stats"}
-						onClick={() => navigate("/stats")}
+						onClick={() => handleNavigate("/stats")}
+						disabled={navLoading}
 					/>
 					<NavButton
 						icon={EmojiEventsIcon}
 						label="Achievements"
 						tooltip={t("achievements") || "Achievements"}
 						isActive={activePath === "/achievements"}
-						onClick={() => navigate("/achievements")}
+						onClick={() => handleNavigate("/achievements")}
+						disabled={navLoading}
 					/>
 					<NavButton
 						icon={EventNoteIcon}
 						label="Plan"
 						tooltip={t("plan") || "Plan"}
 						isActive={activePath === "/plans"}
-						onClick={() => navigate("/plans")}
+						onClick={() => handleNavigate("/plans")}
+						disabled={navLoading}
 					/>
 					<NavButton
 						icon={SettingsIcon}
 						label="Settings"
 						tooltip={t("settings")}
 						isActive={activePath === "/settings"}
-						onClick={() => navigate("/settings")}
+						onClick={() => handleNavigate("/settings")}
+						disabled={navLoading}
 					/>
 				</Box>
 

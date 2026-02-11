@@ -17,11 +17,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import LockIcon from "@mui/icons-material/Lock";
-import VpnKeyIcon from "@mui/icons-material/VpnKey";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+// password-related icons removed
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import StarIcon from "@mui/icons-material/Star";
@@ -29,11 +25,7 @@ import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { getMyPlan, resetStatistics } from "../services/accountServices";
 import { deleteAccount } from "../services/authServices";
 import { firebaseAuth } from "../config/firebase";
-import {
-	EmailAuthProvider,
-	reauthenticateWithCredential,
-	updatePassword,
-} from "firebase/auth";
+// firebase auth password helpers removed
 import { useNavigate } from "react-router-dom";
 import {
 	PageContainer,
@@ -148,15 +140,7 @@ export default function Account() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 
-	// Change password states
-	const [oldPassword, setOldPassword] = useState("");
-	const [newPassword, setNewPassword] = useState("");
-	const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
-	const [pwError, setPwError] = useState("");
-	const [pwLoading, setPwLoading] = useState(false);
-	const [showOldPassword, setShowOldPassword] = useState(false);
-	const [showNewPassword, setShowNewPassword] = useState(false);
-	const [showNewPasswordRepeat, setShowNewPasswordRepeat] = useState(false);
+	// (password update feature removed)
 	const [snackbar, setSnackbar] = useState({
 		open: false,
 		message: "",
@@ -192,60 +176,7 @@ export default function Account() {
 			});
 	}, []);
 
-	const handleChangePassword = async (e) => {
-		e.preventDefault();
-		setPwError("");
-		setPwLoading(true);
-		// Password rules: min 8 characters, must contain letters and numbers
-		if (
-			newPassword.length < 8 ||
-			!/[A-Za-z]/.test(newPassword) ||
-			!/[0-9]/.test(newPassword)
-		) {
-			setPwError(t("password_rule_error"));
-			setPwLoading(false);
-			return;
-		}
-		if (newPassword !== newPasswordRepeat) {
-			setPwError(t("passwords_dont_match"));
-			setPwLoading(false);
-			return;
-		}
-		try {
-			const user = firebaseAuth.getCurrentUser();
-			if (!user || !user.email) {
-				setPwError(t("password_change_failed"));
-				setPwLoading(false);
-				return;
-			}
-
-			// Re-authenticate with current password
-			const credential = EmailAuthProvider.credential(user.email, oldPassword);
-			await reauthenticateWithCredential(user, credential);
-
-			// Update password
-			await updatePassword(user, newPassword);
-
-			setSnackbar({
-				open: true,
-				message: t("password_changed_success"),
-				severity: "success",
-			});
-			setOldPassword("");
-			setNewPassword("");
-			setNewPasswordRepeat("");
-		} catch (err) {
-			console.error("Password change error:", err);
-			if (err.code === "auth/wrong-password") {
-				setPwError(t("invalid_credentials") || "Current password is incorrect");
-			} else if (err.code === "auth/weak-password") {
-				setPwError(t("password_rule_error") || "Password is too weak");
-			} else {
-				setPwError(t("password_change_failed"));
-			}
-		}
-		setPwLoading(false);
-	};
+	// password change handler removed
 
 	const handleDeleteAccount = async () => {
 		setDeleteLoading(true);
@@ -485,206 +416,16 @@ export default function Account() {
 						<Box
 							sx={{
 								display: "grid",
-								gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+								gridTemplateColumns: { xs: "1fr", md: "1fr" },
 								gap: 3,
 								alignItems: "stretch",
 							}}
 						>
-							{/* Change Password */}
-							<MotionBox
-								initial={{ y: 20 }}
-								animate={{ y: 0 }}
-								transition={{ delay: 0.3, duration: 0.4 }}
-								sx={{ height: "100%" }}
-							>
-								<StyledCard variant="default" sx={{ p: 3, height: "100%" }}>
-									<Box
-										sx={{
-											display: "flex",
-											alignItems: "center",
-											gap: 2,
-											mb: 3,
-										}}
-									>
-										<Box
-											sx={{
-												width: 48,
-												height: 48,
-												borderRadius: "12px",
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												background: `linear-gradient(135deg, ${alpha(
-													theme.palette.warning.main,
-													0.15,
-												)} 0%, ${alpha(theme.palette.warning.main, 0.05)} 100%)`,
-												border: `1px solid ${alpha(
-													theme.palette.warning.main,
-													0.2,
-												)}`,
-											}}
-										>
-											<VpnKeyIcon
-												sx={{ fontSize: 24, color: "warning.main" }}
-											/>
-										</Box>
-										<Box>
-											<Typography
-												variant="subtitle1"
-												sx={{
-													fontWeight: 600,
-													color: "text.cardTitle",
-													fontFamily: "Inter, sans-serif",
-												}}
-											>
-												{t("update_password_title")}
-											</Typography>
-											<Typography
-												variant="body2"
-												sx={{
-													color: "text.cardSubtitle",
-													fontFamily: "Inter, sans-serif",
-													fontSize: "0.85rem",
-												}}
-											>
-												{t("update_password_subtitle")}
-											</Typography>
-										</Box>
-									</Box>
-
-									{pwError && (
-										<Alert severity="error" sx={{ mb: 2 }}>
-											{pwError}
-										</Alert>
-									)}
-
-									<Box
-										component="form"
-										onSubmit={handleChangePassword}
-										sx={{ maxWidth: 400 }}
-									>
-										<TextField
-											label={t("current_password")}
-											type={showOldPassword ? "text" : "password"}
-											value={oldPassword}
-											onChange={(e) => setOldPassword(e.target.value)}
-											fullWidth
-											sx={{ mb: 2 }}
-											required
-											InputProps={{
-												startAdornment: (
-													<InputAdornment position="start">
-														<LockIcon sx={{ color: "text.cardSubtitle" }} />
-													</InputAdornment>
-												),
-												endAdornment: (
-													<InputAdornment position="end">
-														<IconButton
-															onClick={() =>
-																setShowOldPassword(!showOldPassword)
-															}
-															edge="end"
-															size="small"
-														>
-															{showOldPassword ? (
-																<VisibilityOffIcon />
-															) : (
-																<VisibilityIcon />
-															)}
-														</IconButton>
-													</InputAdornment>
-												),
-											}}
-										/>
-										<TextField
-											label={t("new_password")}
-											type={showNewPassword ? "text" : "password"}
-											value={newPassword}
-											onChange={(e) => setNewPassword(e.target.value)}
-											fullWidth
-											sx={{ mb: 2 }}
-											required
-											helperText={t("password_rule_helper_text")}
-											InputProps={{
-												startAdornment: (
-													<InputAdornment position="start">
-														<LockIcon sx={{ color: "text.cardSubtitle" }} />
-													</InputAdornment>
-												),
-												endAdornment: (
-													<InputAdornment position="end">
-														<IconButton
-															onClick={() =>
-																setShowNewPassword(!showNewPassword)
-															}
-															edge="end"
-															size="small"
-														>
-															{showNewPassword ? (
-																<VisibilityOffIcon />
-															) : (
-																<VisibilityIcon />
-															)}
-														</IconButton>
-													</InputAdornment>
-												),
-											}}
-										/>
-										<TextField
-											label={t("new_password_repeat")}
-											type={showNewPasswordRepeat ? "text" : "password"}
-											value={newPasswordRepeat}
-											onChange={(e) => setNewPasswordRepeat(e.target.value)}
-											fullWidth
-											sx={{ mb: 3 }}
-											required
-											InputProps={{
-												startAdornment: (
-													<InputAdornment position="start">
-														<LockIcon sx={{ color: "text.cardSubtitle" }} />
-													</InputAdornment>
-												),
-												endAdornment: (
-													<InputAdornment position="end">
-														<IconButton
-															onClick={() =>
-																setShowNewPasswordRepeat(!showNewPasswordRepeat)
-															}
-															edge="end"
-															size="small"
-														>
-															{showNewPasswordRepeat ? (
-																<VisibilityOffIcon />
-															) : (
-																<VisibilityIcon />
-															)}
-														</IconButton>
-													</InputAdornment>
-												),
-											}}
-										/>
-										<StyledButton
-											type="submit"
-											variant="primary"
-											fullWidth
-											disabled={pwLoading}
-											startIcon={
-												pwLoading ? null : (
-													<CheckCircleIcon sx={{ fontSize: 20 }} />
-												)
-											}
-										>
-											{pwLoading ? t("changing") : t("change_password_button")}
-										</StyledButton>
-									</Box>
-								</StyledCard>
-							</MotionBox>
-
-							{/* Right Column - Danger Zone */}
+							{/* Right Column - Danger Zone (side-by-side on md+) */}
 							<Box
 								sx={{
-									display: "flex",
-									flexDirection: "column",
+									display: "grid",
+									gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
 									gap: 3,
 									height: "100%",
 								}}
