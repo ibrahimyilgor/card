@@ -11,7 +11,10 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 	const [isVideoLoaded, setIsVideoLoaded] = useState(false);
 	const [isVideoEnded, setIsVideoEnded] = useState(false);
 	const [remainingTime, setRemainingTime] = useState(0);
+	const [selectedVideo, setSelectedVideo] = useState(null);
+	const [showCloseButton, setShowCloseButton] = useState(false);
 	const videoRef = useRef(null);
+	const timeoutRef = useRef(null);
 
 	// Reset states when overlay opens
 	useEffect(() => {
@@ -19,31 +22,44 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 			setIsVideoLoaded(false);
 			setIsVideoEnded(false);
 			setRemainingTime(0);
+			setShowCloseButton(false);
+			if (!selectedVideo) {
+				const videos = ["/videos/apple.mp4", "/videos/thy.mp4"];
+				const randomVideo = videos[Math.floor(Math.random() * videos.length)];
+				setSelectedVideo(randomVideo);
+			}
+			timeoutRef.current = setTimeout(() => setShowCloseButton(true), 10000);
+		} else {
+			setSelectedVideo(null);
+			setShowCloseButton(false);
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+				timeoutRef.current = null;
+			}
 		}
-	}, [open]);
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+		};
+	}, [open, selectedVideo]);
 
 	// Update remaining time every second while video is playing
 	useEffect(() => {
 		let interval;
-		if (isVideoLoaded && !isVideoEnded && videoRef.current) {
+		if (isVideoLoaded && !isVideoEnded && remainingTime > 0) {
 			interval = setInterval(() => {
-				const video = videoRef.current;
-				if (video.duration && video.currentTime) {
-					const remaining = Math.ceil(video.duration - video.currentTime);
-					setRemainingTime(remaining);
-				}
+				setRemainingTime(prev => Math.max(0, prev - 1));
 			}, 1000);
 		}
 		return () => {
 			if (interval) clearInterval(interval);
 		};
-	}, [isVideoLoaded, isVideoEnded]);
+	}, [isVideoLoaded, isVideoEnded, remainingTime]);
 
 	const handleVideoLoaded = () => {
 		setIsVideoLoaded(true);
-		if (videoRef.current && videoRef.current.duration) {
-			setRemainingTime(Math.ceil(videoRef.current.duration));
-		}
+		setRemainingTime(10);
 	};
 
 	const handleVideoEnded = () => {
@@ -56,10 +72,7 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 	};
 
 	// Placeholder video URL for testing (can be replaced with real ad)
-	const placeholderVideoUrl =
-		videoUrl ||
-		"https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
-
+	const placeholderVideoUrl = videoUrl || selectedVideo;
 	const overlayVariants = {
 		hidden: { opacity: 0 },
 		visible: { opacity: 1 },
@@ -100,8 +113,8 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 						flexDirection: "column",
 					}}
 				>
-					{/* Close button - only visible when video ends */}
-					{isVideoEnded && (
+					{/* Close button - visible after 10 seconds or when video ends */}
+					{(isVideoEnded || showCloseButton) && (
 						<IconButton
 							onClick={handleClose}
 							sx={{
@@ -120,10 +133,10 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 						</IconButton>
 					)}
 
-					{/* Remaining time display - visible while video is playing */}
-					{isVideoLoaded && !isVideoEnded && remainingTime > 0 && (
+					{/* Remaining time display - visible while video is playing and before close button appears */}
+					{isVideoLoaded && !isVideoEnded && remainingTime > 0 && !showCloseButton && (
 						<Typography
-							variant="h4"
+							variant="h6"
 							sx={{
 								position: "absolute",
 								top: { xs: 16, sm: 24 },
@@ -144,7 +157,8 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 						sx={{
 							position: "absolute",
 							top: { xs: 16, sm: 24 },
-							left: { xs: 16, sm: 24 },
+							left: "50%",
+							transform: "translateX(-50%)",
 							color: "rgba(255, 255, 255, 0.7)",
 							bgcolor: "rgba(0, 0, 0, 0.5)",
 							px: 1.5,
