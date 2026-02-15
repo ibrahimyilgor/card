@@ -49,7 +49,7 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 		let interval;
 		if (isVideoLoaded && !isVideoEnded && remainingTime > 0) {
 			interval = setInterval(() => {
-				setRemainingTime(prev => Math.max(0, prev - 1));
+				setRemainingTime((prev) => Math.max(0, prev - 1));
 			}, 1000);
 		}
 		return () => {
@@ -134,22 +134,25 @@ const VideoAdOverlay = ({ open, onClose, videoUrl }) => {
 					)}
 
 					{/* Remaining time display - visible while video is playing and before close button appears */}
-					{isVideoLoaded && !isVideoEnded && remainingTime > 0 && !showCloseButton && (
-						<Typography
-							variant="h6"
-							sx={{
-								position: "absolute",
-								top: { xs: 16, sm: 24 },
-								right: { xs: 16, sm: 24 },
-								color: "white",
-								fontWeight: "bold",
-								textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-								zIndex: 10000,
-							}}
-						>
-							{remainingTime}s
-						</Typography>
-					)}
+					{isVideoLoaded &&
+						!isVideoEnded &&
+						remainingTime > 0 &&
+						!showCloseButton && (
+							<Typography
+								variant="h6"
+								sx={{
+									position: "absolute",
+									top: { xs: 16, sm: 24 },
+									right: { xs: 16, sm: 24 },
+									color: "white",
+									fontWeight: "bold",
+									textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+									zIndex: 10000,
+								}}
+							>
+								{remainingTime}s
+							</Typography>
+						)}
 
 					{/* Ad label */}
 					<Typography
