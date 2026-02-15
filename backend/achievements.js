@@ -4,6 +4,60 @@ const authenticateToken = require("./middleware/authenticateToken");
 module.exports = (pool) => {
 	const router = express.Router();
 
+	// One-time cleanup: remove duplicate achievement rows (keep the one with the lowest id)
+	(async () => {
+		try {
+			// Re-point account_achievements to the canonical (min id) achievement before deleting duplicates
+			await pool.query(`
+				UPDATE account_achievements aa
+				SET achievement_id = canonical.min_id
+				FROM (
+					SELECT category, threshold, MIN(id) AS min_id
+					FROM achievement
+					GROUP BY category, threshold
+				) canonical
+				JOIN achievement a ON a.category = canonical.category
+				  AND a.threshold = canonical.threshold
+				  AND a.id != canonical.min_id
+				WHERE aa.achievement_id = a.id
+				  AND NOT EXISTS (
+				    SELECT 1 FROM account_achievements ex
+				    WHERE ex.account_id = aa.account_id AND ex.achievement_id = canonical.min_id
+				  )
+			`);
+			// Delete orphaned account_achievements that now conflict
+			await pool.query(`
+				DELETE FROM account_achievements
+				WHERE achievement_id NOT IN (
+					SELECT MIN(id) FROM achievement GROUP BY category, threshold
+				)
+			`);
+			// Delete duplicate achievement rows
+			const delResult = await pool.query(`
+				DELETE FROM achievement
+				WHERE id NOT IN (
+					SELECT MIN(id) FROM achievement GROUP BY category, threshold
+				)
+			`);
+			if (delResult.rowCount > 0) {
+				console.log(`[Achievements] Cleaned ${delResult.rowCount} duplicate achievement rows`);
+			}
+			// Add unique constraint if missing
+			await pool.query(`
+				DO $$
+				BEGIN
+					IF NOT EXISTS (
+						SELECT 1 FROM pg_constraint WHERE conname = 'achievement_category_threshold_key'
+					) THEN
+						ALTER TABLE achievement ADD CONSTRAINT achievement_category_threshold_key UNIQUE (category, threshold);
+					END IF;
+				END $$;
+			`);
+		} catch (err) {
+			console.error("[Achievements] Error cleaning duplicate achievements:", err);
+		}
+	})();
+
 	// Get all achievements with user's earned status
 	router.get("/", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
@@ -155,7 +209,8 @@ async function awardAchievement(pool, accountId, category, threshold) {
 		const achievementResult = await pool.query(
 			`SELECT id, name, description, icon, category, threshold
 			FROM achievement 
-			WHERE category = $1 AND threshold = $2`,
+			WHERE category = $1 AND threshold = $2
+			LIMIT 1`,
 			[category, threshold]
 		);
 
@@ -173,8 +228,7 @@ async function awardAchievement(pool, accountId, category, threshold) {
 		);
 
 		if (existingResult.rows.length > 0) {
-			// Already earned - increment done_count for repeatable achievements
-			// For accuracy achievements (can be earned multiple times)
+			// Already earned - silently increment done_count but don't show modal again
 			if (category === "accuracy") {
 				await pool.query(
 					`UPDATE account_achievements 
@@ -182,13 +236,7 @@ async function awardAchievement(pool, accountId, category, threshold) {
 					WHERE account_id = $1 AND achievement_id = $2`,
 					[accountId, achievement.id]
 				);
-				return {
-					...achievement,
-					done_count: existingResult.rows[0].done_count + 1,
-					isRepeat: true,
-				};
 			}
-			// Streak and volume achievements are not repeatable
 			return null;
 		}
 

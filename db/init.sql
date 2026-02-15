@@ -50,7 +50,8 @@ CREATE TABLE IF NOT EXISTS achievement (
   description TEXT,
   icon VARCHAR(50) NOT NULL,
   category VARCHAR(50) NOT NULL,
-  threshold INT NOT NULL
+  threshold INT NOT NULL,
+  UNIQUE(category, threshold)
 );
 
 CREATE TABLE IF NOT EXISTS account_achievements (
