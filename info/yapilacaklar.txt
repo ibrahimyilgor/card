@@ -1,5 +1,4 @@
--firebase authenticationa geçiş.
-    +login signup tamamen buradan
+-web stats grafiklerin x eksenine dil ekle
 
 -plana göre özelliklerin açılıp kapatılması.
     +nelerin kısatlanacağına karar ver

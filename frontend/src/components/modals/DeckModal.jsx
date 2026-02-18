@@ -1,17 +1,8 @@
 import { useState, useEffect, useContext } from "react";
-import {
-	Box,
-	Typography,
-	Checkbox,
-	FormControl,
-	Select,
-	MenuItem,
-	alpha,
-	useTheme,
-} from "@mui/material";
+import { Box, Typography, alpha, useTheme } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import StyleIcon from "@mui/icons-material/Style";
-import TuneIcon from "@mui/icons-material/Tune";
+// Game option UI removed
 import { I18nContext } from "../../utils/i18n";
 import {
 	StyledModal,
@@ -117,85 +108,7 @@ export default function DeckModal({
 					}
 				/>
 
-				<MotionBox
-					initial={{ height: 0 }}
-					animate={{ height: "auto" }}
-					transition={{ duration: 0.3 }}
-				>
-					<Box
-						sx={{
-							p: 2.5,
-							borderRadius: 3,
-							background: (theme) =>
-								theme.palette.mode === "dark"
-									? alpha(theme.palette.primary.main, 0.08)
-									: alpha(theme.palette.primary.main, 0.05),
-							border: (theme) =>
-								`1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-						}}
-					>
-						<Box
-							sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}
-						>
-							<TuneIcon sx={{ fontSize: 20, color: "primary.main" }} />
-							<Typography
-								variant="subtitle2"
-								sx={{
-									fontWeight: 600,
-									color: "text.cardTitle",
-									fontFamily: "Inter, sans-serif",
-								}}
-							>
-								{t("game_options") || "Game Options"}
-							</Typography>
-						</Box>
-
-						{/* Game Mode Selector */}
-						<Box sx={{ mt: 2 }}>
-							<Typography
-								variant="body2"
-								sx={{
-									fontWeight: 500,
-									color: "text.cardSubtitle",
-									fontFamily: "Inter, sans-serif",
-									mb: 1,
-								}}
-							>
-								{t("game_mode") || "Game Mode"}
-							</Typography>
-							<FormControl fullWidth size="small">
-								<Select
-									value={mode}
-									onChange={(e) => setMode(e.target.value)}
-									sx={{
-										fontWeight: 500,
-										fontFamily: "Inter, sans-serif",
-										borderRadius: 2,
-										"& .MuiOutlinedInput-notchedOutline": {
-											borderColor: "divider",
-										},
-										"&:hover .MuiOutlinedInput-notchedOutline": {
-											borderColor: "primary.main",
-										},
-									}}
-								>
-									<MenuItem value="standard">
-										{t("mode_standard") || "Standard Mode"}
-									</MenuItem>
-									<MenuItem value="write">
-										{t("mode_write") || "Write Mode"}
-									</MenuItem>
-									<MenuItem value="multiple_choice">
-										{t("mode_multiple_choice") || "Multiple Choice"}
-									</MenuItem>
-									<MenuItem value="match">
-										{t("mode_match") || "Match Mode"}
-									</MenuItem>
-								</Select>
-							</FormControl>
-						</Box>
-					</Box>
-				</MotionBox>
+				{/* Game options removed from modal UI per request */}
 
 				<AnimatePresence initial={false}>
 					{error && (

@@ -100,7 +100,7 @@ export default function MultipleChoice({
 										? {
 												borderColor: theme.palette.primary.main,
 												background: alpha(theme.palette.primary.main, 0.08),
-										  }
+											}
 										: {},
 							}}
 						>
@@ -121,12 +121,12 @@ export default function MultipleChoice({
 										showResult && option.isCorrect
 											? "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
 											: showResult && isSelected && !option.isCorrect
-											? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
-											: isSelected
-											? "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)"
-											: isDark
-											? "rgba(255, 255, 255, 0.1)"
-											: "rgba(0, 0, 0, 0.08)",
+												? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
+												: isSelected
+													? "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)"
+													: isDark
+														? "rgba(255, 255, 255, 0.1)"
+														: "rgba(0, 0, 0, 0.08)",
 									color:
 										(showResult &&
 											(option.isCorrect ||
@@ -134,8 +134,8 @@ export default function MultipleChoice({
 										isSelected
 											? "#ffffff"
 											: isDark
-											? "#ffffff"
-											: "#1e293b",
+												? "#ffffff"
+												: "#1e293b",
 								}}
 							>
 								{optionLabels[index]}
@@ -174,7 +174,7 @@ export default function MultipleChoice({
 			</Box>
 
 			{/* Keyboard hint */}
-			{!showResult && !disabled && (
+			{
 				<Typography
 					variant="caption"
 					sx={{
@@ -187,7 +187,7 @@ export default function MultipleChoice({
 				>
 					{t("press_1234") || "Press 1-4 to select an answer"}
 				</Typography>
-			)}
+			}
 		</Box>
 	);
 }

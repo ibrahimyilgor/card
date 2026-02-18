@@ -179,6 +179,7 @@
 	"7_days": "7G",
 	"30_days": "30G",
 	"90_days": "90G",
+	"180_days": "180G",
 	"1_year": "1Y",
 	"all_time_short": "Tümü",
 	"download_report": "Rapor İndir",
@@ -383,5 +384,6 @@
 	"flashcard_updated": "Kart başarıyla güncellendi",
 	"flashcard_deleted": "Kart başarıyla silindi",
 	"plans_mobile_only": "Bu işlem yalnızca mobil cihazlarda yapılabilir",
-	"downgrade": "Planı Düşür"
+	"downgrade": "Planı Düşür",
+	"date_range_max_warning": "Lütfen 1 yıldan daha kısa bir tarih aralığı seçin"
 }

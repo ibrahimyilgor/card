@@ -1,4 +1,11 @@
-import { useEffect, useState, useContext, useMemo, useCallback } from "react";
+import {
+	useEffect,
+	useState,
+	useContext,
+	useMemo,
+	useCallback,
+	useRef,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -21,11 +28,14 @@ import {
 	IconButton,
 	TableSortLabel,
 	Button,
+	Snackbar,
+	Alert,
 } from "@mui/material";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
+import "dayjs/locale/tr";
+import $ from "jquery";
+import moment from "moment";
+import "daterangepicker/daterangepicker.css";
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -81,10 +91,12 @@ const MotionBox = motion.create(Box);
 
 // Date preset buttons data
 const DATE_PRESETS = [
-	{ key: "today", days: 0 },
+	// { key: "today", days: 0 },
 	{ key: "7d", days: 7 },
 	{ key: "30d", days: 30 },
 	{ key: "90d", days: 90 },
+	{ key: "180d", days: 180 },
+	{ key: "1y", days: 365 },
 ];
 
 // Stats card component
@@ -175,7 +187,7 @@ const PresetButton = ({ label, active, onClick }) => (
 
 export default function Stats() {
 	const theme = useTheme();
-	const { t } = useContext(I18nContext);
+	const { t, lang } = useContext(I18nContext);
 	const navigate = useNavigate();
 
 	// Plan context for access control
@@ -196,6 +208,9 @@ export default function Stats() {
 	// Table sorting
 	const [sortBy, setSortBy] = useState("times_played");
 	const [sortOrder, setSortOrder] = useState("desc");
+
+	// Date range warning
+	const [dateWarning, setDateWarning] = useState("");
 
 	// If user doesn't have advanced stats access, show upgrade prompt
 	if (!planLoading && !advancedStats) {
@@ -312,21 +327,29 @@ export default function Stats() {
 		return `${minutes}m`;
 	}, []);
 
-	// Format date for display
-	const formatDateLabel = useCallback((dateStr, grouping) => {
-		if (!dateStr) return "-";
-		const date = new Date(dateStr);
-		if (grouping === "monthly") {
-			return date.toLocaleDateString(undefined, {
-				year: "numeric",
-				month: "short",
-			});
+	// Ensure dayjs uses the app language for month/day names
+	useEffect(() => {
+		// Prefer explicit lang from context; fallback to localStorage or English.
+		const initial = lang || localStorage.getItem("lang") || "en";
+		try {
+			dayjs.locale(initial);
+		} catch (e) {
+			dayjs.locale("en");
 		}
-		return date.toLocaleDateString(undefined, {
-			month: "short",
-			day: "numeric",
-		});
-	}, []);
+	}, [lang]);
+
+	// Format date for display using dayjs + current locale
+	const formatDateLabel = useCallback(
+		(dateStr, grouping) => {
+			if (!dateStr) return "-";
+			const d = dayjs(dateStr);
+			if (grouping === "monthly") {
+				return d.format("MMM YYYY");
+			}
+			return d.format("MMM D");
+		},
+		[lang],
+	);
 
 	// Calculate date range from preset
 	const getDateRangeFromPreset = useCallback((preset) => {
@@ -357,17 +380,94 @@ export default function Stats() {
 		[getDateRangeFromPreset],
 	);
 
-	// Handle date picker change
-	const handleDatePickerChange = useCallback((type, value) => {
-		setActivePreset(null); // Clear preset when manually changing dates
-		setDateRange((prev) => {
-			if (type === "start") {
-				return [value, prev[1]];
-			} else {
-				return [prev[0], value];
+	// Daterangepicker ref
+	const dateRangeRef = useRef(null);
+
+	// Initialize daterangepicker
+	useEffect(() => {
+		if (!dateRangeRef.current) return;
+
+		// Ensure jQuery is available globally before loading the plugin
+		if (typeof window !== "undefined") {
+			window.jQuery = window.$ = $;
+		}
+
+		let mounted = true;
+		(async () => {
+			try {
+				await import("daterangepicker");
+
+				if (!mounted) return;
+				const $el = $(dateRangeRef.current);
+				const startDate = dateRange[0]
+					? moment(dateRange[0].toDate())
+					: moment().subtract(29, "days");
+				const endDate = dateRange[1] ? moment(dateRange[1].toDate()) : moment();
+
+				$el.daterangepicker(
+					{
+						startDate,
+						endDate,
+						maxDate: moment(),
+						maxSpan: { days: 365 },
+						opens: "center",
+						locale: {
+							format: "DD/MM/YYYY",
+							applyLabel: t("apply") || "Apply",
+							cancelLabel: t("cancel") || "Cancel",
+							customRangeLabel: t("custom_range") || "Custom Range",
+						},
+						ranges: {
+							[t("7_days") || "Last 7 Days"]: [
+								moment().subtract(6, "days"),
+								moment(),
+							],
+							[t("30_days") || "Last 30 Days"]: [
+								moment().subtract(29, "days"),
+								moment(),
+							],
+							[t("90_days") || "Last 90 Days"]: [
+								moment().subtract(89, "days"),
+								moment(),
+							],
+						},
+					},
+					(start, end) => {
+						const diffDays = end.diff(start, "days");
+						if (diffDays > 365) {
+							setDateWarning(
+								t("date_range_max_warning") ||
+									"Date range cannot exceed 1 year. Please select a shorter range.",
+							);
+							return;
+						}
+						setActivePreset(null);
+						setDateRange([dayjs(start.toDate()), dayjs(end.toDate())]);
+					},
+				);
+			} catch (err) {
+				console.error("Failed to load daterangepicker plugin:", err);
 			}
-		});
-	}, []);
+		})();
+
+		return () => {
+			mounted = false;
+			if (dateRangeRef.current) {
+				const picker = $(dateRangeRef.current).data("daterangepicker");
+				if (picker) picker.remove();
+			}
+		};
+	}, [t]);
+
+	// Sync daterangepicker when presets change the dateRange
+	useEffect(() => {
+		if (!dateRangeRef.current) return;
+		const picker = $(dateRangeRef.current).data("daterangepicker");
+		if (picker && dateRange[0] && dateRange[1]) {
+			picker.setStartDate(moment(dateRange[0].toDate()));
+			picker.setEndDate(moment(dateRange[1].toDate()));
+		}
+	}, [dateRange]);
 
 	// Fetch decks list (for dropdown)
 	useEffect(() => {
@@ -508,6 +608,49 @@ export default function Stats() {
 
 		// Create PDF
 		const doc = new jsPDF();
+
+		// Türkçe dahil tüm Unicode karakterleri destekleyen Roboto fontunu yükle ve göm
+		let fontEmbedded = false;
+		try {
+			const res = await fetch("/fonts/Roboto-Regular.ttf");
+			if (!res.ok) throw new Error("Font fetch failed: " + res.status);
+			const buf = await res.arrayBuffer();
+			const bytes = new Uint8Array(buf);
+			let binary = "";
+			for (let i = 0; i < bytes.length; i += 0x8000) {
+				binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+			}
+			const b64 = btoa(binary);
+			doc.addFileToVFS("Roboto-Regular.ttf", b64);
+			doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+			fontEmbedded = true;
+		} catch (err) {
+			console.warn("Font yüklenemedi, varsayılan font kullanılacak:", err);
+		}
+
+		// Her doc.text() öncesinde çağrılacak kısayol
+		const setDocFont = (size) => {
+			if (fontEmbedded) doc.setFont("Roboto", "normal");
+			if (size) doc.setFontSize(size);
+		};
+
+		// Türkçe büyük harf dönüşümü
+		const toUpperTR = (str) =>
+			str
+				.replace(
+					/[iışğüöç]/g,
+					(c) =>
+						({
+							i: "İ",
+							ı: "I",
+							ş: "Ş",
+							ğ: "Ğ",
+							ü: "Ü",
+							ö: "Ö",
+							ç: "Ç",
+						})[c] ?? c,
+				)
+				.toLocaleUpperCase("tr-TR");
 		const pageWidth = doc.internal.pageSize.getWidth();
 		const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -535,7 +678,7 @@ export default function Stats() {
 		}
 
 		// Title
-		doc.setFontSize(22);
+		setDocFont(22);
 		doc.setTextColor(102, 126, 234);
 		doc.text(
 			t("statistics_report") || "Statistics Report",
@@ -546,7 +689,7 @@ export default function Stats() {
 		yPos += 8;
 
 		// Subtitle
-		doc.setFontSize(10);
+		setDocFont(10);
 		doc.setTextColor(148, 163, 184);
 		doc.text(
 			t("stats_subtitle") || "Track your learning progress",
@@ -557,7 +700,8 @@ export default function Stats() {
 		yPos += 10;
 
 		// Meta info
-		doc.setFontSize(9);
+		setDocFont(9);
+		doc.setTextColor(148, 163, 184);
 		doc.text(
 			`${dateRangeText}  •  ${selectedDeckName}  •  ${reportDate}`,
 			pageWidth / 2,
@@ -607,6 +751,8 @@ export default function Stats() {
 			},
 		];
 
+		const activeFont = fontEmbedded ? "Roboto" : "helvetica";
+
 		stats.forEach((stat, index) => {
 			const row = Math.floor(index / cols);
 			const col = index % cols;
@@ -616,13 +762,13 @@ export default function Stats() {
 			doc.setFillColor(30, 41, 59);
 			doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, "F");
 
-			doc.setFontSize(18);
+			setDocFont(18);
 			doc.setTextColor(stat.color[0], stat.color[1], stat.color[2]);
 			doc.text(stat.value, x + cardWidth / 2, y + 12, { align: "center" });
 
-			doc.setFontSize(7);
+			setDocFont(7);
 			doc.setTextColor(148, 163, 184);
-			doc.text(stat.label.toUpperCase(), x + cardWidth / 2, y + 20, {
+			doc.text(toUpperTR(stat.label), x + cardWidth / 2, y + 20, {
 				align: "center",
 			});
 		});
@@ -655,7 +801,7 @@ export default function Stats() {
 					setPageBackground();
 					yPos = 20;
 				}
-				doc.setFontSize(10);
+				setDocFont(10);
 				doc.setTextColor(102, 126, 234);
 				doc.text(chart.title, 15, yPos);
 				yPos += 5;
@@ -673,10 +819,10 @@ export default function Stats() {
 				yPos = 20;
 			}
 
-			doc.setFontSize(11);
+			setDocFont(11);
 			doc.setTextColor(226, 232, 240);
 			doc.text(t("card_performance") || "Card Performance", 15, yPos);
-			yPos += 2; // reduced spacing so title fits better
+			yPos += 2;
 
 			const tableData = cardsTable.map((card) => [
 				(card.front || "").substring(0, 35) +
@@ -710,7 +856,7 @@ export default function Stats() {
 					fillColor: [30, 41, 59],
 					textColor: [226, 232, 240],
 					fontSize: 8,
-					font: "helvetica",
+					font: fontEmbedded ? "Roboto" : "helvetica",
 					// Further reduced padding for tighter rows
 					cellPadding: { top: 3, right: 5, bottom: 3, left: 5 },
 					lineColor: [51, 65, 85],
@@ -722,6 +868,7 @@ export default function Stats() {
 					fillColor: [79, 70, 229], // Indigo gradient başlangıcı
 					textColor: [255, 255, 255],
 					fontSize: 9,
+					font: fontEmbedded ? "Roboto" : "helvetica",
 					fontStyle: "bold",
 					halign: "center",
 					cellPadding: { top: 4, right: 6, bottom: 4, left: 6 },
@@ -801,7 +948,7 @@ export default function Stats() {
 		const pageCount = doc.internal.getNumberOfPages();
 		for (let i = 1; i <= pageCount; i++) {
 			doc.setPage(i);
-			doc.setFontSize(8);
+			setDocFont(8);
 			doc.setTextColor(100, 116, 139);
 			doc.text(
 				`Generated by MemoDeck App • ${reportDate}`,
@@ -852,16 +999,110 @@ export default function Stats() {
 		[theme, chartColors],
 	);
 
+	// Fill missing dates/months so x-axis shows every value in range
+	const filledChartData = useMemo(() => {
+		const rawData = chartData.data || [];
+		if (!dateRange[0] || !dateRange[1] || rawData.length === 0) {
+			return { data: rawData, grouping: chartData.grouping || "daily" };
+		}
+
+		const start = dateRange[0];
+		const end = dateRange[1];
+		const diffDays = end.diff(start, "day");
+		const isDaily = diffDays <= 31;
+
+		const emptyEntry = (date) => ({
+			date,
+			cardsStudied: 0,
+			correct: 0,
+			incorrect: 0,
+			studyTimeSeconds: 0,
+		});
+
+		if (isDaily) {
+			const dataMap = new Map();
+			rawData.forEach((d) => {
+				const key = d.date?.substring(0, 10);
+				if (dataMap.has(key)) {
+					const ex = dataMap.get(key);
+					dataMap.set(key, {
+						date: key,
+						cardsStudied:
+							(parseInt(ex.cardsStudied) || 0) +
+							(parseInt(d.cardsStudied) || 0),
+						correct: (parseInt(ex.correct) || 0) + (parseInt(d.correct) || 0),
+						incorrect:
+							(parseInt(ex.incorrect) || 0) + (parseInt(d.incorrect) || 0),
+						studyTimeSeconds:
+							(parseInt(ex.studyTimeSeconds) || 0) +
+							(parseInt(d.studyTimeSeconds) || 0),
+					});
+				} else {
+					dataMap.set(key, { ...d, date: key });
+				}
+			});
+
+			const filled = [];
+			let current = start;
+			while (current.isBefore(end, "day") || current.isSame(end, "day")) {
+				const dateStr = current.format("YYYY-MM-DD");
+				filled.push(dataMap.get(dateStr) || emptyEntry(dateStr));
+				current = current.add(1, "day");
+			}
+			return { data: filled, grouping: "daily" };
+		} else {
+			const dataMap = new Map();
+			rawData.forEach((d) => {
+				const monthKey = d.date?.substring(0, 7);
+				if (dataMap.has(monthKey)) {
+					const ex = dataMap.get(monthKey);
+					dataMap.set(monthKey, {
+						date: monthKey + "-01",
+						cardsStudied:
+							(parseInt(ex.cardsStudied) || 0) +
+							(parseInt(d.cardsStudied) || 0),
+						correct: (parseInt(ex.correct) || 0) + (parseInt(d.correct) || 0),
+						incorrect:
+							(parseInt(ex.incorrect) || 0) + (parseInt(d.incorrect) || 0),
+						studyTimeSeconds:
+							(parseInt(ex.studyTimeSeconds) || 0) +
+							(parseInt(d.studyTimeSeconds) || 0),
+					});
+				} else {
+					dataMap.set(monthKey, {
+						...d,
+						date: monthKey + "-01",
+					});
+				}
+			});
+
+			const filled = [];
+			let current = start.startOf("month");
+			const endMonth = end.startOf("month");
+			while (
+				current.isBefore(endMonth, "month") ||
+				current.isSame(endMonth, "month")
+			) {
+				const monthKey = current.format("YYYY-MM");
+				filled.push(
+					dataMap.get(monthKey) || emptyEntry(current.format("YYYY-MM-01")),
+				);
+				current = current.add(1, "month");
+			}
+			return { data: filled, grouping: "monthly" };
+		}
+	}, [chartData, dateRange]);
+
 	// Activity line chart data
 	const activityChartData = useMemo(
 		() => ({
-			labels: (chartData.data || []).map((d) =>
-				formatDateLabel(d.date, chartData.grouping),
+			labels: (filledChartData.data || []).map((d) =>
+				formatDateLabel(d.date, filledChartData.grouping),
 			),
 			datasets: [
 				{
 					label: t("cards_studied") || "Cards Studied",
-					data: (chartData.data || []).map(
+					data: (filledChartData.data || []).map(
 						(d) => parseInt(d.cardsStudied) || 0,
 					),
 					borderColor: chartColors.primary,
@@ -871,19 +1112,21 @@ export default function Stats() {
 				},
 			],
 		}),
-		[chartData, chartColors, t, formatDateLabel],
+		[filledChartData, chartColors, t, formatDateLabel],
 	);
 
 	// Accuracy trend chart data
 	const accuracyChartData = useMemo(
 		() => ({
-			labels: (chartData.data || []).map((d) =>
-				formatDateLabel(d.date, chartData.grouping),
+			labels: (filledChartData.data || []).map((d) =>
+				formatDateLabel(d.date, filledChartData.grouping),
 			),
 			datasets: [
 				{
 					label: t("correct") || "Correct",
-					data: (chartData.data || []).map((d) => parseInt(d.correct) || 0),
+					data: (filledChartData.data || []).map(
+						(d) => parseInt(d.correct) || 0,
+					),
 					borderColor: chartColors.success,
 					backgroundColor: `${chartColors.success}20`,
 					fill: false,
@@ -891,7 +1134,9 @@ export default function Stats() {
 				},
 				{
 					label: t("incorrect") || "Incorrect",
-					data: (chartData.data || []).map((d) => parseInt(d.incorrect) || 0),
+					data: (filledChartData.data || []).map(
+						(d) => parseInt(d.incorrect) || 0,
+					),
 					borderColor: chartColors.error,
 					backgroundColor: `${chartColors.error}20`,
 					fill: false,
@@ -899,19 +1144,19 @@ export default function Stats() {
 				},
 			],
 		}),
-		[chartData, chartColors, t, formatDateLabel],
+		[filledChartData, chartColors, t, formatDateLabel],
 	);
 
 	// Study time bar chart data
 	const studyTimeChartData = useMemo(
 		() => ({
-			labels: (chartData.data || []).map((d) =>
-				formatDateLabel(d.date, chartData.grouping),
+			labels: (filledChartData.data || []).map((d) =>
+				formatDateLabel(d.date, filledChartData.grouping),
 			),
 			datasets: [
 				{
 					label: t("study_time") || "Study Time (min)",
-					data: (chartData.data || []).map((d) =>
+					data: (filledChartData.data || []).map((d) =>
 						Math.round((parseInt(d.studyTimeSeconds) || 0) / 60),
 					),
 					backgroundColor: chartColors.secondary,
@@ -919,7 +1164,7 @@ export default function Stats() {
 				},
 			],
 		}),
-		[chartData, chartColors, t, formatDateLabel],
+		[filledChartData, chartColors, t, formatDateLabel],
 	);
 
 	// Bar chart options
@@ -1058,7 +1303,7 @@ export default function Stats() {
 							display: "flex",
 							flexDirection: { xs: "column", md: "row" },
 							gap: 3,
-							alignItems: { xs: "stretch", md: "flex-end" },
+							alignItems: { xs: "stretch", md: "center" },
 						}}
 					>
 						{/* Deck Filter */}
@@ -1094,41 +1339,32 @@ export default function Stats() {
 							</Select>
 						</FormControl>
 
-						{/* Date Range Pickers */}
-						<LocalizationProvider dateAdapter={AdapterDayjs}>
-							<Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-								<DatePicker
-									label={t("start_date") || "Start Date"}
-									value={dateRange[0]}
-									onChange={(newValue) =>
-										handleDatePickerChange("start", newValue)
-									}
-									maxDate={dateRange[1] || dayjs()}
-									slotProps={{
-										textField: {
-											size: "small",
-											sx: { width: 160 },
-										},
-									}}
-								/>
-								<Typography sx={{ color: "text.cardSubtitle" }}>—</Typography>
-								<DatePicker
-									label={t("end_date") || "End Date"}
-									value={dateRange[1]}
-									onChange={(newValue) =>
-										handleDatePickerChange("end", newValue)
-									}
-									minDate={dateRange[0]}
-									maxDate={dayjs()}
-									slotProps={{
-										textField: {
-											size: "small",
-											sx: { width: 160 },
-										},
-									}}
-								/>
-							</Box>
-						</LocalizationProvider>
+						{/* Date Range Picker */}
+						{/* <Box
+							component="input"
+							ref={dateRangeRef}
+							readOnly
+							sx={{
+								px: 2,
+								py: 1,
+								borderRadius: "8px",
+								border: "1px solid",
+								borderColor: "divider",
+								bgcolor: "background.paper",
+								color: "text.cardTitle",
+								fontFamily: "Inter, sans-serif",
+								fontSize: 13,
+								minWidth: 220,
+								cursor: "pointer",
+								outline: "none",
+								"&:hover": {
+									borderColor: "primary.main",
+								},
+								"&:focus": {
+									borderColor: "primary.main",
+								},
+							}}
+						/> */}
 
 						{/* Quick Presets */}
 						<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
@@ -1230,7 +1466,7 @@ export default function Stats() {
 							}}
 						>
 							{t("study_activity") || "Study Activity"}
-							{chartData.grouping === "monthly" && (
+							{filledChartData.grouping === "monthly" && (
 								<Chip
 									size="small"
 									label={t("monthly") || "Monthly"}
@@ -1239,7 +1475,7 @@ export default function Stats() {
 							)}
 						</Typography>
 						<Box sx={{ height: 300 }}>
-							{chartData.data?.length > 0 ? (
+							{filledChartData.data?.length > 0 ? (
 								<Line
 									id="activity-chart"
 									data={activityChartData}
@@ -1291,7 +1527,7 @@ export default function Stats() {
 							{t("accuracy_trend") || "Accuracy Trend"}
 						</Typography>
 						<Box sx={{ height: 280 }}>
-							{chartData.data?.length > 0 ? (
+							{filledChartData.data?.length > 0 ? (
 								<Line
 									id="accuracy-chart"
 									data={accuracyChartData}
@@ -1343,7 +1579,7 @@ export default function Stats() {
 							{t("study_time_chart") || "Study Time"}
 						</Typography>
 						<Box sx={{ height: 280 }}>
-							{chartData.data?.length > 0 ? (
+							{filledChartData.data?.length > 0 ? (
 								<Bar
 									id="study-time-chart"
 									data={studyTimeChartData}
@@ -1579,6 +1815,23 @@ export default function Stats() {
 					)}
 				</StyledCard>
 			</MotionBox>
+
+			{/* Date range warning */}
+			<Snackbar
+				open={!!dateWarning}
+				autoHideDuration={4000}
+				onClose={() => setDateWarning("")}
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+			>
+				<Alert
+					onClose={() => setDateWarning("")}
+					severity="warning"
+					variant="filled"
+					sx={{ width: "100%", color: "#fff" }}
+				>
+					{dateWarning}
+				</Alert>
+			</Snackbar>
 		</PageContainer>
 	);
 }

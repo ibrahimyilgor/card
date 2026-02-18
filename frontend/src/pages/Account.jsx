@@ -444,6 +444,11 @@ export default function Account() {
 											height: "100%",
 											border: `1px solid ${alpha("#f59e0b", 0.3)}`,
 											background: alpha("#f59e0b", 0.02),
+											"&:hover": {
+												borderColor: alpha("#f59e0b", 0.6),
+												boxShadow: `0 12px 40px ${alpha("#f59e0b", 0.18)}`,
+												transform: "translateY(-2px)",
+											},
 											display: "flex",
 											flexDirection: "column",
 										}}
@@ -521,6 +526,13 @@ export default function Account() {
 											height: "100%",
 											border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
 											background: alpha(theme.palette.error.main, 0.02),
+											"&:hover": {
+												borderColor: (theme) =>
+													alpha(theme.palette.error.main, 0.65),
+												boxShadow: (theme) =>
+													`0 12px 40px ${alpha(theme.palette.error.main, 0.18)}`,
+												transform: "translateY(-2px)",
+											},
 											display: "flex",
 											flexDirection: "column",
 										}}
