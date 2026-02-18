@@ -366,6 +366,7 @@
 	"adCloseHint": "Click X to close",
 	"stats_locked_title": "Upgrade your plan to unlock advanced statistics",
 	"stats_locked_description": "Get deeper insights into your learning patterns with our premium statistics features.",
+	"stats_preview_description": "This is a preview with sample data. Upgrade your plan to see your real statistics.",
 	"upgrade_plan": "Upgrade Plan",
 	"limitWarningTitle": "Plan Limit Exceeded",
 	"limitWarningDescription": "You have exceeded your plan limits. Please reduce your content or upgrade your plan to continue.",

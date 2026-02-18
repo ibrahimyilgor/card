@@ -7,7 +7,7 @@ import {
 	useRef,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, MotionConfig } from "framer-motion";
 import {
 	Box,
 	Typography,
@@ -73,6 +73,35 @@ import {
 	getChartData,
 	getCardsTable,
 } from "../services/statsServices";
+
+// ---------------------------------------------------------------------------
+// Mock data shown to free-plan users so they can preview the stats page
+// ---------------------------------------------------------------------------
+const _mockCounts = [8,15,0,22,18,30,12,25,0,20,35,10,28,15,22,8,18,32,14,25,0,20,28,16,22,10,30,18,25,14];
+const MOCK_FILTERED_STATS = {
+	cardsStudied: 247,
+	correct: 189,
+	incorrect: 58,
+	studyTimeSeconds: 7320,
+	sessions: 18,
+};
+const MOCK_CHART_DATA = {
+	grouping: "daily",
+	data: _mockCounts.map((n, i) => {
+		const d = new Date(2026, 0, 20 + i);
+		const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+		return { date, cardsStudied: n, correct: Math.floor(n * 0.8), incorrect: Math.ceil(n * 0.2), studyTimeSeconds: n * 40 };
+	}),
+};
+const MOCK_CARDS_TABLE = [
+	{ id: 1, front: "apple → elma", deck_title: "English", times_played: 28, correct: 24, wrong: 4, accuracy: 86 },
+	{ id: 2, front: "book → kitap", deck_title: "English", times_played: 22, correct: 18, wrong: 4, accuracy: 82 },
+	{ id: 3, front: "water → su", deck_title: "English", times_played: 19, correct: 14, wrong: 5, accuracy: 74 },
+	{ id: 4, front: "house → ev", deck_title: "English", times_played: 17, correct: 10, wrong: 7, accuracy: 59 },
+	{ id: 5, front: "cat → kedi", deck_title: "English", times_played: 15, correct: 8, wrong: 7, accuracy: 53 },
+	{ id: 6, front: "dog → köpek", deck_title: "English", times_played: 12, correct: 5, wrong: 7, accuracy: 42 },
+];
+// ---------------------------------------------------------------------------
 
 // Register Chart.js components
 ChartJS.register(
@@ -212,95 +241,13 @@ export default function Stats() {
 	// Date range warning
 	const [dateWarning, setDateWarning] = useState("");
 
-	// If user doesn't have advanced stats access, show upgrade prompt
-	if (!planLoading && !advancedStats) {
-		return (
-			<PageContainer centered>
-				<MotionBox
-					initial={{ scale: 0.95, opacity: 0 }}
-					animate={{ scale: 1, opacity: 1 }}
-					transition={{ duration: 0.3 }}
-					sx={{
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
-						gap: 3,
-						textAlign: "center",
-						maxWidth: 450,
-						p: 4,
-					}}
-				>
-					<Box
-						sx={{
-							width: 100,
-							height: 100,
-							borderRadius: "24px",
-							background:
-								"linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
-						<LockIcon sx={{ fontSize: 48, color: "warning.main" }} />
-					</Box>
-					<Typography
-						variant="h4"
-						sx={{
-							fontWeight: 700,
-							color: "text.cardTitle",
-							fontFamily: "Inter, sans-serif",
-						}}
-					>
-						{t("stats_locked_title", "Statistics Locked")}
-					</Typography>
-					<Typography
-						variant="body1"
-						sx={{
-							color: "text.cardSubtitle",
-							fontFamily: "Inter, sans-serif",
-						}}
-					>
-						{t(
-							"stats_locked_description",
-							"Advanced statistics are available for Pro and Premium plan users. Upgrade your plan to access detailed insights, charts, and performance tracking.",
-						)}
-					</Typography>
-					<Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-						<Button
-							variant="contained"
-							color="primary"
-							startIcon={<UpgradeIcon />}
-							onClick={() => navigate("/plans")}
-							sx={{
-								py: 1.5,
-								px: 4,
-								fontWeight: 600,
-								borderRadius: 2,
-							}}
-						>
-							{t("upgrade_plan", "Upgrade Plan")}
-						</Button>
-						<Button
-							variant="outlined"
-							onClick={() => navigate("/")}
-							sx={{
-								py: 1.5,
-								px: 3,
-								borderRadius: 2,
-							}}
-						>
-							{t("back_to_decks", "Back to Decks")}
-						</Button>
-					</Box>
-					<Typography variant="caption" sx={{ color: "text.disabled", mt: 1 }}>
-						{t("current_plan", "Current plan")}:{" "}
-						{planCode?.charAt(0).toUpperCase() + planCode?.slice(1)}
-					</Typography>
-				</MotionBox>
-			</PageContainer>
-		);
-	}
+	// Whether user is on a free plan (no advanced stats access)
+	const isLocked = !planLoading && !advancedStats;
+
+	// Use mock data for locked users so they can preview what they'd get
+	const effectiveStats = isLocked ? MOCK_FILTERED_STATS : filteredStats;
+	const effectiveChartData = isLocked ? MOCK_CHART_DATA : chartData;
+	const effectiveCardsTable = isLocked ? MOCK_CARDS_TABLE : cardsTable;
 
 	// Chart colors from theme
 	const chartColors = useMemo(
@@ -545,14 +492,14 @@ export default function Stats() {
 
 	// Download report as PDF file
 	const handleDownloadReport = useCallback(async () => {
-		if (!filteredStats) return;
+		if (!effectiveStats) return;
 
-		const total = (filteredStats.correct || 0) + (filteredStats.incorrect || 0);
+		const total = (effectiveStats.correct || 0) + (effectiveStats.incorrect || 0);
 		const accuracyPercent =
-			total > 0 ? Math.round((filteredStats.correct / total) * 100) : 0;
-		const hours = Math.floor((filteredStats.studyTimeSeconds || 0) / 3600);
+			total > 0 ? Math.round((effectiveStats.correct / total) * 100) : 0;
+		const hours = Math.floor((effectiveStats.studyTimeSeconds || 0) / 3600);
 		const minutes = Math.floor(
-			((filteredStats.studyTimeSeconds || 0) % 3600) / 60,
+			((effectiveStats.studyTimeSeconds || 0) % 3600) / 60,
 		);
 		const studyTimeFormatted =
 			hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
@@ -721,17 +668,17 @@ export default function Stats() {
 		const stats = [
 			{
 				label: t("cards_studied") || "Cards Studied",
-				value: String(filteredStats.cardsStudied || 0),
+				value: String(effectiveStats.cardsStudied || 0),
 				color: [59, 130, 246],
 			},
 			{
 				label: t("correct_answers") || "Correct",
-				value: String(filteredStats.correct || 0),
+				value: String(effectiveStats.correct || 0),
 				color: [34, 197, 94],
 			},
 			{
 				label: t("wrong_answers") || "Incorrect",
-				value: String(filteredStats.incorrect || 0),
+				value: String(effectiveStats.incorrect || 0),
 				color: [239, 68, 68],
 			},
 			{
@@ -746,7 +693,7 @@ export default function Stats() {
 			},
 			{
 				label: t("sessions") || "Sessions",
-				value: String(filteredStats.sessions || 0),
+				value: String(effectiveStats.sessions || 0),
 				color: [245, 158, 11],
 			},
 		];
@@ -811,7 +758,7 @@ export default function Stats() {
 		});
 
 		// Card Performance table
-		if (cardsTable.length > 0) {
+		if (effectiveCardsTable.length > 0) {
 			// Check if we need a new page
 			if (yPos > 240) {
 				doc.addPage();
@@ -824,7 +771,7 @@ export default function Stats() {
 			doc.text(t("card_performance") || "Card Performance", 15, yPos);
 			yPos += 2;
 
-			const tableData = cardsTable.map((card) => [
+			const tableData = effectiveCardsTable.map((card) => [
 				(card.front || "").substring(0, 35) +
 					(card.front?.length > 35 ? "..." : ""),
 				String(card.times_played || 0),
@@ -960,7 +907,7 @@ export default function Stats() {
 
 		// Save PDF
 		doc.save(`stats-report-${dayjs().format("YYYY-MM-DD")}.pdf`);
-	}, [filteredStats, cardsTable, dateRange, selectedDeck, decksData, t]);
+	}, [effectiveStats, effectiveCardsTable, dateRange, selectedDeck, decksData, t]);
 
 	// Line chart options
 	const lineChartOptions = useMemo(
@@ -1001,9 +948,11 @@ export default function Stats() {
 
 	// Fill missing dates/months so x-axis shows every value in range
 	const filledChartData = useMemo(() => {
-		const rawData = chartData.data || [];
+		// Use mock chart data for locked users (skip date-range filling)
+		if (isLocked) return effectiveChartData;
+		const rawData = effectiveChartData.data || [];
 		if (!dateRange[0] || !dateRange[1] || rawData.length === 0) {
-			return { data: rawData, grouping: chartData.grouping || "daily" };
+			return { data: rawData, grouping: effectiveChartData.grouping || "daily" };
 		}
 
 		const start = dateRange[0];
@@ -1091,7 +1040,7 @@ export default function Stats() {
 			}
 			return { data: filled, grouping: "monthly" };
 		}
-	}, [chartData, dateRange]);
+	}, [effectiveChartData, dateRange, isLocked]);
 
 	// Activity line chart data
 	const activityChartData = useMemo(
@@ -1167,6 +1116,83 @@ export default function Stats() {
 		[filledChartData, chartColors, t, formatDateLabel],
 	);
 
+	// Improve Chart.js canvas reliability when preview lock, scrolling or
+	// layout changes occur. Use debounced updates, scroll listener,
+	// visibilitychange and a ResizeObserver to trigger chart resize/update.
+	useEffect(() => {
+		let timeoutId = null;
+		let mounted = true;
+
+		const updateAllCharts = () => {
+			["activity-chart", "accuracy-chart", "study-time-chart"].forEach(
+				(id) => {
+					try {
+						const c = ChartJS.getChart(id);
+						if (c) {
+							// call resize + update to ensure canvas paints
+							if (typeof c.resize === "function") c.resize();
+							if (typeof c.update === "function") c.update();
+						} else {
+							// If chart instance not found, try to trigger resize event
+							// so react-chartjs-2 will pick it up when it mounts.
+							try {
+								window.dispatchEvent(new Event("resize"));
+							} catch (e) {}
+						}
+					} catch (e) {
+						// ignore
+					}
+				},
+			);
+		};
+
+		const scheduleUpdate = () => {
+			if (!mounted) return;
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => {
+				try {
+					updateAllCharts();
+				} catch (e) {}
+			}, 120);
+		};
+
+		// run immediately and after a small delay to catch layout shifts
+		scheduleUpdate();
+
+		// on scroll, schedule an update (fixes charts appearing when user scrolls)
+		window.addEventListener("scroll", scheduleUpdate, { passive: true });
+
+		// when tab becomes visible again, force update
+		const onVisibility = () => {
+			if (document.visibilityState === "visible") scheduleUpdate();
+		};
+		document.addEventListener("visibilitychange", onVisibility);
+
+		// ResizeObserver to watch body size changes
+		let ro = null;
+		try {
+			ro = new ResizeObserver(scheduleUpdate);
+			ro.observe(document.body);
+		} catch (e) {
+			// ResizeObserver not supported -> fall back to window resize
+			window.addEventListener("resize", scheduleUpdate);
+		}
+
+		return () => {
+			mounted = false;
+			clearTimeout(timeoutId);
+			window.removeEventListener("scroll", scheduleUpdate);
+			document.removeEventListener("visibilitychange", onVisibility);
+			if (ro) {
+				try {
+					ro.disconnect();
+				} catch (e) {}
+			} else {
+				window.removeEventListener("resize", scheduleUpdate);
+			}
+		};
+	}, [isLocked, filledChartData]);
+
 	// Bar chart options
 	const barChartOptions = useMemo(
 		() => ({
@@ -1194,13 +1220,13 @@ export default function Stats() {
 
 	// Calculate accuracy percentage
 	const accuracy = useMemo(() => {
-		if (!filteredStats) return 0;
-		const total = (filteredStats.correct || 0) + (filteredStats.incorrect || 0);
+		if (!effectiveStats) return 0;
+		const total = (effectiveStats.correct || 0) + (effectiveStats.incorrect || 0);
 		if (total === 0) return 0;
-		return Math.round((filteredStats.correct / total) * 100);
-	}, [filteredStats]);
+		return Math.round((effectiveStats.correct / total) * 100);
+	}, [effectiveStats]);
 
-	if (loading && !filteredStats) {
+	if (!isLocked && loading && !filteredStats) {
 		return (
 			<PageContainer>
 				<StatsSkeleton />
@@ -1210,6 +1236,67 @@ export default function Stats() {
 
 	return (
 		<PageContainer>
+			{/* ── Locked / preview banner ── */}
+			{isLocked && (
+				<MotionBox
+					initial={{ y: -8, opacity: 0 }}
+					animate={{ y: 0, opacity: 1 }}
+					transition={{ duration: 0.3 }}
+					sx={{
+						mb: 3,
+						p: 2.5,
+						borderRadius: 3,
+						background:
+							"linear-gradient(135deg, rgba(251,191,36,0.15) 0%, rgba(245,158,11,0.08) 100%)",
+						border: "1px solid",
+						borderColor: "warning.main",
+						display: "flex",
+						alignItems: { xs: "flex-start", sm: "center" },
+						flexDirection: { xs: "column", sm: "row" },
+						gap: 2,
+					}}
+				>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1 }}>
+						<LockIcon sx={{ color: "warning.main", flexShrink: 0 }} />
+						<Box>
+							<Typography
+								variant="subtitle2"
+								sx={{ fontWeight: 700, color: "warning.main", fontFamily: "Inter, sans-serif" }}
+							>
+								{t("stats_locked_title") || "Statistics Locked"}
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{ color: "text.cardSubtitle", fontFamily: "Inter, sans-serif", mt: 0.25 }}
+							>
+								{t("stats_preview_description") ||
+									"This is a preview with sample data. Upgrade your plan to see your real statistics."}
+							</Typography>
+						</Box>
+					</Box>
+					<Button
+						variant="contained"
+						color="warning"
+						size="small"
+						startIcon={<UpgradeIcon />}
+						onClick={() => navigate("/plans")}
+						sx={{ fontWeight: 600, borderRadius: 2, whiteSpace: "nowrap", flexShrink: 0 }}
+					>
+						{t("upgrade_plan") || "Upgrade Plan"}
+					</Button>
+				</MotionBox>
+			)}
+
+			{/* ── Main content (blurred & non-interactive for free users) ── */}
+			<MotionConfig reducedMotion={isLocked ? "always" : "never"}>
+			<Box
+				sx={{
+					filter: isLocked ? "blur(1.5px)" : "none",
+					pointerEvents: isLocked ? "none" : "auto",
+					userSelect: isLocked ? "none" : "auto",
+					transition: "filter 0.2s",
+				}}
+			>
 			{/* Header */}
 			<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 3 }}>
 				<Box
@@ -1252,7 +1339,7 @@ export default function Stats() {
 							<IconButton
 								onClick={handleDownloadReport}
 								sx={{ color: "text.cardSubtitle" }}
-								disabled={!filteredStats}
+								disabled={!effectiveStats || isLocked}
 							>
 								<DownloadIcon />
 							</IconButton>
@@ -1400,21 +1487,21 @@ export default function Stats() {
 				<StatCard
 					icon={SchoolIcon}
 					title={t("cards_studied") || "Cards Studied"}
-					value={filteredStats?.cardsStudied || 0}
+					value={effectiveStats?.cardsStudied || 0}
 					color={chartColors.primary}
 					delay={0.1}
 				/>
 				<StatCard
 					icon={CheckCircleIcon}
 					title={t("correct_answers") || "Correct"}
-					value={filteredStats?.correct || 0}
+					value={effectiveStats?.correct || 0}
 					color={chartColors.success}
 					delay={0.15}
 				/>
 				<StatCard
 					icon={ErrorIcon}
 					title={t("wrong_answers") || "Incorrect"}
-					value={filteredStats?.incorrect || 0}
+					value={effectiveStats?.incorrect || 0}
 					color={chartColors.error}
 					delay={0.2}
 				/>
@@ -1428,14 +1515,14 @@ export default function Stats() {
 				<StatCard
 					icon={AccessTimeIcon}
 					title={t("study_time") || "Study Time"}
-					value={formatDuration(filteredStats?.studyTimeSeconds || 0)}
+					value={formatDuration(effectiveStats?.studyTimeSeconds || 0)}
 					color={chartColors.info}
 					delay={0.3}
 				/>
 				<StatCard
 					icon={CalendarTodayIcon}
 					title={t("sessions") || "Sessions"}
-					value={filteredStats?.sessions || 0}
+					value={effectiveStats?.sessions || 0}
 					color={chartColors.warning}
 					delay={0.35}
 				/>
@@ -1627,7 +1714,7 @@ export default function Stats() {
 						{t("card_performance") || "Card Performance"}
 					</Typography>
 
-					{cardsTable.length > 0 ? (
+					{effectiveCardsTable.length > 0 ? (
 						<TableContainer sx={{ maxHeight: 400 }}>
 							<Table stickyHeader size="small">
 								<TableHead>
@@ -1695,7 +1782,7 @@ export default function Stats() {
 									</TableRow>
 								</TableHead>
 								<TableBody>
-									{cardsTable.map((card) => (
+									{effectiveCardsTable.map((card) => (
 										<TableRow key={card.id} hover>
 											<TableCell
 												sx={{
@@ -1832,6 +1919,8 @@ export default function Stats() {
 					{dateWarning}
 				</Alert>
 			</Snackbar>
+			</Box>{/* end main-content blur wrapper */}
+			</MotionConfig>
 		</PageContainer>
 	);
 }
