@@ -63,7 +63,7 @@ export default function WriteInput({
 						fullWidth
 						autoFocus
 						disabled={disabled || showResult}
-						error={showResult && !isCorrect}
+						error={showResult && !isCorrect && !isClose}
 						sx={{
 							"& .MuiOutlinedInput-root": {
 								...(showResult &&
@@ -72,7 +72,15 @@ export default function WriteInput({
 										"& fieldset": { borderColor: "#22c55e" },
 									}),
 								...(showResult &&
-									!isCorrect && {
+									!isCorrect &&
+									isClose && {
+										borderColor: "#f59e0b",
+										"& fieldset": { borderColor: "#f59e0b" },
+									}),
+
+								...(showResult &&
+									!isCorrect &&
+									!isClose && {
 										borderColor: "#ef4444",
 										"& fieldset": { borderColor: "#ef4444" },
 									}),
@@ -145,9 +153,15 @@ export default function WriteInput({
 									borderRadius: 3,
 									background: isCorrect
 										? alpha("#22c55e", 0.1)
-										: alpha("#ef4444", 0.1),
+										: isClose
+											? alpha("#f59e0b", 0.1)
+											: alpha("#ef4444", 0.1),
 									border: `1px solid ${
-										isCorrect ? alpha("#22c55e", 0.3) : alpha("#ef4444", 0.3)
+										isCorrect
+											? alpha("#22c55e", 0.3)
+											: isClose
+												? alpha("#f59e0b", 0.3)
+												: alpha("#ef4444", 0.3)
 									}`,
 									textAlign: "center",
 								}}
@@ -163,6 +177,8 @@ export default function WriteInput({
 								>
 									{isCorrect ? (
 										<CheckCircleIcon sx={{ color: "#22c55e", fontSize: 28 }} />
+									) : isClose ? (
+										<CancelIcon sx={{ color: "#f59e0b", fontSize: 28 }} />
 									) : (
 										<CancelIcon sx={{ color: "#ef4444", fontSize: 28 }} />
 									)}
@@ -170,15 +186,19 @@ export default function WriteInput({
 										variant="h6"
 										sx={{
 											fontWeight: 600,
-											color: isCorrect ? "#22c55e" : "#ef4444",
+											color: isCorrect
+												? "#22c55e"
+												: isClose
+													? "#f59e0b"
+													: "#ef4444",
 											fontFamily: "Inter, sans-serif",
 										}}
 									>
 										{isCorrect
 											? t("correct_answer") || "Correct!"
 											: isClose
-											? t("almost_correct") || "Almost!"
-											: t("wrong_answer") || "Incorrect"}
+												? t("almost_correct") || "Almost!"
+												: t("wrong_answer") || "Incorrect"}
 									</Typography>
 								</Box>
 

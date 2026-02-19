@@ -280,7 +280,7 @@
 	"direction_normal": "Normal",
 	"direction_reverse": "Reverse",
 	"hard_mode": "Hard Mode",
-	"hard_mode_desc": "Only study cards you got wrong",
+	"hard_mode_desc": "Only study cards you got correct less than 50%",
 	"download_csv": "Download CSV",
 	"download_error": "Error downloading file",
 	"download_success": "File downloaded successfully",

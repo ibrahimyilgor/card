@@ -18,7 +18,7 @@ const CardView = ({
 				key={currentCardIndex}
 				initial={{
 					opacity: 0,
-					x: direction * 100,
+					x: direction * -100,
 					scale: 0.95,
 				}}
 				animate={{
@@ -28,7 +28,7 @@ const CardView = ({
 				}}
 				exit={{
 					opacity: 0,
-					x: direction * -100,
+					x: direction * 100,
 					scale: 0.95,
 				}}
 				transition={{

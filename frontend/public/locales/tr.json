@@ -280,7 +280,7 @@
 	"direction_normal": "Normal",
 	"direction_reverse": "Ters",
 	"hard_mode": "Zor Mod",
-	"hard_mode_desc": "Sadece yanlış yaptığınız kartları çalışın",
+	"hard_mode_desc": "Sadece %50'den az doğru bildiğiniz kartları çalışın",
 	"download_csv": "CSV İndir",
 	"download_error": "Dosya indirme hatası",
 	"download_success": "Dosya başarıyla indirildi",

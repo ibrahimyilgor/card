@@ -180,7 +180,7 @@ export default function Game({ onBackToDecks }) {
 	// Handle timer expiration
 	useEffect(() => {
 		if (timer.hasExpired && challengeType === "timed" && !gameEnded) {
-			playSound(SOUNDS.GAME_OVER);
+			playSound(SOUNDS.SUCCESS);
 			setGameEnded(true);
 		}
 	}, [timer.hasExpired, challengeType, gameEnded]);
@@ -188,7 +188,7 @@ export default function Game({ onBackToDecks }) {
 	// Handle game over in survival challenge
 	useEffect(() => {
 		if (lives.isGameOver && challengeType === "survival") {
-			playSound(SOUNDS.GAME_OVER);
+			playSound(SOUNDS.SUCCESS);
 			setGameEnded(true);
 		}
 	}, [lives.isGameOver, challengeType]);
@@ -348,7 +348,7 @@ export default function Game({ onBackToDecks }) {
 			const res = await validateAnswer(flashcard.id, userAnswer);
 			setWriteResult(res.data);
 			setTimeout(() => {
-				handleAnswer(res.data.correct);
+				handleAnswer(res.data.isClose);
 			}, 2000);
 		} catch (err) {
 			console.error("Error validating answer:", err);
@@ -360,7 +360,7 @@ export default function Game({ onBackToDecks }) {
 		setShowChoiceResult(true);
 		setTimeout(() => {
 			handleAnswer(isCorrect);
-		}, 1500);
+		}, 500);
 	};
 
 	const handleMatchComplete = ({ attempts, totalPairs }) => {
@@ -572,6 +572,7 @@ export default function Game({ onBackToDecks }) {
 				onMatch={(isCorrect) => {
 					playSound(isCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
 				}}
+				onCardClick={() => playSound(SOUNDS.FLIP)}
 				challengeType={challengeType}
 				timer={timer}
 				t={t}

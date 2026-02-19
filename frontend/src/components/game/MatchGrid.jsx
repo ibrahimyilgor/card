@@ -6,7 +6,12 @@ import { I18nContext } from "../../utils/i18n";
 
 const MotionBox = motion.create(Box);
 
-export default function MatchGrid({ flashcards = [], onComplete, onMatch }) {
+export default function MatchGrid({
+	flashcards = [],
+	onComplete,
+	onMatch,
+	onCardClick,
+}) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 	const isDark = theme.palette.mode === "dark";
@@ -60,6 +65,9 @@ export default function MatchGrid({ flashcards = [], onComplete, onMatch }) {
 		if (matched.includes(cardId)) return;
 		if (flipped.includes(cardId)) return;
 		if (flipped.length === 2) return;
+
+		// play flip sound / notify parent before the card visually flips
+		onCardClick?.(cardId);
 
 		const newFlipped = [...flipped, cardId];
 		setFlipped(newFlipped);

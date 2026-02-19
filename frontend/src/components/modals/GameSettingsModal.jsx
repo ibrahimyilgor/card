@@ -685,33 +685,6 @@ export default function GameSettingsModal({
 						}}
 					/>
 				</SettingOption>
-
-				{/* Keyboard shortcuts info */}
-				<MotionBox
-					initial={{ y: 10 }}
-					animate={{ y: 0 }}
-					transition={{ delay: 0.2, duration: 0.3 }}
-					sx={{
-						p: 2,
-						borderRadius: 2,
-						background: (theme) => alpha(theme.palette.info.main, 0.08),
-						border: (theme) =>
-							`1px solid ${alpha(theme.palette.info.main, 0.2)}`,
-					}}
-				>
-					<Typography
-						variant="caption"
-						sx={{
-							color: "info.main",
-							fontFamily: "Inter, sans-serif",
-							display: "block",
-						}}
-					>
-						💡{" "}
-						{t("keyboard_tip") ||
-							"Keyboard shortcuts: Space/Enter to flip, Arrow keys or 1-4 for answers"}
-					</Typography>
-				</MotionBox>
 			</Box>
 		</StyledModal>
 	);
