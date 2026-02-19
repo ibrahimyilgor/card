@@ -356,9 +356,8 @@ export default function Stats() {
 				const monthKey = /^\d{4}-\d{2}$/.test(dateStr)
 					? dateStr + "-01"
 					: dateStr;
-				return (/T|Z/.test(monthKey)
-					? dayjs.utc(monthKey).local()
-					: dayjs(monthKey)
+				return (
+					/T|Z/.test(monthKey) ? dayjs.utc(monthKey).local() : dayjs(monthKey)
 				).format("MMM YYYY");
 			}
 

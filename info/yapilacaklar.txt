@@ -1,4 +1,4 @@
--web stats grafiklerin x eksenine dil ekle
+-standard modeda son karta iki kere hızlı basarsak coklu sayıyor
 
 -plana göre özelliklerin açılıp kapatılması.
     +nelerin kısatlanacağına karar ver
