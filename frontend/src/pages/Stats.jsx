@@ -105,7 +105,7 @@ const MOCK_CHART_DATA = {
 const MOCK_CARDS_TABLE = [
 	{
 		id: 1,
-		front: "apple → elma",
+		front: "apple",
 		deck_title: "English",
 		times_played: 28,
 		correct: 24,
@@ -114,7 +114,7 @@ const MOCK_CARDS_TABLE = [
 	},
 	{
 		id: 2,
-		front: "book → kitap",
+		front: "book",
 		deck_title: "English",
 		times_played: 22,
 		correct: 18,
@@ -123,7 +123,7 @@ const MOCK_CARDS_TABLE = [
 	},
 	{
 		id: 3,
-		front: "water → su",
+		front: "water",
 		deck_title: "English",
 		times_played: 19,
 		correct: 14,
@@ -132,7 +132,7 @@ const MOCK_CARDS_TABLE = [
 	},
 	{
 		id: 4,
-		front: "house → ev",
+		front: "house",
 		deck_title: "English",
 		times_played: 17,
 		correct: 10,
@@ -141,7 +141,7 @@ const MOCK_CARDS_TABLE = [
 	},
 	{
 		id: 5,
-		front: "cat → kedi",
+		front: "cat",
 		deck_title: "English",
 		times_played: 15,
 		correct: 8,
@@ -150,7 +150,7 @@ const MOCK_CARDS_TABLE = [
 	},
 	{
 		id: 6,
-		front: "dog → köpek",
+		front: "dog",
 		deck_title: "English",
 		times_played: 12,
 		correct: 5,
