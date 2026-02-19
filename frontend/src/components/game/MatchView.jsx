@@ -15,6 +15,7 @@ const MatchView = ({
 	onBackToDecks,
 	onRestart,
 	onMatchComplete,
+	onCardClick,
 	onMatch,
 	challengeType,
 	timer,
@@ -106,6 +107,7 @@ const MatchView = ({
 				flashcards={flashcards}
 				onComplete={onMatchComplete}
 				onMatch={onMatch}
+				onCardClick={onCardClick}
 			/>
 		</PageContainer>
 	);

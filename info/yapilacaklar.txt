@@ -1,5 +1,4 @@
--firebase authenticationa geçiş.
-    +login signup tamamen buradan
+-standard modeda son karta iki kere hızlı basarsak coklu sayıyor
 
 -plana göre özelliklerin açılıp kapatılması.
     +nelerin kısatlanacağına karar ver

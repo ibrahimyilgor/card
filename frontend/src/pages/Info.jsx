@@ -197,7 +197,7 @@ const DeckCard = forwardRef(
 									minHeight: "1.5em",
 								}}
 							>
-								{deck.description || t("no_description") || "No description"}
+								{deck.description || ""}
 							</Typography>
 						</Tooltip>
 

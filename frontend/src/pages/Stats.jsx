@@ -1,6 +1,13 @@
-import { useEffect, useState, useContext, useMemo, useCallback } from "react";
+import {
+	useEffect,
+	useState,
+	useContext,
+	useMemo,
+	useCallback,
+	useRef,
+} from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, MotionConfig } from "framer-motion";
 import {
 	Box,
 	Typography,
@@ -21,11 +28,16 @@ import {
 	IconButton,
 	TableSortLabel,
 	Button,
+	Snackbar,
+	Alert,
 } from "@mui/material";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import "dayjs/locale/tr";
+dayjs.extend(utc);
+import $ from "jquery";
+import moment from "moment";
+import "daterangepicker/daterangepicker.css";
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -64,6 +76,92 @@ import {
 	getCardsTable,
 } from "../services/statsServices";
 
+// ---------------------------------------------------------------------------
+// Mock data shown to free-plan users so they can preview the stats page
+// ---------------------------------------------------------------------------
+const _mockCounts = [
+	8, 15, 0, 22, 18, 30, 12, 25, 0, 20, 35, 10, 28, 15, 22, 8, 18, 32, 14, 25, 0,
+	20, 28, 16, 22, 10, 30, 18, 25, 14,
+];
+const MOCK_FILTERED_STATS = {
+	cardsStudied: 247,
+	correct: 189,
+	incorrect: 58,
+	studyTimeSeconds: 7320,
+	sessions: 18,
+};
+const MOCK_CHART_DATA = {
+	grouping: "daily",
+	data: _mockCounts.map((n, i) => {
+		const d = new Date(2026, 0, 20 + i);
+		const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+		return {
+			date,
+			cardsStudied: n,
+			correct: Math.floor(n * 0.8),
+			incorrect: Math.ceil(n * 0.2),
+			studyTimeSeconds: n * 40,
+		};
+	}),
+};
+const MOCK_CARDS_TABLE = [
+	{
+		id: 1,
+		front: "apple",
+		deck_title: "English",
+		times_played: 28,
+		correct: 24,
+		wrong: 4,
+		accuracy: 86,
+	},
+	{
+		id: 2,
+		front: "book",
+		deck_title: "English",
+		times_played: 22,
+		correct: 18,
+		wrong: 4,
+		accuracy: 82,
+	},
+	{
+		id: 3,
+		front: "water",
+		deck_title: "English",
+		times_played: 19,
+		correct: 14,
+		wrong: 5,
+		accuracy: 74,
+	},
+	{
+		id: 4,
+		front: "house",
+		deck_title: "English",
+		times_played: 17,
+		correct: 10,
+		wrong: 7,
+		accuracy: 59,
+	},
+	{
+		id: 5,
+		front: "cat",
+		deck_title: "English",
+		times_played: 15,
+		correct: 8,
+		wrong: 7,
+		accuracy: 53,
+	},
+	{
+		id: 6,
+		front: "dog",
+		deck_title: "English",
+		times_played: 12,
+		correct: 5,
+		wrong: 7,
+		accuracy: 42,
+	},
+];
+// ---------------------------------------------------------------------------
+
 // Register Chart.js components
 ChartJS.register(
 	CategoryScale,
@@ -81,10 +179,12 @@ const MotionBox = motion.create(Box);
 
 // Date preset buttons data
 const DATE_PRESETS = [
-	{ key: "today", days: 0 },
+	// { key: "today", days: 0 },
 	{ key: "7d", days: 7 },
 	{ key: "30d", days: 30 },
 	{ key: "90d", days: 90 },
+	{ key: "180d", days: 180 },
+	{ key: "1y", days: 365 },
 ];
 
 // Stats card component
@@ -175,7 +275,7 @@ const PresetButton = ({ label, active, onClick }) => (
 
 export default function Stats() {
 	const theme = useTheme();
-	const { t } = useContext(I18nContext);
+	const { t, lang } = useContext(I18nContext);
 	const navigate = useNavigate();
 
 	// Plan context for access control
@@ -197,95 +297,16 @@ export default function Stats() {
 	const [sortBy, setSortBy] = useState("times_played");
 	const [sortOrder, setSortOrder] = useState("desc");
 
-	// If user doesn't have advanced stats access, show upgrade prompt
-	if (!planLoading && !advancedStats) {
-		return (
-			<PageContainer centered>
-				<MotionBox
-					initial={{ scale: 0.95, opacity: 0 }}
-					animate={{ scale: 1, opacity: 1 }}
-					transition={{ duration: 0.3 }}
-					sx={{
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
-						gap: 3,
-						textAlign: "center",
-						maxWidth: 450,
-						p: 4,
-					}}
-				>
-					<Box
-						sx={{
-							width: 100,
-							height: 100,
-							borderRadius: "24px",
-							background:
-								"linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
-						<LockIcon sx={{ fontSize: 48, color: "warning.main" }} />
-					</Box>
-					<Typography
-						variant="h4"
-						sx={{
-							fontWeight: 700,
-							color: "text.cardTitle",
-							fontFamily: "Inter, sans-serif",
-						}}
-					>
-						{t("stats_locked_title", "Statistics Locked")}
-					</Typography>
-					<Typography
-						variant="body1"
-						sx={{
-							color: "text.cardSubtitle",
-							fontFamily: "Inter, sans-serif",
-						}}
-					>
-						{t(
-							"stats_locked_description",
-							"Advanced statistics are available for Pro and Premium plan users. Upgrade your plan to access detailed insights, charts, and performance tracking.",
-						)}
-					</Typography>
-					<Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-						<Button
-							variant="contained"
-							color="primary"
-							startIcon={<UpgradeIcon />}
-							onClick={() => navigate("/plans")}
-							sx={{
-								py: 1.5,
-								px: 4,
-								fontWeight: 600,
-								borderRadius: 2,
-							}}
-						>
-							{t("upgrade_plan", "Upgrade Plan")}
-						</Button>
-						<Button
-							variant="outlined"
-							onClick={() => navigate("/")}
-							sx={{
-								py: 1.5,
-								px: 3,
-								borderRadius: 2,
-							}}
-						>
-							{t("back_to_decks", "Back to Decks")}
-						</Button>
-					</Box>
-					<Typography variant="caption" sx={{ color: "text.disabled", mt: 1 }}>
-						{t("current_plan", "Current plan")}:{" "}
-						{planCode?.charAt(0).toUpperCase() + planCode?.slice(1)}
-					</Typography>
-				</MotionBox>
-			</PageContainer>
-		);
-	}
+	// Date range warning
+	const [dateWarning, setDateWarning] = useState("");
+
+	// Whether user is on a free plan (no advanced stats access)
+	const isLocked = !planLoading && !advancedStats;
+
+	// Use mock data for locked users so they can preview what they'd get
+	const effectiveStats = isLocked ? MOCK_FILTERED_STATS : filteredStats;
+	const effectiveChartData = isLocked ? MOCK_CHART_DATA : chartData;
+	const effectiveCardsTable = isLocked ? MOCK_CARDS_TABLE : cardsTable;
 
 	// Chart colors from theme
 	const chartColors = useMemo(
@@ -312,21 +333,42 @@ export default function Stats() {
 		return `${minutes}m`;
 	}, []);
 
-	// Format date for display
-	const formatDateLabel = useCallback((dateStr, grouping) => {
-		if (!dateStr) return "-";
-		const date = new Date(dateStr);
-		if (grouping === "monthly") {
-			return date.toLocaleDateString(undefined, {
-				year: "numeric",
-				month: "short",
-			});
+	// Ensure dayjs uses the app language for month/day names
+	useEffect(() => {
+		// Prefer explicit lang from context; fallback to localStorage or English.
+		const initial = lang || localStorage.getItem("lang") || "en";
+		try {
+			dayjs.locale(initial);
+		} catch (e) {
+			dayjs.locale("en");
 		}
-		return date.toLocaleDateString(undefined, {
-			month: "short",
-			day: "numeric",
-		});
-	}, []);
+	}, [lang]);
+
+	// Format date for display using dayjs + current locale
+	// Normalize incoming ISO timestamps (UTC) to local time so labels
+	// reflect the user's local day (avoids off-by-one due to UTC offsets).
+	const formatDateLabel = useCallback(
+		(dateStr, grouping) => {
+			if (!dateStr) return "-";
+
+			// Monthly keys sometimes come as "YYYY-MM" or full ISO — normalize
+			if (grouping === "monthly") {
+				const monthKey = /^\d{4}-\d{2}$/.test(dateStr)
+					? dateStr + "-01"
+					: dateStr;
+				return (
+					/T|Z/.test(monthKey) ? dayjs.utc(monthKey).local() : dayjs(monthKey)
+				).format("MMM YYYY");
+			}
+
+			// Plain YYYY-MM-DD: parse as local; ISO timestamp: convert UTC→local
+			if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+				return dayjs(dateStr).format("MMM D");
+			}
+			return dayjs.utc(dateStr).local().format("MMM D");
+		},
+		[lang],
+	);
 
 	// Calculate date range from preset
 	const getDateRangeFromPreset = useCallback((preset) => {
@@ -357,17 +399,94 @@ export default function Stats() {
 		[getDateRangeFromPreset],
 	);
 
-	// Handle date picker change
-	const handleDatePickerChange = useCallback((type, value) => {
-		setActivePreset(null); // Clear preset when manually changing dates
-		setDateRange((prev) => {
-			if (type === "start") {
-				return [value, prev[1]];
-			} else {
-				return [prev[0], value];
+	// Daterangepicker ref
+	const dateRangeRef = useRef(null);
+
+	// Initialize daterangepicker
+	useEffect(() => {
+		if (!dateRangeRef.current) return;
+
+		// Ensure jQuery is available globally before loading the plugin
+		if (typeof window !== "undefined") {
+			window.jQuery = window.$ = $;
+		}
+
+		let mounted = true;
+		(async () => {
+			try {
+				await import("daterangepicker");
+
+				if (!mounted) return;
+				const $el = $(dateRangeRef.current);
+				const startDate = dateRange[0]
+					? moment(dateRange[0].toDate())
+					: moment().subtract(29, "days");
+				const endDate = dateRange[1] ? moment(dateRange[1].toDate()) : moment();
+
+				$el.daterangepicker(
+					{
+						startDate,
+						endDate,
+						maxDate: moment(),
+						maxSpan: { days: 365 },
+						opens: "center",
+						locale: {
+							format: "DD/MM/YYYY",
+							applyLabel: t("apply") || "Apply",
+							cancelLabel: t("cancel") || "Cancel",
+							customRangeLabel: t("custom_range") || "Custom Range",
+						},
+						ranges: {
+							[t("7_days") || "Last 7 Days"]: [
+								moment().subtract(6, "days"),
+								moment(),
+							],
+							[t("30_days") || "Last 30 Days"]: [
+								moment().subtract(29, "days"),
+								moment(),
+							],
+							[t("90_days") || "Last 90 Days"]: [
+								moment().subtract(89, "days"),
+								moment(),
+							],
+						},
+					},
+					(start, end) => {
+						const diffDays = end.diff(start, "days");
+						if (diffDays > 365) {
+							setDateWarning(
+								t("date_range_max_warning") ||
+									"Date range cannot exceed 1 year. Please select a shorter range.",
+							);
+							return;
+						}
+						setActivePreset(null);
+						setDateRange([dayjs(start.toDate()), dayjs(end.toDate())]);
+					},
+				);
+			} catch (err) {
+				console.error("Failed to load daterangepicker plugin:", err);
 			}
-		});
-	}, []);
+		})();
+
+		return () => {
+			mounted = false;
+			if (dateRangeRef.current) {
+				const picker = $(dateRangeRef.current).data("daterangepicker");
+				if (picker) picker.remove();
+			}
+		};
+	}, [t]);
+
+	// Sync daterangepicker when presets change the dateRange
+	useEffect(() => {
+		if (!dateRangeRef.current) return;
+		const picker = $(dateRangeRef.current).data("daterangepicker");
+		if (picker && dateRange[0] && dateRange[1]) {
+			picker.setStartDate(moment(dateRange[0].toDate()));
+			picker.setEndDate(moment(dateRange[1].toDate()));
+		}
+	}, [dateRange]);
 
 	// Fetch decks list (for dropdown)
 	useEffect(() => {
@@ -445,14 +564,15 @@ export default function Stats() {
 
 	// Download report as PDF file
 	const handleDownloadReport = useCallback(async () => {
-		if (!filteredStats) return;
+		if (!effectiveStats) return;
 
-		const total = (filteredStats.correct || 0) + (filteredStats.incorrect || 0);
+		const total =
+			(effectiveStats.correct || 0) + (effectiveStats.incorrect || 0);
 		const accuracyPercent =
-			total > 0 ? Math.round((filteredStats.correct / total) * 100) : 0;
-		const hours = Math.floor((filteredStats.studyTimeSeconds || 0) / 3600);
+			total > 0 ? Math.round((effectiveStats.correct / total) * 100) : 0;
+		const hours = Math.floor((effectiveStats.studyTimeSeconds || 0) / 3600);
 		const minutes = Math.floor(
-			((filteredStats.studyTimeSeconds || 0) % 3600) / 60,
+			((effectiveStats.studyTimeSeconds || 0) % 3600) / 60,
 		);
 		const studyTimeFormatted =
 			hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
@@ -508,6 +628,49 @@ export default function Stats() {
 
 		// Create PDF
 		const doc = new jsPDF();
+
+		// Türkçe dahil tüm Unicode karakterleri destekleyen Roboto fontunu yükle ve göm
+		let fontEmbedded = false;
+		try {
+			const res = await fetch("/fonts/Roboto-Regular.ttf");
+			if (!res.ok) throw new Error("Font fetch failed: " + res.status);
+			const buf = await res.arrayBuffer();
+			const bytes = new Uint8Array(buf);
+			let binary = "";
+			for (let i = 0; i < bytes.length; i += 0x8000) {
+				binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+			}
+			const b64 = btoa(binary);
+			doc.addFileToVFS("Roboto-Regular.ttf", b64);
+			doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+			fontEmbedded = true;
+		} catch (err) {
+			console.warn("Font yüklenemedi, varsayılan font kullanılacak:", err);
+		}
+
+		// Her doc.text() öncesinde çağrılacak kısayol
+		const setDocFont = (size) => {
+			if (fontEmbedded) doc.setFont("Roboto", "normal");
+			if (size) doc.setFontSize(size);
+		};
+
+		// Türkçe büyük harf dönüşümü
+		const toUpperTR = (str) =>
+			str
+				.replace(
+					/[iışğüöç]/g,
+					(c) =>
+						({
+							i: "İ",
+							ı: "I",
+							ş: "Ş",
+							ğ: "Ğ",
+							ü: "Ü",
+							ö: "Ö",
+							ç: "Ç",
+						})[c] ?? c,
+				)
+				.toLocaleUpperCase("tr-TR");
 		const pageWidth = doc.internal.pageSize.getWidth();
 		const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -535,7 +698,7 @@ export default function Stats() {
 		}
 
 		// Title
-		doc.setFontSize(22);
+		setDocFont(22);
 		doc.setTextColor(102, 126, 234);
 		doc.text(
 			t("statistics_report") || "Statistics Report",
@@ -546,7 +709,7 @@ export default function Stats() {
 		yPos += 8;
 
 		// Subtitle
-		doc.setFontSize(10);
+		setDocFont(10);
 		doc.setTextColor(148, 163, 184);
 		doc.text(
 			t("stats_subtitle") || "Track your learning progress",
@@ -557,7 +720,8 @@ export default function Stats() {
 		yPos += 10;
 
 		// Meta info
-		doc.setFontSize(9);
+		setDocFont(9);
+		doc.setTextColor(148, 163, 184);
 		doc.text(
 			`${dateRangeText}  •  ${selectedDeckName}  •  ${reportDate}`,
 			pageWidth / 2,
@@ -577,17 +741,17 @@ export default function Stats() {
 		const stats = [
 			{
 				label: t("cards_studied") || "Cards Studied",
-				value: String(filteredStats.cardsStudied || 0),
+				value: String(effectiveStats.cardsStudied || 0),
 				color: [59, 130, 246],
 			},
 			{
 				label: t("correct_answers") || "Correct",
-				value: String(filteredStats.correct || 0),
+				value: String(effectiveStats.correct || 0),
 				color: [34, 197, 94],
 			},
 			{
 				label: t("wrong_answers") || "Incorrect",
-				value: String(filteredStats.incorrect || 0),
+				value: String(effectiveStats.incorrect || 0),
 				color: [239, 68, 68],
 			},
 			{
@@ -602,10 +766,12 @@ export default function Stats() {
 			},
 			{
 				label: t("sessions") || "Sessions",
-				value: String(filteredStats.sessions || 0),
+				value: String(effectiveStats.sessions || 0),
 				color: [245, 158, 11],
 			},
 		];
+
+		const activeFont = fontEmbedded ? "Roboto" : "helvetica";
 
 		stats.forEach((stat, index) => {
 			const row = Math.floor(index / cols);
@@ -616,13 +782,13 @@ export default function Stats() {
 			doc.setFillColor(30, 41, 59);
 			doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, "F");
 
-			doc.setFontSize(18);
+			setDocFont(18);
 			doc.setTextColor(stat.color[0], stat.color[1], stat.color[2]);
 			doc.text(stat.value, x + cardWidth / 2, y + 12, { align: "center" });
 
-			doc.setFontSize(7);
+			setDocFont(7);
 			doc.setTextColor(148, 163, 184);
-			doc.text(stat.label.toUpperCase(), x + cardWidth / 2, y + 20, {
+			doc.text(toUpperTR(stat.label), x + cardWidth / 2, y + 20, {
 				align: "center",
 			});
 		});
@@ -655,7 +821,7 @@ export default function Stats() {
 					setPageBackground();
 					yPos = 20;
 				}
-				doc.setFontSize(10);
+				setDocFont(10);
 				doc.setTextColor(102, 126, 234);
 				doc.text(chart.title, 15, yPos);
 				yPos += 5;
@@ -665,7 +831,7 @@ export default function Stats() {
 		});
 
 		// Card Performance table
-		if (cardsTable.length > 0) {
+		if (effectiveCardsTable.length > 0) {
 			// Check if we need a new page
 			if (yPos > 240) {
 				doc.addPage();
@@ -673,12 +839,12 @@ export default function Stats() {
 				yPos = 20;
 			}
 
-			doc.setFontSize(11);
+			setDocFont(11);
 			doc.setTextColor(226, 232, 240);
 			doc.text(t("card_performance") || "Card Performance", 15, yPos);
-			yPos += 2; // reduced spacing so title fits better
+			yPos += 2;
 
-			const tableData = cardsTable.map((card) => [
+			const tableData = effectiveCardsTable.map((card) => [
 				(card.front || "").substring(0, 35) +
 					(card.front?.length > 35 ? "..." : ""),
 				String(card.times_played || 0),
@@ -710,7 +876,7 @@ export default function Stats() {
 					fillColor: [30, 41, 59],
 					textColor: [226, 232, 240],
 					fontSize: 8,
-					font: "helvetica",
+					font: fontEmbedded ? "Roboto" : "helvetica",
 					// Further reduced padding for tighter rows
 					cellPadding: { top: 3, right: 5, bottom: 3, left: 5 },
 					lineColor: [51, 65, 85],
@@ -722,6 +888,7 @@ export default function Stats() {
 					fillColor: [79, 70, 229], // Indigo gradient başlangıcı
 					textColor: [255, 255, 255],
 					fontSize: 9,
+					font: fontEmbedded ? "Roboto" : "helvetica",
 					fontStyle: "bold",
 					halign: "center",
 					cellPadding: { top: 4, right: 6, bottom: 4, left: 6 },
@@ -801,7 +968,7 @@ export default function Stats() {
 		const pageCount = doc.internal.getNumberOfPages();
 		for (let i = 1; i <= pageCount; i++) {
 			doc.setPage(i);
-			doc.setFontSize(8);
+			setDocFont(8);
 			doc.setTextColor(100, 116, 139);
 			doc.text(
 				`Generated by MemoDeck App • ${reportDate}`,
@@ -813,7 +980,14 @@ export default function Stats() {
 
 		// Save PDF
 		doc.save(`stats-report-${dayjs().format("YYYY-MM-DD")}.pdf`);
-	}, [filteredStats, cardsTable, dateRange, selectedDeck, decksData, t]);
+	}, [
+		effectiveStats,
+		effectiveCardsTable,
+		dateRange,
+		selectedDeck,
+		decksData,
+		t,
+	]);
 
 	// Line chart options
 	const lineChartOptions = useMemo(
@@ -852,16 +1026,121 @@ export default function Stats() {
 		[theme, chartColors],
 	);
 
+	// Fill missing dates/months so x-axis shows every value in range
+	const filledChartData = useMemo(() => {
+		// Use mock chart data for locked users (skip date-range filling)
+		if (isLocked) return effectiveChartData;
+		const rawData = effectiveChartData.data || [];
+		if (!dateRange[0] || !dateRange[1] || rawData.length === 0) {
+			return {
+				data: rawData,
+				grouping: effectiveChartData.grouping || "daily",
+			};
+		}
+
+		const start = dateRange[0];
+		const end = dateRange[1];
+		const diffDays = end.diff(start, "day");
+		const isDaily = diffDays <= 31;
+
+		const emptyEntry = (date) => ({
+			date,
+			cardsStudied: 0,
+			correct: 0,
+			incorrect: 0,
+			studyTimeSeconds: 0,
+		});
+
+		if (isDaily) {
+			const dataMap = new Map();
+			rawData.forEach((d) => {
+				// Convert ISO UTC timestamp to the user's local date string
+				const key = d.date
+					? dayjs.utc(d.date).local().format("YYYY-MM-DD")
+					: undefined;
+				if (dataMap.has(key)) {
+					const ex = dataMap.get(key);
+					dataMap.set(key, {
+						date: key,
+						cardsStudied:
+							(parseInt(ex.cardsStudied) || 0) +
+							(parseInt(d.cardsStudied) || 0),
+						correct: (parseInt(ex.correct) || 0) + (parseInt(d.correct) || 0),
+						incorrect:
+							(parseInt(ex.incorrect) || 0) + (parseInt(d.incorrect) || 0),
+						studyTimeSeconds:
+							(parseInt(ex.studyTimeSeconds) || 0) +
+							(parseInt(d.studyTimeSeconds) || 0),
+					});
+				} else {
+					dataMap.set(key, { ...d, date: key });
+				}
+			});
+
+			const filled = [];
+			let current = start;
+			while (current.isBefore(end, "day") || current.isSame(end, "day")) {
+				const dateStr = current.format("YYYY-MM-DD");
+				filled.push(dataMap.get(dateStr) || emptyEntry(dateStr));
+				current = current.add(1, "day");
+			}
+			return { data: filled, grouping: "daily" };
+		} else {
+			const dataMap = new Map();
+			rawData.forEach((d) => {
+				// Convert ISO UTC timestamp to the user's local month key
+				const monthKey = d.date
+					? dayjs.utc(d.date).local().format("YYYY-MM")
+					: undefined;
+				if (dataMap.has(monthKey)) {
+					const ex = dataMap.get(monthKey);
+					dataMap.set(monthKey, {
+						date: monthKey + "-01",
+						cardsStudied:
+							(parseInt(ex.cardsStudied) || 0) +
+							(parseInt(d.cardsStudied) || 0),
+						correct: (parseInt(ex.correct) || 0) + (parseInt(d.correct) || 0),
+						incorrect:
+							(parseInt(ex.incorrect) || 0) + (parseInt(d.incorrect) || 0),
+						studyTimeSeconds:
+							(parseInt(ex.studyTimeSeconds) || 0) +
+							(parseInt(d.studyTimeSeconds) || 0),
+					});
+				} else {
+					dataMap.set(monthKey, {
+						...d,
+						date: monthKey + "-01",
+					});
+				}
+			});
+
+			const filled = [];
+			let current = start.startOf("month");
+			const endMonth = end.startOf("month");
+			while (
+				current.isBefore(endMonth, "month") ||
+				current.isSame(endMonth, "month")
+			) {
+				const monthKey = current.format("YYYY-MM");
+				filled.push(
+					dataMap.get(monthKey) || emptyEntry(current.format("YYYY-MM-01")),
+				);
+				current = current.add(1, "month");
+			}
+			return { data: filled, grouping: "monthly" };
+		}
+	}, [effectiveChartData, dateRange, isLocked]);
+
 	// Activity line chart data
 	const activityChartData = useMemo(
 		() => ({
-			labels: (chartData.data || []).map((d) =>
-				formatDateLabel(d.date, chartData.grouping),
+			labels: (filledChartData.data || []).map((d) =>
+				formatDateLabel(d.date, filledChartData.grouping),
 			),
 			datasets: [
 				{
 					label: t("cards_studied") || "Cards Studied",
-					data: (chartData.data || []).map(
+					data: (filledChartData.data || []).map(
 						(d) => parseInt(d.cardsStudied) || 0,
 					),
 					borderColor: chartColors.primary,
@@ -871,19 +1150,21 @@ export default function Stats() {
 				},
 			],
 		}),
-		[chartData, chartColors, t, formatDateLabel],
+		[filledChartData, chartColors, t, formatDateLabel],
 	);
 
 	// Accuracy trend chart data
 	const accuracyChartData = useMemo(
 		() => ({
-			labels: (chartData.data || []).map((d) =>
-				formatDateLabel(d.date, chartData.grouping),
+			labels: (filledChartData.data || []).map((d) =>
+				formatDateLabel(d.date, filledChartData.grouping),
 			),
 			datasets: [
 				{
 					label: t("correct") || "Correct",
-					data: (chartData.data || []).map((d) => parseInt(d.correct) || 0),
+					data: (filledChartData.data || []).map(
+						(d) => parseInt(d.correct) || 0,
+					),
 					borderColor: chartColors.success,
 					backgroundColor: `${chartColors.success}20`,
 					fill: false,
@@ -891,7 +1172,9 @@ export default function Stats() {
 				},
 				{
 					label: t("incorrect") || "Incorrect",
-					data: (chartData.data || []).map((d) => parseInt(d.incorrect) || 0),
+					data: (filledChartData.data || []).map(
+						(d) => parseInt(d.incorrect) || 0,
+					),
 					borderColor: chartColors.error,
 					backgroundColor: `${chartColors.error}20`,
 					fill: false,
@@ -899,19 +1182,19 @@ export default function Stats() {
 				},
 			],
 		}),
-		[chartData, chartColors, t, formatDateLabel],
+		[filledChartData, chartColors, t, formatDateLabel],
 	);
 
 	// Study time bar chart data
 	const studyTimeChartData = useMemo(
 		() => ({
-			labels: (chartData.data || []).map((d) =>
-				formatDateLabel(d.date, chartData.grouping),
+			labels: (filledChartData.data || []).map((d) =>
+				formatDateLabel(d.date, filledChartData.grouping),
 			),
 			datasets: [
 				{
 					label: t("study_time") || "Study Time (min)",
-					data: (chartData.data || []).map((d) =>
+					data: (filledChartData.data || []).map((d) =>
 						Math.round((parseInt(d.studyTimeSeconds) || 0) / 60),
 					),
 					backgroundColor: chartColors.secondary,
@@ -919,7 +1202,7 @@ export default function Stats() {
 				},
 			],
 		}),
-		[chartData, chartColors, t, formatDateLabel],
+		[filledChartData, chartColors, t, formatDateLabel],
 	);
 
 	// Bar chart options
@@ -949,13 +1232,14 @@ export default function Stats() {
 
 	// Calculate accuracy percentage
 	const accuracy = useMemo(() => {
-		if (!filteredStats) return 0;
-		const total = (filteredStats.correct || 0) + (filteredStats.incorrect || 0);
+		if (!effectiveStats) return 0;
+		const total =
+			(effectiveStats.correct || 0) + (effectiveStats.incorrect || 0);
 		if (total === 0) return 0;
-		return Math.round((filteredStats.correct / total) * 100);
-	}, [filteredStats]);
+		return Math.round((effectiveStats.correct / total) * 100);
+	}, [effectiveStats]);
 
-	if (loading && !filteredStats) {
+	if (!isLocked && loading && !filteredStats) {
 		return (
 			<PageContainer>
 				<StatsSkeleton />
@@ -965,620 +1249,738 @@ export default function Stats() {
 
 	return (
 		<PageContainer>
-			{/* Header */}
-			<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 3 }}>
-				<Box
+			{/* ── Locked / preview banner ── */}
+			{isLocked && (
+				<MotionBox
+					initial={{ y: -8, opacity: 0 }}
+					animate={{ y: 0, opacity: 1 }}
+					transition={{ duration: 0.3 }}
 					sx={{
+						mb: 3,
+						p: 2.5,
+						borderRadius: 3,
+						background:
+							"linear-gradient(135deg, rgba(251,191,36,0.15) 0%, rgba(245,158,11,0.08) 100%)",
+						border: "1px solid",
+						borderColor: "warning.main",
 						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "flex-start",
-						flexWrap: "wrap",
+						alignItems: { xs: "flex-start", sm: "center" },
+						flexDirection: { xs: "column", sm: "row" },
 						gap: 2,
 					}}
 				>
-					<Box>
-						<Typography
-							variant="h4"
-							sx={{
-								fontWeight: 700,
-								color: "text.cardTitle",
-								fontFamily: "Inter, sans-serif",
-								display: "flex",
-								alignItems: "center",
-								gap: 1.5,
-							}}
-						>
-							<TrendingUpIcon sx={{ color: "primary.light", fontSize: 32 }} />
-							{t("statistics") || "Statistics"}
-						</Typography>
-						<Typography
-							variant="body2"
-							sx={{
-								color: "text.cardSubtitle",
-								mt: 0.5,
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{t("stats_subtitle") || "Track your learning progress"}
-						</Typography>
-					</Box>
-					<Box sx={{ display: "flex", gap: 1 }}>
-						<Tooltip title={t("download_report") || "Download Report"}>
-							<IconButton
-								onClick={handleDownloadReport}
-								sx={{ color: "text.cardSubtitle" }}
-								disabled={!filteredStats}
-							>
-								<DownloadIcon />
-							</IconButton>
-						</Tooltip>
-						<Tooltip title={t("refresh") || "Refresh"}>
-							<IconButton
-								onClick={handleRefresh}
-								sx={{ color: "text.cardSubtitle" }}
-							>
-								<RefreshIcon />
-							</IconButton>
-						</Tooltip>
-					</Box>
-				</Box>
-			</MotionBox>
-
-			{/* Filters Section */}
-			<MotionBox
-				initial={{ y: 20, opacity: 0 }}
-				animate={{ y: 0, opacity: 1 }}
-				transition={{ delay: 0.1 }}
-				sx={{ mb: 3 }}
-			>
-				<StyledCard variant="default" padding={3}>
 					<Box
-						sx={{
-							display: "flex",
-							alignItems: "center",
-							gap: 1,
-							mb: 2,
-						}}
+						sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1 }}
 					>
-						<FilterListIcon sx={{ color: "text.cardSubtitle", fontSize: 20 }} />
-						<Typography
-							variant="subtitle2"
-							sx={{
-								color: "text.cardTitle",
-								fontFamily: "Inter",
-								fontWeight: 600,
-							}}
-						>
-							{t("filters") || "Filters"}
-						</Typography>
-					</Box>
-
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: { xs: "column", md: "row" },
-							gap: 3,
-							alignItems: { xs: "stretch", md: "flex-end" },
-						}}
-					>
-						{/* Deck Filter */}
-						<FormControl size="small" sx={{ minWidth: 200 }}>
-							<InputLabel>{t("deck") || "Deck"}</InputLabel>
-							<Select
-								value={selectedDeck}
-								label={t("deck") || "Deck"}
-								onChange={(e) => setSelectedDeck(e.target.value)}
+						<LockIcon sx={{ color: "warning.main", flexShrink: 0 }} />
+						<Box>
+							<Typography
+								variant="subtitle2"
 								sx={{
-									"& .MuiSelect-select": {
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-										whiteSpace: "nowrap",
-									},
+									fontWeight: 700,
+									color: "warning.main",
+									fontFamily: "Inter, sans-serif",
 								}}
 							>
-								<MenuItem value="all">{t("all_decks") || "All Decks"}</MenuItem>
-								{decksData.map((deck) => (
-									<MenuItem
-										key={deck.id}
-										value={deck.id}
-										sx={{
-											maxWidth: 300,
-											overflow: "hidden",
-											textOverflow: "ellipsis",
-											whiteSpace: "nowrap",
-										}}
-									>
-										{deck.title}
-									</MenuItem>
-								))}
-							</Select>
-						</FormControl>
-
-						{/* Date Range Pickers */}
-						<LocalizationProvider dateAdapter={AdapterDayjs}>
-							<Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-								<DatePicker
-									label={t("start_date") || "Start Date"}
-									value={dateRange[0]}
-									onChange={(newValue) =>
-										handleDatePickerChange("start", newValue)
-									}
-									maxDate={dateRange[1] || dayjs()}
-									slotProps={{
-										textField: {
-											size: "small",
-											sx: { width: 160 },
-										},
-									}}
-								/>
-								<Typography sx={{ color: "text.cardSubtitle" }}>—</Typography>
-								<DatePicker
-									label={t("end_date") || "End Date"}
-									value={dateRange[1]}
-									onChange={(newValue) =>
-										handleDatePickerChange("end", newValue)
-									}
-									minDate={dateRange[0]}
-									maxDate={dayjs()}
-									slotProps={{
-										textField: {
-											size: "small",
-											sx: { width: 160 },
-										},
-									}}
-								/>
-							</Box>
-						</LocalizationProvider>
-
-						{/* Quick Presets */}
-						<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-							{DATE_PRESETS.map((preset) => (
-								<PresetButton
-									key={preset.key}
-									label={
-										preset.key === "today"
-											? t("today") || "Today"
-											: preset.key === "all"
-												? t("all_time_short") || "All"
-												: t(`${preset.key.replace("d", "_days")}`) ||
-													preset.key.toUpperCase()
-									}
-									active={activePreset === preset.key}
-									onClick={() => handlePresetClick(preset.key)}
-								/>
-							))}
+								{t("stats_locked_title") || "Statistics Locked"}
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{
+									color: "text.cardSubtitle",
+									fontFamily: "Inter, sans-serif",
+									mt: 0.25,
+								}}
+							>
+								{t("stats_preview_description") ||
+									"This is a preview with sample data. Upgrade your plan to see your real statistics."}
+							</Typography>
 						</Box>
 					</Box>
-				</StyledCard>
-			</MotionBox>
-
-			{/* Stats Cards: 2 columns x 3 rows */}
-			<Box
-				sx={{
-					display: "grid",
-					gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
-					gap: 2,
-					mb: 3,
-				}}
-			>
-				<StatCard
-					icon={SchoolIcon}
-					title={t("cards_studied") || "Cards Studied"}
-					value={filteredStats?.cardsStudied || 0}
-					color={chartColors.primary}
-					delay={0.1}
-				/>
-				<StatCard
-					icon={CheckCircleIcon}
-					title={t("correct_answers") || "Correct"}
-					value={filteredStats?.correct || 0}
-					color={chartColors.success}
-					delay={0.15}
-				/>
-				<StatCard
-					icon={ErrorIcon}
-					title={t("wrong_answers") || "Incorrect"}
-					value={filteredStats?.incorrect || 0}
-					color={chartColors.error}
-					delay={0.2}
-				/>
-				<StatCard
-					icon={EmojiEventsIcon}
-					title={t("accuracy") || "Accuracy"}
-					value={`${accuracy}%`}
-					color={chartColors.secondary}
-					delay={0.25}
-				/>
-				<StatCard
-					icon={AccessTimeIcon}
-					title={t("study_time") || "Study Time"}
-					value={formatDuration(filteredStats?.studyTimeSeconds || 0)}
-					color={chartColors.info}
-					delay={0.3}
-				/>
-				<StatCard
-					icon={CalendarTodayIcon}
-					title={t("sessions") || "Sessions"}
-					value={filteredStats?.sessions || 0}
-					color={chartColors.warning}
-					delay={0.35}
-				/>
-			</Box>
-
-			{/* Charts Row 1 */}
-			<Box
-				sx={{
-					display: "grid",
-					gridTemplateColumns: "1fr",
-					gap: 3,
-					mb: 3,
-				}}
-			>
-				<MotionBox
-					initial={{ y: 20, opacity: 0 }}
-					animate={{ y: 0, opacity: 1 }}
-					transition={{ delay: 0.4 }}
-				>
-					<StyledCard variant="default" padding={3}>
-						<Typography
-							variant="h6"
-							sx={{
-								fontWeight: 600,
-								color: "text.cardTitle",
-								fontFamily: "Inter",
-								mb: 3,
-							}}
-						>
-							{t("study_activity") || "Study Activity"}
-							{chartData.grouping === "monthly" && (
-								<Chip
-									size="small"
-									label={t("monthly") || "Monthly"}
-									sx={{ ml: 1, fontSize: 11 }}
-								/>
-							)}
-						</Typography>
-						<Box sx={{ height: 300 }}>
-							{chartData.data?.length > 0 ? (
-								<Line
-									id="activity-chart"
-									data={activityChartData}
-									options={lineChartOptions}
-								/>
-							) : (
-								<Box
-									sx={{
-										height: "100%",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-									}}
-								>
-									<Typography sx={{ color: "text.cardSubtitle" }}>
-										{t("no_data") || "No data for selected period"}
-									</Typography>
-								</Box>
-							)}
-						</Box>
-					</StyledCard>
-				</MotionBox>
-			</Box>
-
-			{/* Charts Row 2 & 3: Each chart in its own row */}
-			<Box
-				sx={{
-					display: "grid",
-					gridTemplateColumns: "1fr",
-					gap: 3,
-					mb: 3,
-				}}
-			>
-				<MotionBox
-					initial={{ y: 20, opacity: 0 }}
-					animate={{ y: 0, opacity: 1 }}
-					transition={{ delay: 0.5 }}
-				>
-					<StyledCard variant="default" padding={3}>
-						<Typography
-							variant="h6"
-							sx={{
-								fontWeight: 600,
-								color: "text.cardTitle",
-								fontFamily: "Inter",
-								mb: 3,
-							}}
-						>
-							{t("accuracy_trend") || "Accuracy Trend"}
-						</Typography>
-						<Box sx={{ height: 280 }}>
-							{chartData.data?.length > 0 ? (
-								<Line
-									id="accuracy-chart"
-									data={accuracyChartData}
-									options={{
-										...lineChartOptions,
-										plugins: {
-											...lineChartOptions.plugins,
-											legend: {
-												display: true,
-												position: "top",
-												labels: { color: chartColors.text },
-											},
-										},
-									}}
-								/>
-							) : (
-								<Box
-									sx={{
-										height: "100%",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-									}}
-								>
-									<Typography sx={{ color: "text.cardSubtitle" }}>
-										{t("no_data") || "No data for selected period"}
-									</Typography>
-								</Box>
-							)}
-						</Box>
-					</StyledCard>
-				</MotionBox>
-
-				<MotionBox
-					initial={{ y: 20, opacity: 0 }}
-					animate={{ y: 0, opacity: 1 }}
-					transition={{ delay: 0.55 }}
-				>
-					<StyledCard variant="default" padding={3}>
-						<Typography
-							variant="h6"
-							sx={{
-								fontWeight: 600,
-								color: "text.cardTitle",
-								fontFamily: "Inter",
-								mb: 3,
-							}}
-						>
-							{t("study_time_chart") || "Study Time"}
-						</Typography>
-						<Box sx={{ height: 280 }}>
-							{chartData.data?.length > 0 ? (
-								<Bar
-									id="study-time-chart"
-									data={studyTimeChartData}
-									options={barChartOptions}
-								/>
-							) : (
-								<Box
-									sx={{
-										height: "100%",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-									}}
-								>
-									<Typography sx={{ color: "text.cardSubtitle" }}>
-										{t("no_data") || "No data for selected period"}
-									</Typography>
-								</Box>
-							)}
-						</Box>
-					</StyledCard>
-				</MotionBox>
-			</Box>
-
-			{/* Cards Performance Table */}
-			<MotionBox
-				initial={{ y: 20, opacity: 0 }}
-				animate={{ y: 0, opacity: 1 }}
-				transition={{ delay: 0.6 }}
-			>
-				<StyledCard variant="default" padding={3}>
-					<Typography
-						variant="h6"
+					<Button
+						variant="contained"
+						color="warning"
+						size="small"
+						startIcon={<UpgradeIcon />}
+						onClick={() => navigate("/plans")}
 						sx={{
 							fontWeight: 600,
-							color: "text.cardTitle",
-							fontFamily: "Inter",
-							mb: 2,
-							display: "flex",
-							alignItems: "center",
-							gap: 1,
+							borderRadius: 2,
+							whiteSpace: "nowrap",
+							flexShrink: 0,
 						}}
 					>
-						<StyleIcon sx={{ color: chartColors.primary }} />
-						{t("card_performance") || "Card Performance"}
-					</Typography>
+						{t("upgrade_plan") || "Upgrade Plan"}
+					</Button>
+				</MotionBox>
+			)}
 
-					{cardsTable.length > 0 ? (
-						<TableContainer sx={{ maxHeight: 400 }}>
-							<Table stickyHeader size="small">
-								<TableHead>
-									<TableRow>
-										<TableCell
-											sx={{ color: "text.cardSubtitle", minWidth: 200 }}
+			{/* ── Main content (blurred & non-interactive for free users) ── */}
+			<MotionConfig reducedMotion={isLocked ? "always" : "never"}>
+				<Box sx={{ position: "relative" }}>
+					{/* blur overlay — sits on top, içerik normal DOM akışında kalır */}
+					{isLocked && (
+						<Box
+							aria-hidden
+							sx={{
+								position: "absolute",
+								inset: 0,
+								backdropFilter: "blur(2px)",
+								WebkitBackdropFilter: "blur(2px)",
+								background: "rgba(15,23,42,0.35)",
+								borderRadius: 3,
+								zIndex: 10,
+								pointerEvents: "none",
+							}}
+						/>
+					)}
+
+					{/* gerçek içerik */}
+					<Box
+						sx={{
+							pointerEvents: isLocked ? "none" : "auto",
+							userSelect: isLocked ? "none" : "auto",
+						}}
+					>
+						{/* Header */}
+						<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 3 }}>
+							<Box
+								sx={{
+									display: "flex",
+									justifyContent: "space-between",
+									alignItems: "flex-start",
+									flexWrap: "wrap",
+									gap: 2,
+								}}
+							>
+								<Box>
+									<Typography
+										variant="h4"
+										sx={{
+											fontWeight: 700,
+											color: "text.cardTitle",
+											fontFamily: "Inter, sans-serif",
+											display: "flex",
+											alignItems: "center",
+											gap: 1.5,
+										}}
+									>
+										<TrendingUpIcon
+											sx={{ color: "primary.light", fontSize: 32 }}
+										/>
+										{t("statistics") || "Statistics"}
+									</Typography>
+									<Typography
+										variant="body2"
+										sx={{
+											color: "text.cardSubtitle",
+											mt: 0.5,
+											fontFamily: "Inter, sans-serif",
+										}}
+									>
+										{t("stats_subtitle") || "Track your learning progress"}
+									</Typography>
+								</Box>
+								<Box sx={{ display: "flex", gap: 1 }}>
+									<Tooltip title={t("download_report") || "Download Report"}>
+										<IconButton
+											onClick={handleDownloadReport}
+											sx={{ color: "text.cardSubtitle" }}
+											disabled={!effectiveStats || isLocked}
 										>
-											{t("card_title") || "Card"}
-										</TableCell>
-										{selectedDeck === "all" && (
-											<TableCell sx={{ color: "text.cardSubtitle" }}>
-												{t("deck") || "Deck"}
-											</TableCell>
-										)}
-										<TableCell
-											align="center"
+											<DownloadIcon />
+										</IconButton>
+									</Tooltip>
+									<Tooltip title={t("refresh") || "Refresh"}>
+										<IconButton
+											onClick={handleRefresh}
 											sx={{ color: "text.cardSubtitle" }}
 										>
-											<TableSortLabel
-												active={sortBy === "times_played"}
-												direction={
-													sortBy === "times_played" ? sortOrder : "desc"
-												}
-												onClick={() => handleSort("times_played")}
-											>
-												{t("times_played") || "Played"}
-											</TableSortLabel>
-										</TableCell>
-										<TableCell
-											align="center"
-											sx={{ color: "text.cardSubtitle" }}
-										>
-											<TableSortLabel
-												active={sortBy === "correct"}
-												direction={sortBy === "correct" ? sortOrder : "desc"}
-												onClick={() => handleSort("correct")}
-											>
-												{t("correct") || "Correct"}
-											</TableSortLabel>
-										</TableCell>
-										<TableCell
-											align="center"
-											sx={{ color: "text.cardSubtitle" }}
-										>
-											<TableSortLabel
-												active={sortBy === "wrong"}
-												direction={sortBy === "wrong" ? sortOrder : "desc"}
-												onClick={() => handleSort("wrong")}
-											>
-												{t("incorrect") || "Incorrect"}
-											</TableSortLabel>
-										</TableCell>
-										<TableCell
-											align="center"
-											sx={{ color: "text.cardSubtitle" }}
-										>
-											<TableSortLabel
-												active={sortBy === "accuracy"}
-												direction={sortBy === "accuracy" ? sortOrder : "desc"}
-												onClick={() => handleSort("accuracy")}
-											>
-												{t("accuracy") || "Accuracy"}
-											</TableSortLabel>
-										</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{cardsTable.map((card) => (
-										<TableRow key={card.id} hover>
-											<TableCell
-												sx={{
-													color: "text.cardTitle",
-													maxWidth: 250,
+											<RefreshIcon />
+										</IconButton>
+									</Tooltip>
+								</Box>
+							</Box>
+						</MotionBox>
+
+						{/* Filters Section */}
+						<MotionBox
+							initial={{ y: 20, opacity: 0 }}
+							animate={{ y: 0, opacity: 1 }}
+							transition={{ delay: 0.1 }}
+							sx={{ mb: 3 }}
+						>
+							<StyledCard variant="default" padding={3}>
+								<Box
+									sx={{
+										display: "flex",
+										alignItems: "center",
+										gap: 1,
+										mb: 2,
+									}}
+								>
+									<FilterListIcon
+										sx={{ color: "text.cardSubtitle", fontSize: 20 }}
+									/>
+									<Typography
+										variant="subtitle2"
+										sx={{
+											color: "text.cardTitle",
+											fontFamily: "Inter",
+											fontWeight: 600,
+										}}
+									>
+										{t("filters") || "Filters"}
+									</Typography>
+								</Box>
+
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: { xs: "column", md: "row" },
+										gap: 3,
+										alignItems: { xs: "stretch", md: "center" },
+									}}
+								>
+									{/* Deck Filter */}
+									<FormControl size="small" sx={{ minWidth: 200 }}>
+										<InputLabel>{t("deck") || "Deck"}</InputLabel>
+										<Select
+											value={selectedDeck}
+											label={t("deck") || "Deck"}
+											onChange={(e) => setSelectedDeck(e.target.value)}
+											sx={{
+												"& .MuiSelect-select": {
 													overflow: "hidden",
 													textOverflow: "ellipsis",
 													whiteSpace: "nowrap",
-												}}
-											>
-												{card.front?.length > 50 ? (
-													<Tooltip title={card.front} arrow>
-														<span>{card.front}</span>
-													</Tooltip>
-												) : (
-													card.front
-												)}
-											</TableCell>
-											{selectedDeck === "all" && (
-												<TableCell
+												},
+											}}
+										>
+											<MenuItem value="all">
+												{t("all_decks") || "All Decks"}
+											</MenuItem>
+											{decksData.map((deck) => (
+												<MenuItem
+													key={deck.id}
+													value={deck.id}
 													sx={{
-														color: "text.cardSubtitle",
-														maxWidth: 150,
+														maxWidth: 300,
 														overflow: "hidden",
 														textOverflow: "ellipsis",
 														whiteSpace: "nowrap",
 													}}
 												>
-													{card.deck_title}
-												</TableCell>
-											)}
-											<TableCell
-												align="center"
-												sx={{ color: "text.cardTitle" }}
-											>
-												{card.times_played || 0}
-											</TableCell>
-											<TableCell align="center">
-												<Chip
-													size="small"
-													label={card.correct || 0}
-													sx={{
-														bgcolor: "success.main",
-														color: "white",
-														minWidth: 40,
-													}}
-												/>
-											</TableCell>
-											<TableCell align="center">
-												<Chip
-													size="small"
-													label={card.wrong || 0}
-													sx={{
-														bgcolor: "error.main",
-														color: "white",
-														minWidth: 40,
-													}}
-												/>
-											</TableCell>
-											<TableCell align="center">
-												<Box
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "center",
-														gap: 1,
-													}}
-												>
-													<LinearProgress
-														variant="determinate"
-														value={parseFloat(card.accuracy) || 0}
-														sx={{
-															width: 50,
-															height: 6,
-															borderRadius: 3,
-															bgcolor: "action.hover",
-															"& .MuiLinearProgress-bar": {
-																bgcolor:
-																	card.accuracy >= 80
-																		? "success.main"
-																		: card.accuracy >= 50
-																			? "warning.main"
-																			: "error.main",
-															},
-														}}
-													/>
-													<Typography
-														variant="body2"
-														sx={{
-															color: "text.cardTitle",
-															minWidth: 35,
-															fontSize: 12,
-														}}
-													>
-														{card.accuracy || 0}%
-													</Typography>
-												</Box>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						</TableContainer>
-					) : (
+													{deck.title}
+												</MenuItem>
+											))}
+										</Select>
+									</FormControl>
+
+									{/* Date Range Picker */}
+									{/* <Box
+							component="input"
+							ref={dateRangeRef}
+							readOnly
+							sx={{
+								px: 2,
+								py: 1,
+								borderRadius: "8px",
+								border: "1px solid",
+								borderColor: "divider",
+								bgcolor: "background.paper",
+								color: "text.cardTitle",
+								fontFamily: "Inter, sans-serif",
+								fontSize: 13,
+								minWidth: 220,
+								cursor: "pointer",
+								outline: "none",
+								"&:hover": {
+									borderColor: "primary.main",
+								},
+								"&:focus": {
+									borderColor: "primary.main",
+								},
+							}}
+						/> */}
+
+									{/* Quick Presets */}
+									<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+										{DATE_PRESETS.map((preset) => (
+											<PresetButton
+												key={preset.key}
+												label={
+													preset.key === "today"
+														? t("today") || "Today"
+														: preset.key === "all"
+															? t("all_time_short") || "All"
+															: t(`${preset.key.replace("d", "_days")}`) ||
+																preset.key.toUpperCase()
+												}
+												active={activePreset === preset.key}
+												onClick={() => handlePresetClick(preset.key)}
+											/>
+										))}
+									</Box>
+								</Box>
+							</StyledCard>
+						</MotionBox>
+
+						{/* Stats Cards: 2 columns x 3 rows */}
 						<Box
 							sx={{
-								py: 6,
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center",
+								display: "grid",
+								gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+								gap: 2,
+								mb: 3,
 							}}
 						>
-							<Typography sx={{ color: "text.cardSubtitle" }}>
-								{t("no_cards_data") || "No card performance data yet"}
-							</Typography>
+							<StatCard
+								icon={SchoolIcon}
+								title={t("cards_studied") || "Cards Studied"}
+								value={effectiveStats?.cardsStudied || 0}
+								color={chartColors.primary}
+								delay={0.1}
+							/>
+							<StatCard
+								icon={CheckCircleIcon}
+								title={t("correct_answers") || "Correct"}
+								value={effectiveStats?.correct || 0}
+								color={chartColors.success}
+								delay={0.15}
+							/>
+							<StatCard
+								icon={ErrorIcon}
+								title={t("wrong_answers") || "Incorrect"}
+								value={effectiveStats?.incorrect || 0}
+								color={chartColors.error}
+								delay={0.2}
+							/>
+							<StatCard
+								icon={EmojiEventsIcon}
+								title={t("accuracy") || "Accuracy"}
+								value={`${accuracy}%`}
+								color={chartColors.secondary}
+								delay={0.25}
+							/>
+							<StatCard
+								icon={AccessTimeIcon}
+								title={t("study_time") || "Study Time"}
+								value={formatDuration(effectiveStats?.studyTimeSeconds || 0)}
+								color={chartColors.info}
+								delay={0.3}
+							/>
+							<StatCard
+								icon={CalendarTodayIcon}
+								title={t("sessions") || "Sessions"}
+								value={effectiveStats?.sessions || 0}
+								color={chartColors.warning}
+								delay={0.35}
+							/>
 						</Box>
-					)}
-				</StyledCard>
-			</MotionBox>
+
+						{/* Charts Row 1 */}
+						<Box
+							sx={{
+								display: "grid",
+								gridTemplateColumns: "1fr",
+								gap: 3,
+								mb: 3,
+							}}
+						>
+							<MotionBox
+								initial={{ y: 20, opacity: 0 }}
+								animate={{ y: 0, opacity: 1 }}
+								transition={{ delay: 0.4 }}
+							>
+								<StyledCard variant="default" padding={3}>
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 600,
+											color: "text.cardTitle",
+											fontFamily: "Inter",
+											mb: 3,
+										}}
+									>
+										{t("study_activity") || "Study Activity"}
+										{filledChartData.grouping === "monthly" && (
+											<Chip
+												size="small"
+												label={t("monthly") || "Monthly"}
+												sx={{ ml: 1, fontSize: 11 }}
+											/>
+										)}
+									</Typography>
+									<Box sx={{ height: 300 }}>
+										{filledChartData.data?.length > 0 ? (
+											<Line
+												id="activity-chart"
+												data={activityChartData}
+												options={lineChartOptions}
+											/>
+										) : (
+											<Box
+												sx={{
+													height: "100%",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+												}}
+											>
+												<Typography sx={{ color: "text.cardSubtitle" }}>
+													{t("no_data") || "No data for selected period"}
+												</Typography>
+											</Box>
+										)}
+									</Box>
+								</StyledCard>
+							</MotionBox>
+						</Box>
+
+						{/* Charts Row 2 & 3: Each chart in its own row */}
+						<Box
+							sx={{
+								display: "grid",
+								gridTemplateColumns: "1fr",
+								gap: 3,
+								mb: 3,
+							}}
+						>
+							<MotionBox
+								initial={{ y: 20, opacity: 0 }}
+								animate={{ y: 0, opacity: 1 }}
+								transition={{ delay: 0.5 }}
+							>
+								<StyledCard variant="default" padding={3}>
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 600,
+											color: "text.cardTitle",
+											fontFamily: "Inter",
+											mb: 3,
+										}}
+									>
+										{t("accuracy_trend") || "Accuracy Trend"}
+									</Typography>
+									<Box sx={{ height: 280 }}>
+										{filledChartData.data?.length > 0 ? (
+											<Line
+												id="accuracy-chart"
+												data={accuracyChartData}
+												options={{
+													...lineChartOptions,
+													plugins: {
+														...lineChartOptions.plugins,
+														legend: {
+															display: true,
+															position: "top",
+															labels: { color: chartColors.text },
+														},
+													},
+												}}
+											/>
+										) : (
+											<Box
+												sx={{
+													height: "100%",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+												}}
+											>
+												<Typography sx={{ color: "text.cardSubtitle" }}>
+													{t("no_data") || "No data for selected period"}
+												</Typography>
+											</Box>
+										)}
+									</Box>
+								</StyledCard>
+							</MotionBox>
+
+							<MotionBox
+								initial={{ y: 20, opacity: 0 }}
+								animate={{ y: 0, opacity: 1 }}
+								transition={{ delay: 0.55 }}
+							>
+								<StyledCard variant="default" padding={3}>
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 600,
+											color: "text.cardTitle",
+											fontFamily: "Inter",
+											mb: 3,
+										}}
+									>
+										{t("study_time_chart") || "Study Time"}
+									</Typography>
+									<Box sx={{ height: 280 }}>
+										{filledChartData.data?.length > 0 ? (
+											<Bar
+												id="study-time-chart"
+												data={studyTimeChartData}
+												options={barChartOptions}
+											/>
+										) : (
+											<Box
+												sx={{
+													height: "100%",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+												}}
+											>
+												<Typography sx={{ color: "text.cardSubtitle" }}>
+													{t("no_data") || "No data for selected period"}
+												</Typography>
+											</Box>
+										)}
+									</Box>
+								</StyledCard>
+							</MotionBox>
+						</Box>
+
+						{/* Cards Performance Table */}
+						<MotionBox
+							initial={{ y: 20, opacity: 0 }}
+							animate={{ y: 0, opacity: 1 }}
+							transition={{ delay: 0.6 }}
+						>
+							<StyledCard variant="default" padding={3}>
+								<Typography
+									variant="h6"
+									sx={{
+										fontWeight: 600,
+										color: "text.cardTitle",
+										fontFamily: "Inter",
+										mb: 2,
+										display: "flex",
+										alignItems: "center",
+										gap: 1,
+									}}
+								>
+									<StyleIcon sx={{ color: chartColors.primary }} />
+									{t("card_performance") || "Card Performance"}
+								</Typography>
+
+								{effectiveCardsTable.length > 0 ? (
+									<TableContainer sx={{ maxHeight: 400 }}>
+										<Table stickyHeader size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell
+														sx={{ color: "text.cardSubtitle", minWidth: 200 }}
+													>
+														{t("card_title") || "Card"}
+													</TableCell>
+													{selectedDeck === "all" && (
+														<TableCell sx={{ color: "text.cardSubtitle" }}>
+															{t("deck") || "Deck"}
+														</TableCell>
+													)}
+													<TableCell
+														align="center"
+														sx={{ color: "text.cardSubtitle" }}
+													>
+														<TableSortLabel
+															active={sortBy === "times_played"}
+															direction={
+																sortBy === "times_played" ? sortOrder : "desc"
+															}
+															onClick={() => handleSort("times_played")}
+														>
+															{t("times_played") || "Played"}
+														</TableSortLabel>
+													</TableCell>
+													<TableCell
+														align="center"
+														sx={{ color: "text.cardSubtitle" }}
+													>
+														<TableSortLabel
+															active={sortBy === "correct"}
+															direction={
+																sortBy === "correct" ? sortOrder : "desc"
+															}
+															onClick={() => handleSort("correct")}
+														>
+															{t("correct") || "Correct"}
+														</TableSortLabel>
+													</TableCell>
+													<TableCell
+														align="center"
+														sx={{ color: "text.cardSubtitle" }}
+													>
+														<TableSortLabel
+															active={sortBy === "wrong"}
+															direction={
+																sortBy === "wrong" ? sortOrder : "desc"
+															}
+															onClick={() => handleSort("wrong")}
+														>
+															{t("incorrect") || "Incorrect"}
+														</TableSortLabel>
+													</TableCell>
+													<TableCell
+														align="center"
+														sx={{ color: "text.cardSubtitle" }}
+													>
+														<TableSortLabel
+															active={sortBy === "accuracy"}
+															direction={
+																sortBy === "accuracy" ? sortOrder : "desc"
+															}
+															onClick={() => handleSort("accuracy")}
+														>
+															{t("accuracy") || "Accuracy"}
+														</TableSortLabel>
+													</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{effectiveCardsTable.map((card) => (
+													<TableRow key={card.id} hover>
+														<TableCell
+															sx={{
+																color: "text.cardTitle",
+																maxWidth: 250,
+																overflow: "hidden",
+																textOverflow: "ellipsis",
+																whiteSpace: "nowrap",
+															}}
+														>
+															{card.front?.length > 50 ? (
+																<Tooltip title={card.front} arrow>
+																	<span>{card.front}</span>
+																</Tooltip>
+															) : (
+																card.front
+															)}
+														</TableCell>
+														{selectedDeck === "all" && (
+															<TableCell
+																sx={{
+																	color: "text.cardSubtitle",
+																	maxWidth: 150,
+																	overflow: "hidden",
+																	textOverflow: "ellipsis",
+																	whiteSpace: "nowrap",
+																}}
+															>
+																{card.deck_title}
+															</TableCell>
+														)}
+														<TableCell
+															align="center"
+															sx={{ color: "text.cardTitle" }}
+														>
+															{card.times_played || 0}
+														</TableCell>
+														<TableCell align="center">
+															<Chip
+																size="small"
+																label={card.correct || 0}
+																sx={{
+																	bgcolor: "success.main",
+																	color: "white",
+																	minWidth: 40,
+																}}
+															/>
+														</TableCell>
+														<TableCell align="center">
+															<Chip
+																size="small"
+																label={card.wrong || 0}
+																sx={{
+																	bgcolor: "error.main",
+																	color: "white",
+																	minWidth: 40,
+																}}
+															/>
+														</TableCell>
+														<TableCell align="center">
+															<Box
+																sx={{
+																	display: "flex",
+																	alignItems: "center",
+																	justifyContent: "center",
+																	gap: 1,
+																}}
+															>
+																<LinearProgress
+																	variant="determinate"
+																	value={parseFloat(card.accuracy) || 0}
+																	sx={{
+																		width: 50,
+																		height: 6,
+																		borderRadius: 3,
+																		bgcolor: "action.hover",
+																		"& .MuiLinearProgress-bar": {
+																			bgcolor:
+																				card.accuracy >= 80
+																					? "success.main"
+																					: card.accuracy >= 50
+																						? "warning.main"
+																						: "error.main",
+																		},
+																	}}
+																/>
+																<Typography
+																	variant="body2"
+																	sx={{
+																		color: "text.cardTitle",
+																		minWidth: 35,
+																		fontSize: 12,
+																	}}
+																>
+																	{card.accuracy || 0}%
+																</Typography>
+															</Box>
+														</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</TableContainer>
+								) : (
+									<Box
+										sx={{
+											py: 6,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+										}}
+									>
+										<Typography sx={{ color: "text.cardSubtitle" }}>
+											{t("no_cards_data") || "No card performance data yet"}
+										</Typography>
+									</Box>
+								)}
+							</StyledCard>
+						</MotionBox>
+
+						{/* Date range warning */}
+						<Snackbar
+							open={!!dateWarning}
+							autoHideDuration={4000}
+							onClose={() => setDateWarning("")}
+							anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+						>
+							<Alert
+								onClose={() => setDateWarning("")}
+								severity="warning"
+								variant="filled"
+								sx={{ width: "100%", color: "#fff" }}
+							>
+								{dateWarning}
+							</Alert>
+						</Snackbar>
+					</Box>
+					{/* end real content */}
+				</Box>
+				{/* end relative wrapper */}
+			</MotionConfig>
 		</PageContainer>
 	);
 }

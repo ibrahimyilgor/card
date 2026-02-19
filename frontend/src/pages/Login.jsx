@@ -1,78 +1,390 @@
-import React, { useState, useContext } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useContext, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { signInWithGoogle } from "../services/authServices";
 import { I18nContext } from "../utils/i18n";
 import { useSEO } from "../utils/seo";
-import { Box, Typography, Alert } from "@mui/material";
-import BoltIcon from "@mui/icons-material/Bolt";
-import BuildIcon from "@mui/icons-material/Build";
-import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import { Box, Typography, Alert, IconButton } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { StyledButton, StyledCard } from "../components/ui";
 
 const MotionBox = motion.create(Box);
 
-// Feature item component with animation
-const FeatureItem = ({ icon: Icon, title, description, delay }) => (
-	<MotionBox
-		initial={{ x: -20 }}
-		animate={{ x: 0 }}
-		transition={{ duration: 0.5, delay }}
-		sx={{
-			display: "flex",
-			alignItems: "flex-start",
-			gap: 2.5,
-			mb: 3,
-		}}
-	>
+// Placeholder slide data — drop your screenshots into /images/screenshots/
+// and name them screenshot-1.png, screenshot-2.png, …
+const SLIDES = [
+	{
+		src: "/images/screenshots/screenshot-1.png",
+		label: "Kart Desteni",
+		title: "Kendi kart destelerini oluştur",
+		description:
+			"İstediğin konuda kartlar ekle, düzenle ve organize et. Öğrenmek hiç bu kadar kolay olmamıştı.",
+	},
+	{
+		src: "/images/screenshots/screenshot-2.png",
+		label: "Oyun Modları",
+		title: "Farklı oyun modlarıyla öğren",
+		description:
+			"Klasik kart çevirme, çoktan seçmeli, yazma ve eşleştirme modlarıyla öğrenmeyi eğlenceye dönüştür.",
+	},
+	{
+		src: "/images/screenshots/screenshot-3.png",
+		label: "İstatistikler",
+		title: "İlerlemenizi takip edin",
+		description:
+			"Detaylı istatistikler ve grafiklerle hangi konularda iyi olduğunu, nerede daha fazla çalışman gerektiğini gör.",
+	},
+	{
+		src: "/images/screenshots/screenshot-4.png",
+		label: "Başarımlar",
+		title: "Başarımlar kazan, motive kal",
+		description:
+			"Her gün çalışarak rozetler kazanın, serilerinizi koruyun ve kendinizi sürekli geliştirin.",
+	},
+	{
+		src: "/images/screenshots/screenshot-5.png",
+		label: "İçe Aktarma",
+		title: "Hazır desteleri içe aktar",
+		description:
+			"Başkalarının hazırladığı desteleri kolayca içe aktar ya da kendi destelerini paylaş.",
+	},
+];
+
+const AUTO_PLAY_INTERVAL = 3500; // ms
+
+const slideVariants = {
+	enter: (dir) => ({
+		x: dir > 0 ? "100%" : "-100%",
+		opacity: 0,
+		scale: 0.97,
+	}),
+	center: {
+		x: 0,
+		opacity: 1,
+		scale: 1,
+		transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] },
+	},
+	exit: (dir) => ({
+		x: dir > 0 ? "-100%" : "100%",
+		opacity: 0,
+		scale: 0.97,
+		transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] },
+	}),
+};
+
+// Gradient placeholders shown when image hasn't loaded yet
+const PLACEHOLDER_GRADIENTS = [
+	"linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 50%, #1a4a7a 100%)",
+	"linear-gradient(135deg, #2d1b69 0%, #6b3fa0 50%, #3d2080 100%)",
+	"linear-gradient(135deg, #0d3b2e 0%, #1a6b4a 50%, #0a4f38 100%)",
+	"linear-gradient(135deg, #3b1f0d 0%, #8b4a1a 50%, #5c2e0a 100%)",
+	"linear-gradient(135deg, #1a0d3b 0%, #4a1a8b 50%, #2d0f5c 100%)",
+];
+
+const captionVariants = {
+	enter: (dir) => ({ x: dir > 0 ? 24 : -24, opacity: 0 }),
+	center: {
+		x: 0,
+		opacity: 1,
+		transition: { duration: 0.4, ease: "easeOut", delay: 0.15 },
+	},
+	exit: (dir) => ({
+		x: dir > 0 ? -24 : 24,
+		opacity: 0,
+		transition: { duration: 0.25, ease: "easeIn" },
+	}),
+};
+
+function ScreenshotCarousel() {
+	const [current, setCurrent] = useState(0);
+	const [direction, setDirection] = useState(1);
+	const [paused, setPaused] = useState(false);
+	const [imageStates, setImageStates] = useState(
+		() => SLIDES.map(() => "loading"), // "loading" | "loaded" | "error"
+	);
+
+	const goTo = useCallback((index, dir) => {
+		setDirection(dir);
+		setCurrent((index + SLIDES.length) % SLIDES.length);
+	}, []);
+
+	const next = useCallback(() => goTo(current + 1, 1), [current, goTo]);
+	const prev = useCallback(() => goTo(current - 1, -1), [current, goTo]);
+
+	useEffect(() => {
+		if (paused) return;
+		const id = setInterval(() => {
+			setDirection(1);
+			setCurrent((c) => (c + 1) % SLIDES.length);
+		}, AUTO_PLAY_INTERVAL);
+		return () => clearInterval(id);
+	}, [paused]);
+
+	const handleImageLoad = (idx) => {
+		setImageStates((prev) => {
+			const next = [...prev];
+			next[idx] = "loaded";
+			return next;
+		});
+	};
+
+	const handleImageError = (idx) => {
+		setImageStates((prev) => {
+			const next = [...prev];
+			next[idx] = "error";
+			return next;
+		});
+	};
+
+	return (
 		<Box
+			onMouseEnter={() => setPaused(true)}
+			onMouseLeave={() => setPaused(false)}
 			sx={{
-				width: 44,
-				height: 44,
-				borderRadius: "12px",
-				background:
-					"linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%)",
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				flexShrink: 0,
+				position: "relative",
+				width: "100%",
+				height: "100%",
+				borderRadius: "20px",
+				overflow: "hidden",
+				boxShadow: "0 24px 64px rgba(0,0,0,0.45)",
+				userSelect: "none",
 			}}
 		>
-			<Icon sx={{ color: "primary.light", fontSize: 22 }} />
-		</Box>
-		<Box>
-			<Typography
-				variant="subtitle1"
+			{/* Slides */}
+			<AnimatePresence initial={false} custom={direction}>
+				<MotionBox
+					key={current}
+					custom={direction}
+					variants={slideVariants}
+					initial="enter"
+					animate="center"
+					exit="exit"
+					sx={{
+						position: "absolute",
+						inset: 0,
+						width: "100%",
+						height: "100%",
+					}}
+				>
+					{/* Placeholder gradient (always rendered, hidden when image loaded) */}
+					<Box
+						sx={{
+							position: "absolute",
+							inset: 0,
+							background:
+								PLACEHOLDER_GRADIENTS[current % PLACEHOLDER_GRADIENTS.length],
+							display: imageStates[current] === "loaded" ? "none" : "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							flexDirection: "column",
+							gap: 2,
+						}}
+					>
+						{imageStates[current] === "loading" && (
+							<>
+								{/* Animated shimmer bars */}
+								{[70, 50, 60].map((w, i) => (
+									<Box
+										key={i}
+										sx={{
+											width: `${w}%`,
+											height: 12,
+											borderRadius: 6,
+											background:
+												"linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.06) 75%)",
+											backgroundSize: "200% 100%",
+											animation: "shimmer 1.6s infinite",
+											"@keyframes shimmer": {
+												"0%": { backgroundPosition: "-200% 0" },
+												"100%": { backgroundPosition: "200% 0" },
+											},
+										}}
+									/>
+								))}
+							</>
+						)}
+					</Box>
+
+					{/* Actual screenshot image */}
+					<Box
+						component="img"
+						src={SLIDES[current].src}
+						alt={SLIDES[current].label}
+						onLoad={() => handleImageLoad(current)}
+						onError={() => handleImageError(current)}
+						sx={{
+							position: "absolute",
+							inset: 0,
+							width: "100%",
+							height: "100%",
+							objectFit: "cover",
+							opacity: imageStates[current] === "loaded" ? 1 : 0,
+							transition: "opacity 0.4s ease",
+						}}
+					/>
+
+					{/* Bottom gradient overlay — taller to accommodate caption */}
+					<Box
+						sx={{
+							position: "absolute",
+							bottom: 0,
+							left: 0,
+							right: 0,
+							height: "50%",
+							background:
+								"linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.3) 55%, transparent 100%)",
+							pointerEvents: "none",
+						}}
+					/>
+
+					{/* Animated caption overlay */}
+					<AnimatePresence initial={false} custom={direction} mode="wait">
+						<MotionBox
+							key={`caption-${current}`}
+							custom={direction}
+							variants={captionVariants}
+							initial="enter"
+							animate="center"
+							exit="exit"
+							sx={{
+								position: "absolute",
+								bottom: 44,
+								left: 0,
+								right: 0,
+								px: 3,
+								zIndex: 5,
+							}}
+						>
+							<Typography
+								variant="subtitle1"
+								sx={{
+									color: "#fff",
+									fontWeight: 700,
+									fontFamily: "Inter, sans-serif",
+									fontSize: "1.05rem",
+									lineHeight: 1.35,
+									mb: 0.75,
+									textShadow: "0 1px 6px rgba(0,0,0,0.5)",
+								}}
+							>
+								{SLIDES[current].title}
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{
+									color: "rgba(255,255,255,0.82)",
+									fontFamily: "Inter, sans-serif",
+									lineHeight: 1.55,
+									fontSize: "0.82rem",
+									textShadow: "0 1px 4px rgba(0,0,0,0.4)",
+								}}
+							>
+								{SLIDES[current].description}
+							</Typography>
+						</MotionBox>
+					</AnimatePresence>
+				</MotionBox>
+			</AnimatePresence>
+
+			{/* Prev / Next arrow buttons */}
+			<IconButton
+				onClick={prev}
+				size="small"
 				sx={{
-					fontWeight: 600,
-					color: "text.cardTitle",
-					mb: 0.5,
-					fontFamily: "Inter, sans-serif",
+					position: "absolute",
+					left: 12,
+					top: "50%",
+					transform: "translateY(-50%)",
+					zIndex: 10,
+					bgcolor: "rgba(0,0,0,0.45)",
+					backdropFilter: "blur(8px)",
+					color: "#fff",
+					"&:hover": { bgcolor: "rgba(0,0,0,0.65)" },
+					transition: "background 0.2s",
 				}}
 			>
-				{title}
-			</Typography>
-			<Typography
-				variant="body2"
+				<ChevronLeftIcon />
+			</IconButton>
+			<IconButton
+				onClick={next}
+				size="small"
 				sx={{
-					color: "text.cardSubtitle",
-					lineHeight: 1.6,
-					fontFamily: "Inter, sans-serif",
+					position: "absolute",
+					right: 12,
+					top: "50%",
+					transform: "translateY(-50%)",
+					zIndex: 10,
+					bgcolor: "rgba(0,0,0,0.45)",
+					backdropFilter: "blur(8px)",
+					color: "#fff",
+					"&:hover": { bgcolor: "rgba(0,0,0,0.65)" },
+					transition: "background 0.2s",
 				}}
 			>
-				{description}
-			</Typography>
+				<ChevronRightIcon />
+			</IconButton>
+
+			{/* Dot indicators */}
+			<Box
+				sx={{
+					position: "absolute",
+					bottom: 16,
+					left: "50%",
+					transform: "translateX(-50%)",
+					display: "flex",
+					gap: 1,
+					zIndex: 10,
+				}}
+			>
+				{SLIDES.map((_, idx) => (
+					<Box
+						key={idx}
+						onClick={() => goTo(idx, idx > current ? 1 : -1)}
+						sx={{
+							width: idx === current ? 22 : 7,
+							height: 7,
+							borderRadius: 4,
+							bgcolor: idx === current ? "#fff" : "rgba(255,255,255,0.4)",
+							cursor: "pointer",
+							transition: "all 0.3s ease",
+							"&:hover": {
+								bgcolor: idx === current ? "#fff" : "rgba(255,255,255,0.65)",
+							},
+						}}
+					/>
+				))}
+			</Box>
+
+			{/* Progress bar */}
+			{!paused && (
+				<Box
+					key={`progress-${current}`}
+					sx={{
+						position: "absolute",
+						top: 0,
+						left: 0,
+						height: 3,
+						bgcolor: "rgba(59, 130, 246, 0.9)",
+						borderRadius: "0 2px 2px 0",
+						animation: `progress ${AUTO_PLAY_INTERVAL}ms linear`,
+						"@keyframes progress": {
+							from: { width: "0%" },
+							to: { width: "100%" },
+						},
+						zIndex: 10,
+					}}
+				/>
+			)}
 		</Box>
-	</MotionBox>
-);
+	);
+}
 
 export default function Login({ onLogin }) {
 	const [error, setError] = useState("");
 	const [googleLoading, setGoogleLoading] = useState(false);
 	const { t } = useContext(I18nContext);
 
-	// SEO meta tags for login page
 	useSEO("login");
 
 	const handleGoogleSignIn = async () => {
@@ -83,10 +395,7 @@ export default function Login({ onLogin }) {
 			onLogin();
 		} catch (err) {
 			console.error("Google sign-in error:", err);
-			if (err.code === "auth/popup-closed-by-user") {
-				// User closed popup, don't show error
-				return;
-			}
+			if (err.code === "auth/popup-closed-by-user") return;
 			setError(
 				t("google_signin_failed") || "Google sign-in failed. Please try again.",
 			);
@@ -94,29 +403,6 @@ export default function Login({ onLogin }) {
 			setGoogleLoading(false);
 		}
 	};
-
-	const features = [
-		{
-			icon: BoltIcon,
-			title: t("adaptable_performance"),
-			description: t("adaptable_performance_desc"),
-		},
-		{
-			icon: BuildIcon,
-			title: t("built_to_last"),
-			description: t("built_to_last_desc"),
-		},
-		{
-			icon: ThumbUpAltIcon,
-			title: t("great_account_experience"),
-			description: t("great_account_experience_desc"),
-		},
-		{
-			icon: AutoAwesomeIcon,
-			title: t("innovative_functionality"),
-			description: t("innovative_functionality_desc"),
-		},
-	];
 
 	return (
 		<Box
@@ -133,7 +419,7 @@ export default function Login({ onLogin }) {
 				overflow: "hidden",
 			}}
 		>
-			{/* Background decorative elements */}
+			{/* Background blobs */}
 			<Box
 				sx={{
 					position: "absolute",
@@ -165,98 +451,81 @@ export default function Login({ onLogin }) {
 				sx={{
 					display: "flex",
 					width: "100%",
-					maxWidth: 1100,
-					gap: { xs: 0, md: 8 },
-					alignItems: "center",
+					maxWidth: 1160,
+					gap: { xs: 0, md: 6 },
+					alignItems: "stretch",
 					position: "relative",
 					zIndex: 1,
+					minHeight: { md: 560 },
 				}}
 			>
-				{/* Left Info Panel */}
+				{/* ── Left: Screenshot Carousel ── */}
 				<MotionBox
-					initial={{ x: -40 }}
-					animate={{ x: 0 }}
-					transition={{ duration: 0.6, ease: "easeOut" }}
+					initial={{ x: -40, opacity: 0 }}
+					animate={{ x: 0, opacity: 1 }}
+					transition={{ duration: 0.65, ease: "easeOut" }}
 					sx={{
-						flex: 1,
+						flex: 1.15,
 						display: { xs: "none", md: "flex" },
 						flexDirection: "column",
-						pr: 4,
+						gap: 3,
 					}}
 				>
-					{/* Logo/Brand */}
-					<MotionBox
-						initial={{ y: -20 }}
-						animate={{ y: 0 }}
-						transition={{ duration: 0.5 }}
-						sx={{
-							display: "flex",
-							alignItems: "center",
-							gap: 2,
-							mb: 5,
-						}}
-					>
+					{/* Brand header above carousel */}
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 						<Box
 							component="img"
 							src="/images/logo/memodeck.png"
 							alt="MemoDeck"
 							sx={{
-								width: 40,
-								height: 40,
-								borderRadius: "10px",
+								width: 36,
+								height: 36,
+								borderRadius: "9px",
 								objectFit: "cover",
 								boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
 							}}
 						/>
-						<Box>
-							<Typography
-								variant="h4"
-								sx={{
-									fontWeight: 700,
-									background:
-										"linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-									backgroundClip: "text",
-									WebkitBackgroundClip: "text",
-									WebkitTextFillColor: "transparent",
-									fontFamily: "Inter, sans-serif",
-								}}
-							>
-								MemoDeck
-							</Typography>
-							<Typography
-								variant="body2"
-								sx={{
-									color: "text.cardSubtitle",
-									fontFamily: "Inter, sans-serif",
-								}}
-							>
-								{t("tagline") || "Master anything with flashcards"}
-							</Typography>
-						</Box>
-					</MotionBox>
+						<Typography
+							variant="h5"
+							sx={{
+								fontWeight: 700,
+								background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+								backgroundClip: "text",
+								WebkitBackgroundClip: "text",
+								WebkitTextFillColor: "transparent",
+								fontFamily: "Inter, sans-serif",
+							}}
+						>
+							MemoDeck
+						</Typography>
+						<Typography
+							variant="body2"
+							sx={{
+								color: "text.cardSubtitle",
+								fontFamily: "Inter, sans-serif",
+								ml: 0.5,
+								mt: 0.3,
+							}}
+						>
+							{t("tagline") || "Master anything with flashcards"}
+						</Typography>
+					</Box>
 
-					{/* Features */}
-					<Box sx={{ mt: 2 }}>
-						{features.map((feature, index) => (
-							<FeatureItem
-								key={index}
-								icon={feature.icon}
-								title={feature.title}
-								description={feature.description}
-								delay={0.2 + index * 0.1}
-							/>
-						))}
+					{/* Carousel */}
+					<Box sx={{ flex: 1, minHeight: 0 }}>
+						<ScreenshotCarousel />
 					</Box>
 				</MotionBox>
 
-				{/* Right Login Form */}
+				{/* ── Right: Login Card ── */}
 				<MotionBox
-					initial={{ x: 40 }}
-					animate={{ x: 0 }}
-					transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+					initial={{ x: 40, opacity: 0 }}
+					animate={{ x: 0, opacity: 1 }}
+					transition={{ duration: 0.65, ease: "easeOut", delay: 0.1 }}
 					sx={{
 						flex: 1,
 						display: "flex",
+						alignItems: "center",
 						justifyContent: "center",
 						width: "100%",
 					}}
@@ -270,7 +539,7 @@ export default function Login({ onLogin }) {
 							p: { xs: 3, sm: 4 },
 						}}
 					>
-						{/* Mobile Logo */}
+						{/* Mobile branding */}
 						<Box
 							sx={{
 								display: { xs: "flex", md: "none" },
@@ -335,45 +604,24 @@ export default function Login({ onLogin }) {
 							<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 3 }}>
 								<Alert
 									severity="error"
-									sx={{
-										borderRadius: "12px",
-										fontFamily: "Inter, sans-serif",
-									}}
+									sx={{ borderRadius: "12px", fontFamily: "Inter, sans-serif" }}
 								>
 									{error}
 								</Alert>
 							</MotionBox>
 						)}
 
-						{/* Google Sign-In Button */}
 						<StyledButton
 							variant="primary"
 							size="large"
 							fullWidth
 							loading={googleLoading}
 							onClick={handleGoogleSignIn}
-							sx={{
-								py: 1.5,
-								fontSize: "1rem",
-							}}
+							sx={{ py: 1.5, fontSize: "1rem" }}
 							startIcon={<GoogleIcon />}
 						>
 							{t("continue_with_google") || "Continue with Google"}
 						</StyledButton>
-
-						{/* <Typography
-							variant="caption"
-							sx={{
-								color: "text.cardSubtitle",
-								textAlign: "center",
-								display: "block",
-								mt: 3,
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{t("terms_agreement") ||
-								"By continuing, you agree to our Terms of Service and Privacy Policy"}
-						</Typography> */}
 					</StyledCard>
 				</MotionBox>
 			</Box>

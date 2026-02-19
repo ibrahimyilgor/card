@@ -179,6 +179,7 @@
 	"7_days": "7D",
 	"30_days": "30D",
 	"90_days": "90D",
+	"180_days": "180D",
 	"1_year": "1Y",
 	"all_time_short": "All",
 	"download_report": "Download Report",
@@ -279,7 +280,7 @@
 	"direction_normal": "Normal",
 	"direction_reverse": "Reverse",
 	"hard_mode": "Hard Mode",
-	"hard_mode_desc": "Only study cards you got wrong",
+	"hard_mode_desc": "Only study cards you got correct less than 50%",
 	"download_csv": "Download CSV",
 	"download_error": "Error downloading file",
 	"download_success": "File downloaded successfully",
@@ -365,6 +366,7 @@
 	"adCloseHint": "Click X to close",
 	"stats_locked_title": "Upgrade your plan to unlock advanced statistics",
 	"stats_locked_description": "Get deeper insights into your learning patterns with our premium statistics features.",
+	"stats_preview_description": "This is a preview with sample data. Upgrade your plan to see your real statistics.",
 	"upgrade_plan": "Upgrade Plan",
 	"limitWarningTitle": "Plan Limit Exceeded",
 	"limitWarningDescription": "You have exceeded your plan limits. Please reduce your content or upgrade your plan to continue.",
@@ -383,5 +385,6 @@
 	"flashcard_updated": "Flashcard updated successfully",
 	"flashcard_deleted": "Flashcard deleted successfully",
 	"plans_mobile_only": "This operation can be done only by mobile",
-	"downgrade": "Downgrade"
+	"downgrade": "Downgrade",
+	"date_range_max_warning": "Please select a date range shorter than 1 year"
 }

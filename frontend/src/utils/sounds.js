@@ -2,12 +2,10 @@
 
 // Sound file paths
 const SOUND_FILES = {
-	correct: "/sounds/correct.wav",
-	wrong: "/sounds/wrong.wav",
-	flip: "/sounds/flip.wav",
-	success: "/sounds/success.wav",
-	click: "/sounds/click.wav",
-	gameOver: "/sounds/game-over.wav",
+	correct: "/sounds/correct.mp3",
+	wrong: "/sounds/wrong.mp3",
+	flip: "/sounds/flip.mp3",
+	success: "/sounds/success.mp3",
 };
 
 // Cache for Audio objects
@@ -65,8 +63,6 @@ export const SOUNDS = {
 	WRONG: "wrong",
 	FLIP: "flip",
 	SUCCESS: "success",
-	CLICK: "click",
-	GAME_OVER: "gameOver",
 };
 
 export default {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Box, Typography, useTheme } from "@mui/material";
 import TouchAppIcon from "@mui/icons-material/TouchApp";
@@ -13,6 +13,26 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 		playSound(SOUNDS.FLIP);
 		onFlip();
 	};
+
+	useEffect(() => {
+		const onKeyDown = (e) => {
+			const tag = e.target && e.target.tagName;
+			if (
+				e.code === "Space" &&
+				!e.repeat &&
+				tag !== "INPUT" &&
+				tag !== "TEXTAREA" &&
+				!e.target.isContentEditable
+			) {
+				e.preventDefault();
+				playSound(SOUNDS.FLIP);
+				onFlip();
+			}
+		};
+
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [onFlip]);
 
 	const cardVariants = {
 		front: {
