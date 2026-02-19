@@ -32,7 +32,9 @@ import {
 	Alert,
 } from "@mui/material";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import "dayjs/locale/tr";
+dayjs.extend(utc);
 import $ from "jquery";
 import moment from "moment";
 import "daterangepicker/daterangepicker.css";
@@ -343,14 +345,28 @@ export default function Stats() {
 	}, [lang]);
 
 	// Format date for display using dayjs + current locale
+	// Normalize incoming ISO timestamps (UTC) to local time so labels
+	// reflect the user's local day (avoids off-by-one due to UTC offsets).
 	const formatDateLabel = useCallback(
 		(dateStr, grouping) => {
 			if (!dateStr) return "-";
-			const d = dayjs(dateStr);
+
+			// Monthly keys sometimes come as "YYYY-MM" or full ISO — normalize
 			if (grouping === "monthly") {
-				return d.format("MMM YYYY");
+				const monthKey = /^\d{4}-\d{2}$/.test(dateStr)
+					? dateStr + "-01"
+					: dateStr;
+				return (/T|Z/.test(monthKey)
+					? dayjs.utc(monthKey).local()
+					: dayjs(monthKey)
+				).format("MMM YYYY");
 			}
-			return d.format("MMM D");
+
+			// Plain YYYY-MM-DD: parse as local; ISO timestamp: convert UTC→local
+			if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+				return dayjs(dateStr).format("MMM D");
+			}
+			return dayjs.utc(dateStr).local().format("MMM D");
 		},
 		[lang],
 	);
@@ -1039,7 +1055,10 @@ export default function Stats() {
 		if (isDaily) {
 			const dataMap = new Map();
 			rawData.forEach((d) => {
-				const key = d.date?.substring(0, 10);
+				// Convert ISO UTC timestamp to the user's local date string
+				const key = d.date
+					? dayjs.utc(d.date).local().format("YYYY-MM-DD")
+					: undefined;
 				if (dataMap.has(key)) {
 					const ex = dataMap.get(key);
 					dataMap.set(key, {
@@ -1070,7 +1089,10 @@ export default function Stats() {
 		} else {
 			const dataMap = new Map();
 			rawData.forEach((d) => {
-				const monthKey = d.date?.substring(0, 7);
+				// Convert ISO UTC timestamp to the user's local month key
+				const monthKey = d.date
+					? dayjs.utc(d.date).local().format("YYYY-MM")
+					: undefined;
 				if (dataMap.has(monthKey)) {
 					const ex = dataMap.get(monthKey);
 					dataMap.set(monthKey, {
