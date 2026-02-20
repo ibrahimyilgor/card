@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import {
 	AppBar,
 	Toolbar,
@@ -12,7 +12,7 @@ import {
 	alpha,
 	Avatar,
 } from "@mui/material";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion"; // AnimatePresence'i Popover'da kullanıyoruz, gerekmedikçe kaldırmadım
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -38,6 +38,7 @@ function NavButton({ icon: Icon, label, isActive, onClick, tooltip }) {
 				onClick={onClick}
 				whileHover={{ scale: 1.05 }}
 				whileTap={{ scale: 0.95 }}
+				disabled={onClick === null} // disabled mantığı parent'tan geliyor
 				sx={{
 					mx: 0.25,
 					p: { xs: 0.75, sm: 1.25 },
@@ -61,6 +62,10 @@ function NavButton({ icon: Icon, label, isActive, onClick, tooltip }) {
 						backgroundColor: isDark
 							? "rgba(255, 255, 255, 0.08)"
 							: "rgba(59, 130, 246, 0.08)",
+					},
+					"&.Mui-disabled": {
+						opacity: 0.5,
+						cursor: "not-allowed",
 					},
 				}}
 			>
@@ -91,14 +96,43 @@ export default function Topbar({ onLogout, currentPath, user }) {
 	const location = useLocation();
 
 	const [navLoading, setNavLoading] = useState(false);
-
 	const [anchorEl, setAnchorEl] = useState(null);
 	const [streak, setStreak] = useState(null);
 
-	// Fetch current streak on mount (only when logged in)s
+	// Debounce yardımcı fonksiyonu (lodash olmadan)
+	const debounce = (func, wait) => {
+		let timeout;
+		return (...args) => {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => func(...args), wait);
+		};
+	};
+
+	// Debounced navigate
+	const debouncedNavigate = useCallback(
+		debounce((path) => {
+			navigate(path);
+			setNavLoading(false); // navigate sonrası hemen reset (location değişikliğiyle de resetlenir)
+		}, 425), // 425ms – hızlı tıklamaları tek tıklamaya indirir
+		[navigate],
+	);
+
+	const handleNavigate = (path) => {
+		if (navLoading || currentPath === path) return;
+		setNavLoading(true);
+		debouncedNavigate(path);
+	};
+
+	// location değiştiğinde loading'i temizle (debounce sonrası da olur)
+	useEffect(() => {
+		setNavLoading(false);
+	}, [location.pathname]);
+
+	// Streak fetch
 	useEffect(() => {
 		const isLoggedIn = !!(user || localStorage.getItem("token"));
 		if (!isLoggedIn) return;
+
 		let mounted = true;
 		getCurrentStreak()
 			.then((data) => {
@@ -110,23 +144,11 @@ export default function Topbar({ onLogout, currentPath, user }) {
 		};
 	}, [user]);
 
-	// Get user's profile photo from props
 	const photoURL = user?.photoURL;
 	const displayName = user?.displayName;
 	const email = user?.email;
 
-	// Use location.pathname if currentPath not provided
 	const activePath = currentPath || location.pathname;
-
-	const handleNavigate = (path) => {
-		if (navLoading || activePath === path) return;
-		setNavLoading(true);
-		navigate(path);
-	};
-
-	useEffect(() => {
-		setNavLoading(false);
-	}, [location.pathname]);
 
 	const handleProfileClick = (event) => {
 		setAnchorEl(event.currentTarget);
@@ -140,7 +162,6 @@ export default function Topbar({ onLogout, currentPath, user }) {
 		try {
 			const refreshToken = localStorage.getItem("refreshToken");
 			if (refreshToken) {
-				// Invalidate refresh token on server
 				await fetch(
 					`${window.location.protocol}//${window.location.hostname}/api/auth/logout`,
 					{
@@ -199,7 +220,7 @@ export default function Topbar({ onLogout, currentPath, user }) {
 				<MotionBox
 					whileHover={{ scale: 1.02 }}
 					whileTap={{ scale: 0.98 }}
-					onClick={() => navigate("/")}
+					onClick={() => handleNavigate("/")}
 					sx={{
 						display: "flex",
 						alignItems: "center",
@@ -262,51 +283,45 @@ export default function Topbar({ onLogout, currentPath, user }) {
 						label="Home"
 						tooltip={t("home") || "Home"}
 						isActive={activePath === "/"}
-						onClick={() => handleNavigate("/")}
-						disabled={navLoading}
+						onClick={navLoading ? null : () => handleNavigate("/")}
 					/>
 					<NavButton
 						icon={BarChartIcon}
 						label="Stats"
 						tooltip={t("statistics") || "Statistics"}
 						isActive={activePath === "/stats"}
-						onClick={() => handleNavigate("/stats")}
-						disabled={navLoading}
+						onClick={navLoading ? null : () => handleNavigate("/stats")}
 					/>
 					<NavButton
 						icon={EmojiEventsIcon}
 						label="Achievements"
 						tooltip={t("achievements") || "Achievements"}
 						isActive={activePath === "/achievements"}
-						onClick={() => handleNavigate("/achievements")}
-						disabled={navLoading}
+						onClick={navLoading ? null : () => handleNavigate("/achievements")}
 					/>
 					<NavButton
 						icon={EventNoteIcon}
 						label="Plan"
 						tooltip={t("plan") || "Plan"}
 						isActive={activePath === "/plans"}
-						onClick={() => handleNavigate("/plans")}
-						disabled={navLoading}
+						onClick={navLoading ? null : () => handleNavigate("/plans")}
 					/>
 					<NavButton
 						icon={SettingsIcon}
 						label="Settings"
 						tooltip={t("settings")}
 						isActive={activePath === "/settings"}
-						onClick={() => handleNavigate("/settings")}
-						disabled={navLoading}
+						onClick={navLoading ? null : () => handleNavigate("/settings")}
 					/>
 				</Box>
 
-				{/* Profile */}
+				{/* Profile & Streak */}
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 					{/* Streak indicator */}
 					<Tooltip title={t("current_streak") || "Current Streak"} arrow>
 						<MotionBox
 							whileHover={{ scale: 1.08 }}
 							whileTap={{ scale: 0.95 }}
-							// onClick={() => handleNavigate("/stats")}
 							sx={{
 								display: "flex",
 								alignItems: "center",
@@ -335,7 +350,7 @@ export default function Topbar({ onLogout, currentPath, user }) {
 									lineHeight: 1,
 								}}
 							>
-								{streak}
+								{streak ?? "-"}
 							</Typography>
 						</MotionBox>
 					</Tooltip>
@@ -410,134 +425,129 @@ export default function Topbar({ onLogout, currentPath, user }) {
 							},
 						}}
 					>
-						<AnimatePresence initial={false}>
-							<MotionBox
-								initial={{ y: -10 }}
-								animate={{ y: 0 }}
-								transition={{ duration: 0.2 }}
+						<MotionBox
+							initial={{ y: -10, opacity: 0 }}
+							animate={{ y: 0, opacity: 1 }}
+							transition={{ duration: 0.2 }}
+						>
+							{/* Profile Header */}
+							<Box
+								sx={{
+									p: 3,
+									background: (theme) =>
+										theme.palette.mode === "dark"
+											? "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)"
+											: "linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)",
+									borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+									textAlign: "center",
+								}}
 							>
-								{/* Profile Header */}
-								<Box
+								{photoURL ? (
+									<Avatar
+										src={photoURL}
+										alt={displayName || "Profile"}
+										sx={{
+											width: 56,
+											height: 56,
+											borderRadius: "14px",
+											mx: "auto",
+											mb: 1.5,
+											boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+										}}
+									/>
+								) : (
+									<Box
+										sx={{
+											width: 56,
+											height: 56,
+											borderRadius: "14px",
+											background:
+												"linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											mx: "auto",
+											mb: 1.5,
+											boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+										}}
+									>
+										<AccountCircleIcon sx={{ fontSize: 32, color: "white" }} />
+									</Box>
+								)}
+								<Typography
+									variant="subtitle1"
 									sx={{
-										p: 3,
-										background: (theme) =>
-											theme.palette.mode === "dark"
-												? "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)"
-												: "linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)",
-										borderBottom: (theme) =>
-											`1px solid ${theme.palette.border.main}`,
-										textAlign: "center",
+										fontWeight: 600,
+										color: "text.primary",
+										fontFamily: "Inter, sans-serif",
 									}}
 								>
-									{photoURL ? (
-										<Avatar
-											src={photoURL}
-											alt={displayName || "Profile"}
-											sx={{
-												width: 56,
-												height: 56,
-												borderRadius: "14px",
-												mx: "auto",
-												mb: 1.5,
-												boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
-											}}
-										/>
-									) : (
-										<Box
-											sx={{
-												width: 56,
-												height: 56,
-												borderRadius: "14px",
-												background:
-													"linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												mx: "auto",
-												mb: 1.5,
-												boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
-											}}
-										>
-											<AccountCircleIcon
-												sx={{ fontSize: 32, color: "white" }}
-											/>
-										</Box>
-									)}
+									{displayName || t("profile")}
+								</Typography>
+								{email && (
 									<Typography
-										variant="subtitle1"
+										variant="body2"
 										sx={{
-											fontWeight: 600,
-											color: "text.cardTitle",
+											color: "text.secondary",
 											fontFamily: "Inter, sans-serif",
+											fontSize: "0.75rem",
 										}}
 									>
-										{displayName || t("profile")}
+										{email}
 									</Typography>
-									{email && (
-										<Typography
-											variant="body2"
-											sx={{
-												color: "text.cardSubtitle",
-												fontFamily: "Inter, sans-serif",
-												fontSize: "0.75rem",
-											}}
-										>
-											{email}
-										</Typography>
-									)}
-								</Box>
+								)}
+							</Box>
 
-								{/* Actions */}
-								<Box sx={{ p: 2 }}>
-									<Button
-										fullWidth
-										startIcon={<AccountCircleIcon />}
-										onClick={() => {
-											navigate("/account");
-											setAnchorEl(null);
-										}}
-										sx={{
-											justifyContent: "flex-start",
-											py: 1.5,
-											px: 2,
-											borderRadius: 2,
-											fontWeight: 600,
-											fontFamily: "Inter, sans-serif",
-											transition: "all 0.2s ease",
-											"&:hover": {
-												backgroundColor: (theme) =>
-													alpha(theme.palette.action.hover, 0.06),
-											},
-										}}
-									>
-										{t("account") || "Account"}
-									</Button>
-									<Button
-										fullWidth
-										startIcon={<LogoutIcon />}
-										onClick={handleLogout}
-										sx={{
-											justifyContent: "flex-start",
-											py: 1.5,
-											px: 2,
-											borderRadius: 2,
-											fontWeight: 600,
-											fontFamily: "Inter, sans-serif",
-											color: "error.main",
+							{/* Actions */}
+							<Box sx={{ p: 2 }}>
+								<Button
+									fullWidth
+									startIcon={<AccountCircleIcon />}
+									onClick={() => {
+										navigate("/account");
+										setAnchorEl(null);
+									}}
+									sx={{
+										justifyContent: "flex-start",
+										py: 1.5,
+										px: 2,
+										borderRadius: 2,
+										fontWeight: 600,
+										fontFamily: "Inter, sans-serif",
+										transition: "all 0.2s ease",
+										"&:hover": {
 											backgroundColor: (theme) =>
-												alpha(theme.palette.error.main, 0.08),
-											transition: "all 0.2s ease",
-											"&:hover": {
-												backgroundColor: (theme) =>
-													alpha(theme.palette.error.main, 0.15),
-											},
-										}}
-									>
-										{t("logout")}
-									</Button>
-								</Box>
-							</MotionBox>
-						</AnimatePresence>
+												alpha(theme.palette.action.hover, 0.06),
+										},
+									}}
+								>
+									{t("account") || "Account"}
+								</Button>
+								<Button
+									fullWidth
+									startIcon={<LogoutIcon />}
+									onClick={handleLogout}
+									sx={{
+										justifyContent: "flex-start",
+										py: 1.5,
+										px: 2,
+										borderRadius: 2,
+										fontWeight: 600,
+										fontFamily: "Inter, sans-serif",
+										color: "error.main",
+										backgroundColor: (theme) =>
+											alpha(theme.palette.error.main, 0.08),
+										transition: "all 0.2s ease",
+										"&:hover": {
+											backgroundColor: (theme) =>
+												alpha(theme.palette.error.main, 0.15),
+										},
+									}}
+								>
+									{t("logout")}
+								</Button>
+							</Box>
+						</MotionBox>
 					</Popover>
 				</Box>
 			</Toolbar>

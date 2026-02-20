@@ -1,7 +1,7 @@
--standard modeda son karta iki kere hızlı basarsak coklu sayıyor
+-standard modeda son karta iki kere hızlı basarsak coklu sayıyor.
+-menü geçişlerinde boş sayfaya dönüyor.
 
 -plana göre özelliklerin açılıp kapatılması.
-    +nelerin kısatlanacağına karar ver
     +plan açıklamalarının düzenlemesi (mobil-web)
 
 -plana ekleme, plandan çıkarma vs
