@@ -1,5 +1,4 @@
--standard modeda son karta iki kere hızlı basarsak coklu sayıyor.
--menü geçişlerinde boş sayfaya dönüyor.
+-her oyun modunu incele, oyun sonu summarylerini incele düzelt.
 
 -plana göre özelliklerin açılıp kapatılması.
     +plan açıklamalarının düzenlemesi (mobil-web)

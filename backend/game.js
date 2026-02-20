@@ -331,7 +331,7 @@ module.exports = (pool) => {
 				correct: isCorrect,
 				similarity: similarity,
 				correctAnswer: correctAnswer,
-				isClose: similarity > 0.8 && !isCorrect,
+				isClose: similarity > 0.8,
 			});
 		} catch (err) {
 			console.error("Error validating answer:", err);
