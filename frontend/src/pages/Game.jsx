@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useContext, useCallback } from "react";
+import React, {
+	useEffect,
+	useState,
+	useContext,
+	useCallback,
+	useRef,
+} from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSEO } from "../utils/seo";
@@ -92,6 +98,9 @@ export default function Game({ onBackToDecks }) {
 	const challengeType = settings.challengeType || "none";
 	const cardDirection = settings.cardDirection || "normal";
 	const hardModeEnabled = settings.hardModeEnabled || false;
+
+	// Debounce lock for answer processing
+	const answerProcessingRef = useRef(false);
 
 	// Core game state
 	const [flashcards, setFlashcards] = useState([]);
@@ -249,6 +258,8 @@ export default function Game({ onBackToDecks }) {
 	const handleAnswer = useCallback(
 		async (isCorrect) => {
 			if (gameEnded) return;
+			if (answerProcessingRef.current) return;
+			answerProcessingRef.current = true;
 
 			setDirection(isCorrect ? 1 : -1);
 			playSound(isCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
@@ -303,6 +314,11 @@ export default function Game({ onBackToDecks }) {
 					setGameEnded(true);
 				}
 			}
+
+			// Release lock after a short delay to prevent double-tap
+			setTimeout(() => {
+				answerProcessingRef.current = false;
+			}, 250);
 		},
 		[currentCardIndex, flashcards, challengeType, lives, gameEnded],
 	);
@@ -312,6 +328,7 @@ export default function Game({ onBackToDecks }) {
 	}, []);
 
 	const handleRestart = useCallback(() => {
+		answerProcessingRef.current = false;
 		setCurrentCardIndex(0);
 		setScores({ correct: 0, incorrect: 0 });
 		setGameEnded(false);

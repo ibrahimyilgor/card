@@ -12,6 +12,7 @@ import {
 	StyledCard,
 	AchievementsSkeleton,
 } from "../components/ui";
+import { useSEO } from "../utils/seo";
 
 const MotionBox = motion.create(Box);
 
@@ -199,6 +200,8 @@ export default function Achievements() {
 	const { t } = useContext(I18nContext);
 	const [achievements, setAchievements] = useState([]);
 	const [loading, setLoading] = useState(true);
+
+	useSEO("achievements");
 
 	useEffect(() => {
 		const fetchAchievements = async () => {

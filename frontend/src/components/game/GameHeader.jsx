@@ -3,8 +3,8 @@ import { Box, Typography, Tooltip } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { StyledButton } from "../ui";
-import TimerDisplay from "./TimerDisplay";
 import LivesDisplay from "./LivesDisplay";
+import TimerIcon from "@mui/icons-material/Timer";
 
 const GameHeader = ({
 	gameMode,
@@ -40,11 +40,33 @@ const GameHeader = ({
 
 			{/* Challenge-specific indicators */}
 			<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-				{challengeType === "timed" && (
-					<TimerDisplay
-						timeLeft={timer.timeLeft}
-						totalTime={settings.timeLimit}
-					/>
+				{challengeType === "timed" && timer && (
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							gap: 1,
+							px: 2,
+							py: 1,
+							borderRadius: 2,
+							bgcolor:
+								timer.timeLeft < 10
+									? "rgba(239, 68, 68, 0.1)"
+									: "rgba(245, 158, 11, 0.1)",
+						}}
+					>
+						<TimerIcon sx={{ color: timer.timeLeft < 10 ? "#ef4444" : "#f59e0b" }} />
+						<Typography
+							variant="h6"
+							sx={{
+								color: timer.timeLeft < 10 ? "#ef4444" : "#f59e0b",
+								fontWeight: 700,
+								fontFamily: "Inter, sans-serif",
+							}}
+						>
+							{timer.formattedTime}
+						</Typography>
+					</Box>
 				)}
 				{challengeType === "survival" && (
 					<LivesDisplay lives={lives.lives} maxLives={lives.maxLives} />

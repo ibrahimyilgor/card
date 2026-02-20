@@ -75,6 +75,7 @@ import {
 	getChartData,
 	getCardsTable,
 } from "../services/statsServices";
+import { useSEO } from "../utils/seo";
 
 // ---------------------------------------------------------------------------
 // Mock data shown to free-plan users so they can preview the stats page
@@ -299,6 +300,8 @@ export default function Stats() {
 
 	// Date range warning
 	const [dateWarning, setDateWarning] = useState("");
+
+	useSEO("stats");
 
 	// Whether user is on a free plan (no advanced stats access)
 	const isLocked = !planLoading && !advancedStats;

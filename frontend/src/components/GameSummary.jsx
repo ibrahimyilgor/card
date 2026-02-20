@@ -216,13 +216,15 @@ export default function GameSummary({
 					<Typography
 						variant="body2"
 						sx={{
-							color: gradeColor,
+							color: gameMode !== "match" ? gradeColor : "#22c55e",
 							fontFamily: "Inter, sans-serif",
 							fontWeight: 600,
 							mb: 3,
 						}}
 					>
-						{message}
+						{gameMode !== "match"
+							? message
+							: t("outstanding") || "Outstanding!"}
 					</Typography>
 				</MotionBox>
 
