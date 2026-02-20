@@ -10,6 +10,34 @@ module.exports = (pool) => {
 		console.error(`[stats] ${ctx} - ${err && err.message ? err.message : err}`);
 		if (err && err.stack) console.error(err.stack);
 	};
+	// Lightweight endpoint: current streak only (used by Topbar)
+	router.get("/streak", authenticateToken, async (req, res) => {
+		const accountId = req.user.accountId;
+		try {
+			const result = await pool.query(
+				`WITH dates AS (
+					SELECT DISTINCT DATE(session_date) as study_date
+					FROM study_session
+					WHERE account_id = $1
+					ORDER BY study_date DESC
+				),
+				streak AS (
+					SELECT study_date,
+						   study_date + (ROW_NUMBER() OVER (ORDER BY study_date DESC))::int as grp
+					FROM dates
+				)
+				SELECT COUNT(*) as streak_days
+				FROM streak
+				WHERE grp = (SELECT grp FROM streak WHERE study_date = CURRENT_DATE)`,
+				[accountId],
+			);
+			res.json({ currentStreak: parseInt(result.rows[0]?.streak_days) || 0 });
+		} catch (error) {
+			logError("streak", error);
+			res.status(500).json({ error: "Error fetching streak" });
+		}
+	});
+
 	// Get comprehensive overview stats
 	router.get("/overview", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
@@ -66,7 +94,7 @@ module.exports = (pool) => {
                 ),
                 streak AS (
                     SELECT study_date,
-                           study_date - (ROW_NUMBER() OVER (ORDER BY study_date DESC))::int as grp
+                           study_date + (ROW_NUMBER() OVER (ORDER BY study_date DESC))::int as grp
                     FROM dates
                 )
                 SELECT COUNT(*) as streak_days
@@ -87,7 +115,7 @@ module.exports = (pool) => {
                 ),
                 streak AS (
                     SELECT study_date,
-                           study_date - (ROW_NUMBER() OVER (ORDER BY study_date))::int as grp
+                           study_date + (ROW_NUMBER() OVER (ORDER BY study_date))::int as grp
                     FROM dates
                 )
                 SELECT MAX(streak_count) as longest_streak

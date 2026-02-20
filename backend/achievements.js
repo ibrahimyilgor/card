@@ -40,7 +40,9 @@ module.exports = (pool) => {
 				)
 			`);
 			if (delResult.rowCount > 0) {
-				console.log(`[Achievements] Cleaned ${delResult.rowCount} duplicate achievement rows`);
+				console.log(
+					`[Achievements] Cleaned ${delResult.rowCount} duplicate achievement rows`,
+				);
 			}
 			// Add unique constraint if missing
 			await pool.query(`
@@ -54,7 +56,10 @@ module.exports = (pool) => {
 				END $$;
 			`);
 		} catch (err) {
-			console.error("[Achievements] Error cleaning duplicate achievements:", err);
+			console.error(
+				"[Achievements] Error cleaning duplicate achievements:",
+				err,
+			);
 		}
 	})();
 
@@ -78,7 +83,7 @@ module.exports = (pool) => {
 				LEFT JOIN account_achievements aa 
 					ON a.id = aa.achievement_id AND aa.account_id = $1
 				ORDER BY a.category, a.threshold`,
-				[accountId]
+				[accountId],
 			);
 
 			res.json({ achievements: result.rows });
@@ -113,7 +118,8 @@ module.exports = (pool) => {
 				streak_calc AS (
 					SELECT 
 						study_date,
-						study_date - (ROW_NUMBER() OVER (ORDER BY study_date DESC))::int as grp
+						-- Use addition with row number so consecutive descending dates produce the same grp value
+						study_date + (ROW_NUMBER() OVER (ORDER BY study_date DESC))::int as grp
 					FROM daily_sessions
 				)
 				SELECT COUNT(*) as streak_length
@@ -121,10 +127,12 @@ module.exports = (pool) => {
 				WHERE grp = (
 					SELECT grp FROM streak_calc WHERE study_date = CURRENT_DATE
 				)`,
-				[accountId]
+				[accountId],
 			);
 
 			const currentStreak = parseInt(streakResult.rows[0]?.streak_length || 0);
+
+			console.log("[Achievements] Current streak:", currentStreak);
 
 			// Check streak achievements
 			const streakThresholds = [3, 7, 14, 30];
@@ -134,7 +142,7 @@ module.exports = (pool) => {
 						pool,
 						accountId,
 						"streak",
-						threshold
+						threshold,
 					);
 					if (earned) newlyEarned.push(earned);
 				}
@@ -149,20 +157,20 @@ module.exports = (pool) => {
 						"[Achievements] Testing threshold:",
 						threshold,
 						"accuracy >= threshold:",
-						accuracy >= threshold
+						accuracy >= threshold,
 					);
 					if (accuracy >= threshold) {
 						const earned = await awardAchievement(
 							pool,
 							accountId,
 							"accuracy",
-							threshold
+							threshold,
 						);
 						console.log(
 							"[Achievements] Award result for",
 							threshold,
 							":",
-							earned
+							earned,
 						);
 						if (earned) newlyEarned.push(earned);
 						break; // Only award the highest threshold
@@ -175,7 +183,7 @@ module.exports = (pool) => {
 				`SELECT COALESCE(SUM(cards_studied), 0) as total_cards
 				FROM study_session
 				WHERE account_id = $1`,
-				[accountId]
+				[accountId],
 			);
 
 			const totalCards = parseInt(volumeResult.rows[0]?.total_cards || 0);
@@ -186,7 +194,7 @@ module.exports = (pool) => {
 						pool,
 						accountId,
 						"volume",
-						threshold
+						threshold,
 					);
 					if (earned) newlyEarned.push(earned);
 				}
@@ -211,41 +219,125 @@ async function awardAchievement(pool, accountId, category, threshold) {
 			FROM achievement 
 			WHERE category = $1 AND threshold = $2
 			LIMIT 1`,
-			[category, threshold]
+			[category, threshold],
 		);
 
 		if (achievementResult.rows.length === 0) {
+			console.log(
+				`[Achievements] No achievement row for category=${category} threshold=${threshold}`,
+			);
 			return null;
 		}
 
 		const achievement = achievementResult.rows[0];
+		console.log(
+			`[Achievements] Found achievement: id=${achievement.id} name=${achievement.name}`,
+		);
 
 		// Check if already earned
 		const existingResult = await pool.query(
-			`SELECT done_count FROM account_achievements 
+			`SELECT done_count, earned_at FROM account_achievements 
 			WHERE account_id = $1 AND achievement_id = $2`,
-			[accountId, achievement.id]
+			[accountId, achievement.id],
+		);
+		console.log(
+			`[Achievements] existingResult.rows.length=${existingResult.rows.length} for accountId=${accountId} achievementId=${achievement.id} earned_at=${existingResult.rows[0]?.earned_at}`,
 		);
 
 		if (existingResult.rows.length > 0) {
-			// Already earned - silently increment done_count but don't show modal again
+			// Already earned: apply per-category policy
 			if (category === "accuracy") {
+				// For accuracy we increment done_count to track repeats and show modal
 				await pool.query(
 					`UPDATE account_achievements 
 					SET done_count = done_count + 1, earned_at = CURRENT_TIMESTAMP
 					WHERE account_id = $1 AND achievement_id = $2`,
-					[accountId, achievement.id]
+					[accountId, achievement.id],
 				);
+				console.log(
+					`[Achievements] Updated existing account_achievements for account ${accountId}, achievement ${achievement.id}`,
+				);
+				const doneCountRes = await pool.query(
+					`SELECT done_count FROM account_achievements WHERE account_id = $1 AND achievement_id = $2`,
+					[accountId, achievement.id],
+				);
+				const done_count = doneCountRes.rows[0]?.done_count || 1;
+				console.log(
+					`[Achievements] Returning repeat achievement object for account ${accountId}, achievement ${achievement.id} done_count=${done_count}`,
+				);
+				return {
+					...achievement,
+					done_count,
+					isRepeat: true,
+					alreadyEarned: true,
+				};
 			}
-			return null;
+
+			if (category === "volume") {
+				// For volume achievements, if already earned, do not show modal again
+				console.log(
+					`[Achievements] Account ${accountId} already has volume achievement ${achievement.id}; skipping modal`,
+				);
+				return null;
+			}
+
+			if (category === "streak") {
+				// If the streak achievement was already earned today, skip showing it again
+				const earnedAt = existingResult.rows[0]?.earned_at;
+				if (earnedAt) {
+					const earnedDate = new Date(earnedAt).toISOString().slice(0, 10);
+					const today = new Date().toISOString().slice(0, 10);
+					if (earnedDate === today) {
+						console.log(
+							`[Achievements] Account ${accountId} already earned streak achievement ${achievement.id} today; skipping modal`,
+						);
+						return null;
+					}
+				}
+				// Otherwise, return the existing achievement so frontend can show modal
+				const done_count = existingResult.rows[0]?.done_count || 1;
+				console.log(
+					`[Achievements] Account ${accountId} already earned streak achievement ${achievement.id} previously; returning object for modal (done_count=${done_count})`,
+				);
+				return {
+					...achievement,
+					done_count,
+					isRepeat: false,
+					alreadyEarned: true,
+				};
+			}
+
+			// For other categories, return the existing achievement so frontend can still show modal
+			const done_count = existingResult.rows[0]?.done_count || 1;
+			console.log(
+				`[Achievements] Account ${accountId} already earned achievement ${achievement.id}; returning object for modal (done_count=${done_count})`,
+			);
+			return {
+				...achievement,
+				done_count,
+				isRepeat: false,
+				alreadyEarned: true,
+			};
 		}
 
 		// Award the achievement
-		await pool.query(
-			`INSERT INTO account_achievements (account_id, achievement_id, done_count)
-			VALUES ($1, $2, 1)`,
-			[accountId, achievement.id]
-		);
+		try {
+			const insertRes = await pool.query(
+				`INSERT INTO account_achievements (account_id, achievement_id, done_count)
+				VALUES ($1, $2, 1)`,
+				[accountId, achievement.id],
+			);
+			console.log(
+				`[Achievements] Inserted account_achievements for account ${accountId}, achievement ${achievement.id}`,
+			);
+		} catch (err) {
+			// If insertion fails due to constraint, log and return null
+			console.error(
+				`[Achievements] Failed to insert account_achievements for account ${accountId}, achievement ${achievement.id}:`,
+				err.message || err,
+			);
+			return null;
+		}
 
 		return { ...achievement, done_count: 1, isRepeat: false };
 	} catch (error) {

@@ -13,45 +13,48 @@ const MotionBox = motion.create(Box);
 
 // Placeholder slide data — drop your screenshots into /images/screenshots/
 // and name them screenshot-1.png, screenshot-2.png, …
+// Slides use i18n keys for titles/descriptions/labels. Provide translation
+// strings in your locale files (e.g. `en.json`, `tr.json`) using these keys.
 const SLIDES = [
 	{
 		src: "/images/screenshots/screenshot-1.png",
-		label: "Kart Desteni",
-		title: "Kendi kart destelerini oluştur",
-		description:
-			"İstediğin konuda kartlar ekle, düzenle ve organize et. Öğrenmek hiç bu kadar kolay olmamıştı.",
+		labelKey: "slide1.label",
+		titleKey: "slide1.title",
+		descKey: "slide1.description",
 	},
 	{
 		src: "/images/screenshots/screenshot-2.png",
-		label: "Oyun Modları",
-		title: "Farklı oyun modlarıyla öğren",
-		description:
-			"Klasik kart çevirme, çoktan seçmeli, yazma ve eşleştirme modlarıyla öğrenmeyi eğlenceye dönüştür.",
+		labelKey: "slide2.label",
+		titleKey: "slide2.title",
+		descKey: "slide2.description",
 	},
 	{
 		src: "/images/screenshots/screenshot-3.png",
-		label: "İstatistikler",
-		title: "İlerlemenizi takip edin",
-		description:
-			"Detaylı istatistikler ve grafiklerle hangi konularda iyi olduğunu, nerede daha fazla çalışman gerektiğini gör.",
+		labelKey: "slide3.label",
+		titleKey: "slide3.title",
+		descKey: "slide3.description",
 	},
 	{
 		src: "/images/screenshots/screenshot-4.png",
-		label: "Başarımlar",
-		title: "Başarımlar kazan, motive kal",
-		description:
-			"Her gün çalışarak rozetler kazanın, serilerinizi koruyun ve kendinizi sürekli geliştirin.",
+		labelKey: "slide4.label",
+		titleKey: "slide4.title",
+		descKey: "slide4.description",
 	},
 	{
 		src: "/images/screenshots/screenshot-5.png",
-		label: "İçe Aktarma",
-		title: "Hazır desteleri içe aktar",
-		description:
-			"Başkalarının hazırladığı desteleri kolayca içe aktar ya da kendi destelerini paylaş.",
+		labelKey: "slide5.label",
+		titleKey: "slide5.title",
+		descKey: "slide5.description",
+	},
+	{
+		src: "/images/screenshots/screenshot-6.png",
+		labelKey: "slide6.label",
+		titleKey: "slide6.title",
+		descKey: "slide6.description",
 	},
 ];
 
-const AUTO_PLAY_INTERVAL = 3500; // ms
+const AUTO_PLAY_INTERVAL = 4500; // ms
 
 const slideVariants = {
 	enter: (dir) => ({
@@ -97,6 +100,7 @@ const captionVariants = {
 };
 
 function ScreenshotCarousel() {
+	const { t } = useContext(I18nContext);
 	const [current, setCurrent] = useState(0);
 	const [direction, setDirection] = useState(1);
 	const [paused, setPaused] = useState(false);
@@ -144,7 +148,8 @@ function ScreenshotCarousel() {
 			sx={{
 				position: "relative",
 				width: "100%",
-				height: "100%",
+				aspectRatio: "1382 / 921",
+				maxWidth: "100%",
 				borderRadius: "20px",
 				overflow: "hidden",
 				boxShadow: "0 24px 64px rgba(0,0,0,0.45)",
@@ -210,15 +215,17 @@ function ScreenshotCarousel() {
 					<Box
 						component="img"
 						src={SLIDES[current].src}
-						alt={SLIDES[current].label}
+						alt={t(SLIDES[current].labelKey) || ""}
 						onLoad={() => handleImageLoad(current)}
 						onError={() => handleImageError(current)}
 						sx={{
 							position: "absolute",
-							inset: 0,
+							top: 0,
+							left: 0,
 							width: "100%",
 							height: "100%",
-							objectFit: "cover",
+							objectFit: "fill",
+							objectPosition: "center center",
 							opacity: imageStates[current] === "loaded" ? 1 : 0,
 							transition: "opacity 0.4s ease",
 						}}
@@ -268,7 +275,7 @@ function ScreenshotCarousel() {
 									textShadow: "0 1px 6px rgba(0,0,0,0.5)",
 								}}
 							>
-								{SLIDES[current].title}
+								{t(SLIDES[current].titleKey) || ""}
 							</Typography>
 							<Typography
 								variant="body2"
@@ -280,7 +287,7 @@ function ScreenshotCarousel() {
 									textShadow: "0 1px 4px rgba(0,0,0,0.4)",
 								}}
 							>
-								{SLIDES[current].description}
+								{t(SLIDES[current].descKey) || ""}
 							</Typography>
 						</MotionBox>
 					</AnimatePresence>

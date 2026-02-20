@@ -20,8 +20,10 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import HomeIcon from "@mui/icons-material/Home";
 import LogoutIcon from "@mui/icons-material/Logout";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import { I18nContext } from "../utils/i18n";
 import { useNavigate, useLocation } from "react-router-dom";
+import { getCurrentStreak } from "../services/statsServices";
 
 const MotionBox = motion.create(Box);
 const MotionIconButton = motion.create(IconButton);
@@ -38,7 +40,7 @@ function NavButton({ icon: Icon, label, isActive, onClick, tooltip }) {
 				whileTap={{ scale: 0.95 }}
 				sx={{
 					mx: 0.25,
-					p: 1.25,
+					p: { xs: 0.75, sm: 1.25 },
 					borderRadius: "12px",
 					color: isActive
 						? isDark
@@ -62,7 +64,7 @@ function NavButton({ icon: Icon, label, isActive, onClick, tooltip }) {
 					},
 				}}
 			>
-				<Icon sx={{ fontSize: 22 }} />
+				<Icon sx={{ fontSize: { xs: 18, sm: 22 } }} />
 				{isActive && (
 					<MotionBox
 						layoutId="activeIndicator"
@@ -91,6 +93,22 @@ export default function Topbar({ onLogout, currentPath, user }) {
 	const [navLoading, setNavLoading] = useState(false);
 
 	const [anchorEl, setAnchorEl] = useState(null);
+	const [streak, setStreak] = useState(null);
+
+	// Fetch current streak on mount (only when logged in)s
+	useEffect(() => {
+		const isLoggedIn = !!(user || localStorage.getItem("token"));
+		if (!isLoggedIn) return;
+		let mounted = true;
+		getCurrentStreak()
+			.then((data) => {
+				if (mounted) setStreak(data.currentStreak || 0);
+			})
+			.catch(() => {});
+		return () => {
+			mounted = false;
+		};
+	}, [user]);
 
 	// Get user's profile photo from props
 	const photoURL = user?.photoURL;
@@ -283,6 +301,45 @@ export default function Topbar({ onLogout, currentPath, user }) {
 
 				{/* Profile */}
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					{/* Streak indicator */}
+					<Tooltip title={t("current_streak") || "Current Streak"} arrow>
+						<MotionBox
+							whileHover={{ scale: 1.08 }}
+							whileTap={{ scale: 0.95 }}
+							// onClick={() => handleNavigate("/stats")}
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								gap: 0.5,
+								px: 1.25,
+								py: 0.5,
+								borderRadius: "10px",
+								cursor: "pointer",
+								background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+								boxShadow: "0 2px 8px rgba(239, 68, 68, 0.35)",
+								transition: "all 0.2s ease",
+								"&:hover": {
+									boxShadow: "0 4px 14px rgba(239, 68, 68, 0.45)",
+								},
+							}}
+						>
+							<LocalFireDepartmentIcon
+								sx={{ fontSize: 18, color: "#fbbf24" }}
+							/>
+							<Typography
+								sx={{
+									color: "#fff",
+									fontWeight: 700,
+									fontSize: "0.85rem",
+									fontFamily: "Inter, sans-serif",
+									lineHeight: 1,
+								}}
+							>
+								{streak}
+							</Typography>
+						</MotionBox>
+					</Tooltip>
+
 					<MotionIconButton
 						onClick={handleProfileClick}
 						whileHover={{ scale: 1.05 }}

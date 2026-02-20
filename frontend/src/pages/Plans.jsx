@@ -17,6 +17,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import StarIcon from "@mui/icons-material/Star";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusive";
+import BlockIcon from "@mui/icons-material/Block";
 import { getAllPlans, getMyPlan } from "../services/accountServices";
 import { I18nContext } from "../utils/i18n";
 
@@ -217,6 +218,13 @@ function PlanCard({
 						<FeatureItem
 							icon={<CheckCircleIcon sx={{ fontSize: 18 }} />}
 							text={t("advanced_stats") || "Advanced statistics"}
+							color={planColor}
+						/>
+					)}
+					{(plan.code === "pro" || plan.code === "premium") && (
+						<FeatureItem
+							icon={<CheckCircleIcon sx={{ fontSize: 18 }} />}
+							text={t("no_ads") || "No ads"}
 							color={planColor}
 						/>
 					)}

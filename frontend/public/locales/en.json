@@ -386,5 +386,30 @@
 	"flashcard_deleted": "Flashcard deleted successfully",
 	"plans_mobile_only": "This operation can be done only by mobile",
 	"downgrade": "Downgrade",
-	"date_range_max_warning": "Please select a date range shorter than 1 year"
+	"date_range_max_warning": "Please select a date range shorter than 1 year",
+
+	"slide1.label": "Card Decks",
+	"slide1.title": "Create your own card decks",
+	"slide1.description": "Create and customize card decks focused on the topics you want to learn",
+
+	"slide2.label": "Flashcards",
+	"slide2.title": "Create and study your cards",
+	"slide2.description": "Fill in the front and back for each card and start learning",
+
+	"slide3.label": "Game Modes",
+	"slide3.title": "Make learning fun with game modes",
+	"slide3.description": "Keep your study sessions engaging and effective with different game modes",
+
+	"slide4.label": "Start Learning",
+	"slide4.title": "Get started learning",
+	"slide4.description": "Begin learning, reinforce your knowledge, and discover new things",
+
+	"slide5.label": "Statistics",
+	"slide5.title": "Track your stats",
+	"slide5.description": "Monitor your learning progress and performance.",
+
+	"slide6.label": "Achievements",
+	"slide6.title": "Track your achievements",
+	"slide6.description": "Practice and earn achievements",
+	"no_ads": "No ads"
 }
