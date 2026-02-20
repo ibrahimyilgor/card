@@ -171,6 +171,28 @@ const MainLayout = ({ children, onLogout, themeMode, user }) => {
 					</AnimatePresence>
 				</Box>
 			</Box>
+			{/* Footer */}
+			<Box
+				sx={{
+					flexShrink: 0,
+					py: 1,
+					px: 2,
+					textAlign: "center",
+					fontSize: "0.875rem",
+					color: "text.secondary",
+					borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+				}}
+			>
+				<Box component="span">
+					<a
+						href="mailto:memodeck26@gmail.com"
+						style={{ color: "inherit", textDecoration: "underline" }}
+					>
+						memodeck26@gmail.com
+					</a>
+					&nbsp;&nbsp;© {new Date().getFullYear()} MemoDeck
+				</Box>
+			</Box>
 		</Box>
 	);
 };

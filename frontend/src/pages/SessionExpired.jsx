@@ -6,10 +6,10 @@ export default function SessionExpired() {
 	const { t } = useContext(I18nContext);
 	const theme = useTheme();
 	useEffect(() => {
-		const timer = setTimeout(() => {
-			window.location.href = "/";
-		}, 2000);
-		return () => clearTimeout(timer);
+		// const timer = setTimeout(() => {
+		// 	window.location.href = "/";
+		// }, 2000);
+		// return () => clearTimeout(timer);
 	}, []);
 
 	return (

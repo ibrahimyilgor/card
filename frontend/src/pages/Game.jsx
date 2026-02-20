@@ -38,7 +38,7 @@ import {
 	VideoAdOverlay,
 	LimitWarningModal,
 } from "../components/ui";
-import { playSound, SOUNDS } from "../utils/sounds";
+import { playSound, preloadSounds, SOUNDS } from "../utils/sounds";
 
 const MotionBox = motion.create(Box);
 
@@ -71,6 +71,11 @@ export default function Game({ onBackToDecks }) {
 
 	// SEO meta tags for game page
 	useSEO("game");
+
+	// Preload all sounds immediately on mount so they're ready for the first card
+	useEffect(() => {
+		preloadSounds();
+	}, []);
 
 	// Get initial settings from navigation state, then manage locally
 	const initialSettings = location.state?.settings || {

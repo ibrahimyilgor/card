@@ -1,5 +1,11 @@
 import api from "./api";
 
+// Get current streak (lightweight, used by Topbar)
+export const getCurrentStreak = async () => {
+	const response = await api.get("/stats/streak");
+	return response.data;
+};
+
 // Get comprehensive overview stats
 export const getOverviewStats = async () => {
 	const response = await api.get("/stats/overview");
@@ -10,7 +16,7 @@ export const getOverviewStats = async () => {
 export const getDailyStats = async (
 	period = "30d",
 	startDate = null,
-	endDate = null
+	endDate = null,
 ) => {
 	const params = new URLSearchParams();
 	if (startDate && endDate) {
@@ -39,7 +45,7 @@ export const getDeckStats = async (deckId, period = null) => {
 // Get card-level stats for a deck
 export const getCardStats = async (deckId, sort = "id", order = "asc") => {
 	const response = await api.get(
-		`/stats/cards/${deckId}?sort=${sort}&order=${order}`
+		`/stats/cards/${deckId}?sort=${sort}&order=${order}`,
 	);
 	return response.data;
 };
@@ -63,7 +69,11 @@ export const getInsights = async () => {
 };
 
 // NEW: Get filtered stats summary for overview cards
-export const getFilteredStats = async (deckId = "all", startDate = null, endDate = null) => {
+export const getFilteredStats = async (
+	deckId = "all",
+	startDate = null,
+	endDate = null,
+) => {
 	const params = new URLSearchParams();
 	params.append("deckId", deckId);
 	if (startDate) params.append("startDate", startDate);
@@ -73,7 +83,11 @@ export const getFilteredStats = async (deckId = "all", startDate = null, endDate
 };
 
 // NEW: Get chart data with auto-grouping (daily/monthly)
-export const getChartData = async (deckId = "all", startDate = null, endDate = null) => {
+export const getChartData = async (
+	deckId = "all",
+	startDate = null,
+	endDate = null,
+) => {
 	const params = new URLSearchParams();
 	params.append("deckId", deckId);
 	if (startDate) params.append("startDate", startDate);
@@ -83,7 +97,11 @@ export const getChartData = async (deckId = "all", startDate = null, endDate = n
 };
 
 // NEW: Get cards table with sorting
-export const getCardsTable = async (deckId = "all", sort = "times_played", order = "desc") => {
+export const getCardsTable = async (
+	deckId = "all",
+	sort = "times_played",
+	order = "desc",
+) => {
 	const params = new URLSearchParams();
 	params.append("deckId", deckId);
 	params.append("sort", sort);

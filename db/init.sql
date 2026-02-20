@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS plan (
 INSERT INTO plan (code, name, description, price_monthly, max_decks, max_flashcards, advanced_stats, has_ads)
 VALUES
 ('free', 'Free', 'Basic features for getting started', 0, 3, 100, false, true),
-('pro', 'Pro', 'Advanced features for regular learners', 9.99, 50, 5000, true, false),
+('pro', 'Pro', 'Advanced features for regular learners', 9.99, 50, 5000, false, false),
 ('premium', 'Premium', 'Unlimited access to all features', 19.99, NULL, NULL, true, false);
 
 CREATE TABLE IF NOT EXISTS account_plan (

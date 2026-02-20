@@ -74,7 +74,7 @@ export default function AchievementModal() {
 		if (isModalOpen) {
 			setShowConfetti(true);
 			// Stop confetti after 3 seconds
-			const timer = setTimeout(() => setShowConfetti(false), 3000);
+			const timer = setTimeout(() => setShowConfetti(false), 30000);
 			return () => clearTimeout(timer);
 		}
 	}, [isModalOpen, currentAchievement]);
@@ -183,7 +183,7 @@ export default function AchievementModal() {
 									borderRadius: "50%",
 									background: `linear-gradient(135deg, ${alpha(
 										categoryColor,
-										0.2
+										0.2,
 									)} 0%, ${alpha(categoryColor, 0.1)} 100%)`,
 									border: `3px solid ${categoryColor}`,
 									display: "flex",
