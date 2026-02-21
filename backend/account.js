@@ -112,8 +112,8 @@ module.exports = (pool) => {
 		}
 	});
 
-	// Get all plans
-	router.get("/plans", authenticateToken, async (req, res) => {
+	// Get all plans (public — no auth required)
+	router.get("/plans", async (req, res) => {
 		try {
 			const result = await pool.query(
 				"SELECT id, code, name, description, price_monthly, max_decks, max_flashcards, advanced_stats FROM plan ORDER BY price_monthly ASC",

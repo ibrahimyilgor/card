@@ -406,5 +406,31 @@
 	"slide6.label": "Başarımlar",
 	"slide6.title": "Başarımlarınızı takip edin",
 	"slide6.description": "Çalışın ve başarımlarınızı kazanın",
-	"no_ads": "Reklamsız deneyim"
+	"no_ads": "Reklamsız deneyim",
+
+	"privacy_policy": "Gizlilik Politikası",
+	"terms_of_service": "Kullanım Koşulları",
+	"about": "Hakkında",
+	"last_updated": "Son güncelleme",
+
+	"login_scroll_hint": "Daha fazla bilgi",
+	"login_features_title": "Neden MemoDeck?",
+	"login_features_subtitle": "Etkili öğrenme için tasarlanmış modern bir flashcard platformu",
+	"login_feat_decks_title": "Özel Flashcard Desteleri",
+	"login_feat_decks_desc": "Herhangi bir konuda sınırsız deste oluşturun. Çalışma materyallerinizi kolayca düzenleyin, düzenleyin ve içe aktarın.",
+	"login_feat_modes_title": "4 Oyun Modu",
+	"login_feat_modes_desc": "Standart, Yazma, Çoktan Seçmeli ve Eşleştirme — artı zamanlı ve hayatta kalma zorlukları.",
+	"login_feat_stats_title": "İlerleme Takibi",
+	"login_feat_stats_desc": "Grafikler, ısı haritaları, seri takibi ve deste bazlı analizler ile gelişiminizi ölçün.",
+	"login_feat_achievements_title": "Başarımlar",
+	"login_feat_achievements_desc": "Seriler, doğruluk ve çalışma hacmi için rozetler kazanın. Görünür ödüllerle motivasyonunuzu koruyun.",
+	"login_faq_title": "Sıkça Sorulan Sorular",
+	"login_faq1_q": "MemoDeck ücretsiz mi?",
+	"login_faq1_a": "Evet! Ücretsiz plan deste oluşturma, tüm oyun modları, istatistikler ve başarımları içerir. Daha fazla deste ve gelişmiş özellikler için Pro veya Premium'a yükseltin.",
+	"login_faq2_q": "MemoDeck ile ne çalışabilirim?",
+	"login_faq2_a": "İstediğiniz her şeyi — diller, bilim, tarih, tıp, programlama, sınav hazırlığı ve daha fazlası. Kendi özel flashcard'larınızı oluşturun.",
+	"login_faq3_q": "Mobilde çalışıyor mu?",
+	"login_faq3_a": "MemoDeck, herhangi bir cihazda çalışan bir progresif web uygulamasıdır. Yerel uygulama benzeri erişim için ana ekranınıza ekleyin.",
+	"login_faq4_q": "Nasıl giriş yapabilirim?",
+	"login_faq4_a": "Yukarıdaki 'Google ile Devam Et' düğmesine tıklamanız yeterli. Ayrı bir kayıt gerekmez — Google hesabınız yeterli."
 }

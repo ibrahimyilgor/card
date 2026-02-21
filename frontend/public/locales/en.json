@@ -412,5 +412,31 @@
 	"slide6.label": "Achievements",
 	"slide6.title": "Track your achievements",
 	"slide6.description": "Practice and earn achievements",
-	"no_ads": "No ads"
+	"no_ads": "No ads",
+
+	"privacy_policy": "Privacy Policy",
+	"terms_of_service": "Terms of Service",
+	"about": "About",
+	"last_updated": "Last updated",
+
+	"login_scroll_hint": "Learn more",
+	"login_features_title": "Why MemoDeck?",
+	"login_features_subtitle": "A modern flashcard platform built for effective learning",
+	"login_feat_decks_title": "Custom Flashcard Decks",
+	"login_feat_decks_desc": "Create unlimited decks on any topic. Organize, edit, and import your study materials with ease.",
+	"login_feat_modes_title": "4 Game Modes",
+	"login_feat_modes_desc": "Standard, Write, Multiple Choice, and Match — plus timed and survival challenges.",
+	"login_feat_stats_title": "Progress Tracking",
+	"login_feat_stats_desc": "Charts, heatmaps, streak tracking, and per-deck analytics to measure your improvement.",
+	"login_feat_achievements_title": "Achievements",
+	"login_feat_achievements_desc": "Earn badges for streaks, accuracy, and study volume. Stay motivated with visible rewards.",
+	"login_faq_title": "Frequently Asked Questions",
+	"login_faq1_q": "Is MemoDeck free?",
+	"login_faq1_a": "Yes! The free plan includes deck creation, all game modes, statistics, and achievements. Upgrade to Pro or Premium for more decks and advanced features.",
+	"login_faq2_q": "What can I study with MemoDeck?",
+	"login_faq2_a": "Anything you want — languages, science, history, medicine, programming, exam prep, and more. Create your own custom flashcards.",
+	"login_faq3_q": "Does it work on mobile?",
+	"login_faq3_a": "MemoDeck is a progressive web app that works on any device. Add it to your home screen for native-app-like access.",
+	"login_faq4_q": "How do I sign in?",
+	"login_faq4_a": "Simply click 'Continue with Google' above. No separate registration needed — your Google account is all you need."
 }

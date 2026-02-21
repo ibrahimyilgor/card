@@ -3,10 +3,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { signInWithGoogle } from "../services/authServices";
 import { I18nContext } from "../utils/i18n";
 import { useSEO } from "../utils/seo";
-import { Box, Typography, Alert, IconButton } from "@mui/material";
+import {
+	Box,
+	Typography,
+	Alert,
+	IconButton,
+	alpha,
+	Accordion,
+	AccordionSummary,
+	AccordionDetails,
+} from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import StyleIcon from "@mui/icons-material/Style";
+import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Link } from "react-router-dom";
 import { StyledButton, StyledCard } from "../components/ui";
 
 const MotionBox = motion.create(Box);
@@ -414,157 +430,88 @@ export default function Login({ onLogin }) {
 	return (
 		<Box
 			sx={{
-				minHeight: "100vh",
 				width: "100%",
 				background: (theme) =>
 					`linear-gradient(135deg, ${theme.palette.background.default} 0%, ${theme.palette.background.paper} 50%, ${theme.palette.background.default} 100%)`,
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				p: { xs: 2, sm: 4 },
-				position: "relative",
-				overflow: "hidden",
 			}}
 		>
-			{/* Background blobs */}
+			{/* ── Hero Section ── */}
 			<Box
 				sx={{
-					position: "absolute",
-					top: "-20%",
-					right: "-10%",
-					width: "600px",
-					height: "600px",
-					borderRadius: "50%",
-					background:
-						"radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)",
-					pointerEvents: "none",
-				}}
-			/>
-			<Box
-				sx={{
-					position: "absolute",
-					bottom: "-30%",
-					left: "-15%",
-					width: "800px",
-					height: "800px",
-					borderRadius: "50%",
-					background:
-						"radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%)",
-					pointerEvents: "none",
-				}}
-			/>
-
-			<Box
-				sx={{
+					minHeight: "100vh",
 					display: "flex",
-					width: "100%",
-					maxWidth: 1160,
-					gap: { xs: 0, md: 6 },
-					alignItems: "stretch",
+					flexDirection: "column",
+					alignItems: "center",
+					justifyContent: "center",
+					p: { xs: 2, sm: 4 },
 					position: "relative",
-					zIndex: 1,
-					minHeight: { md: 560 },
+					overflow: "hidden",
 				}}
 			>
-				{/* ── Left: Screenshot Carousel ── */}
-				<MotionBox
-					initial={{ x: -40, opacity: 0 }}
-					animate={{ x: 0, opacity: 1 }}
-					transition={{ duration: 0.65, ease: "easeOut" }}
+				{/* Background blobs */}
+				<Box
 					sx={{
-						flex: 1.15,
-						display: { xs: "none", md: "flex" },
-						flexDirection: "column",
-						gap: 3,
+						position: "absolute",
+						top: "-20%",
+						right: "-10%",
+						width: "600px",
+						height: "600px",
+						borderRadius: "50%",
+						background:
+							"radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)",
+						pointerEvents: "none",
 					}}
-				>
-					{/* Brand header above carousel */}
-					<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-						<Box
-							component="img"
-							src="/images/logo/memodeck.png"
-							alt="MemoDeck"
-							sx={{
-								width: 36,
-								height: 36,
-								borderRadius: "9px",
-								objectFit: "cover",
-								boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
-							}}
-						/>
-						<Typography
-							variant="h5"
-							sx={{
-								fontWeight: 700,
-								background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-								backgroundClip: "text",
-								WebkitBackgroundClip: "text",
-								WebkitTextFillColor: "transparent",
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							MemoDeck
-						</Typography>
-						<Typography
-							variant="body2"
-							sx={{
-								color: "text.cardSubtitle",
-								fontFamily: "Inter, sans-serif",
-								ml: 0.5,
-								mt: 0.3,
-							}}
-						>
-							{t("tagline") || "Master anything with flashcards"}
-						</Typography>
-					</Box>
-
-					{/* Carousel */}
-					<Box sx={{ flex: 1, minHeight: 0 }}>
-						<ScreenshotCarousel />
-					</Box>
-				</MotionBox>
-
-				{/* ── Right: Login Card ── */}
-				<MotionBox
-					initial={{ x: 40, opacity: 0 }}
-					animate={{ x: 0, opacity: 1 }}
-					transition={{ duration: 0.65, ease: "easeOut", delay: 0.1 }}
+				/>
+				<Box
 					sx={{
-						flex: 1,
+						position: "absolute",
+						bottom: "-30%",
+						left: "-15%",
+						width: "800px",
+						height: "800px",
+						borderRadius: "50%",
+						background:
+							"radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%)",
+						pointerEvents: "none",
+					}}
+				/>
+
+				<Box
+					sx={{
 						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
 						width: "100%",
+						maxWidth: 1160,
+						gap: { xs: 0, md: 6 },
+						alignItems: "stretch",
+						position: "relative",
+						zIndex: 1,
+						minHeight: { md: 560 },
 					}}
 				>
-					<StyledCard
-						variant="elevated"
-						hover={false}
+					{/* ── Left: Screenshot Carousel ── */}
+					<MotionBox
+						initial={{ x: -40, opacity: 0 }}
+						animate={{ x: 0, opacity: 1 }}
+						transition={{ duration: 0.65, ease: "easeOut" }}
 						sx={{
-							width: "100%",
-							maxWidth: 420,
-							p: { xs: 3, sm: 4 },
+							flex: 1.15,
+							display: { xs: "none", md: "flex" },
+							flexDirection: "column",
+							gap: 3,
 						}}
 					>
-						{/* Mobile branding */}
-						<Box
-							sx={{
-								display: { xs: "flex", md: "none" },
-								alignItems: "center",
-								justifyContent: "center",
-								gap: 2,
-								mb: 4,
-							}}
-						>
+						{/* Brand header above carousel */}
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 							<Box
 								component="img"
 								src="/images/logo/memodeck.png"
 								alt="MemoDeck"
 								sx={{
-									width: 48,
-									height: 48,
-									borderRadius: "14px",
+									width: 36,
+									height: 36,
+									borderRadius: "9px",
 									objectFit: "cover",
+									boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
 								}}
 							/>
 							<Typography
@@ -576,61 +523,495 @@ export default function Login({ onLogin }) {
 									backgroundClip: "text",
 									WebkitBackgroundClip: "text",
 									WebkitTextFillColor: "transparent",
+									fontFamily: "Inter, sans-serif",
 								}}
 							>
 								MemoDeck
 							</Typography>
+							<Typography
+								variant="body2"
+								sx={{
+									color: "text.cardSubtitle",
+									fontFamily: "Inter, sans-serif",
+									ml: 0.5,
+									mt: 0.3,
+								}}
+							>
+								{t("tagline") || "Master anything with flashcards"}
+							</Typography>
 						</Box>
 
-						<Typography
-							variant="h5"
-							sx={{
-								fontWeight: 700,
-								color: "text.cardTitle",
-								mb: 1,
-								textAlign: "center",
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{t("welcome_to_memodeck") || "Welcome to MemoDeck"}
-						</Typography>
-						<Typography
-							variant="body2"
-							sx={{
-								color: "text.cardSubtitle",
-								mb: 4,
-								textAlign: "center",
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{t("signin_with_google_desc") ||
-								"Sign in with your Google account to continue"}
-						</Typography>
+						{/* Carousel */}
+						<Box sx={{ flex: 1, minHeight: 0 }}>
+							<ScreenshotCarousel />
+						</Box>
+					</MotionBox>
 
-						{error && (
-							<MotionBox initial={{ y: -10 }} animate={{ y: 0 }} sx={{ mb: 3 }}>
-								<Alert
-									severity="error"
-									sx={{ borderRadius: "12px", fontFamily: "Inter, sans-serif" }}
+					{/* ── Right: Login Card ── */}
+					<MotionBox
+						initial={{ x: 40, opacity: 0 }}
+						animate={{ x: 0, opacity: 1 }}
+						transition={{ duration: 0.65, ease: "easeOut", delay: 0.1 }}
+						sx={{
+							flex: 1,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							width: "100%",
+						}}
+					>
+						<StyledCard
+							variant="elevated"
+							hover={false}
+							sx={{
+								width: "100%",
+								maxWidth: 420,
+								p: { xs: 3, sm: 4 },
+							}}
+						>
+							{/* Mobile branding */}
+							<Box
+								sx={{
+									display: { xs: "flex", md: "none" },
+									alignItems: "center",
+									justifyContent: "center",
+									gap: 2,
+									mb: 4,
+								}}
+							>
+								<Box
+									component="img"
+									src="/images/logo/memodeck.png"
+									alt="MemoDeck"
+									sx={{
+										width: 48,
+										height: 48,
+										borderRadius: "14px",
+										objectFit: "cover",
+									}}
+								/>
+								<Typography
+									variant="h5"
+									sx={{
+										fontWeight: 700,
+										background:
+											"linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+										backgroundClip: "text",
+										WebkitBackgroundClip: "text",
+										WebkitTextFillColor: "transparent",
+									}}
 								>
-									{error}
-								</Alert>
-							</MotionBox>
-						)}
+									MemoDeck
+								</Typography>
+							</Box>
 
-						<StyledButton
-							variant="primary"
-							size="large"
-							fullWidth
-							loading={googleLoading}
-							onClick={handleGoogleSignIn}
-							sx={{ py: 1.5, fontSize: "1rem" }}
-							startIcon={<GoogleIcon />}
-						>
-							{t("continue_with_google") || "Continue with Google"}
-						</StyledButton>
-					</StyledCard>
+							<Typography
+								variant="h5"
+								sx={{
+									fontWeight: 700,
+									color: "text.cardTitle",
+									mb: 1,
+									textAlign: "center",
+									fontFamily: "Inter, sans-serif",
+								}}
+							>
+								{t("welcome_to_memodeck") || "Welcome to MemoDeck"}
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{
+									color: "text.cardSubtitle",
+									mb: 4,
+									textAlign: "center",
+									fontFamily: "Inter, sans-serif",
+								}}
+							>
+								{t("signin_with_google_desc") ||
+									"Sign in with your Google account to continue"}
+							</Typography>
+
+							{error && (
+								<MotionBox
+									initial={{ y: -10 }}
+									animate={{ y: 0 }}
+									sx={{ mb: 3 }}
+								>
+									<Alert
+										severity="error"
+										sx={{
+											borderRadius: "12px",
+											fontFamily: "Inter, sans-serif",
+										}}
+									>
+										{error}
+									</Alert>
+								</MotionBox>
+							)}
+
+							<StyledButton
+								variant="primary"
+								size="large"
+								fullWidth
+								loading={googleLoading}
+								onClick={handleGoogleSignIn}
+								sx={{ py: 1.5, fontSize: "1rem" }}
+								startIcon={<GoogleIcon />}
+							>
+								{t("continue_with_google") || "Continue with Google"}
+							</StyledButton>
+						</StyledCard>
+					</MotionBox>
+				</Box>
+
+				{/* Scroll hint */}
+				<MotionBox
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					transition={{ delay: 1.5 }}
+					sx={{
+						position: "absolute",
+						bottom: 24,
+						left: "50%",
+						transform: "translateX(-50%)",
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						gap: 0.5,
+						color: "text.secondary",
+						zIndex: 2,
+					}}
+				>
+					<Typography
+						variant="caption"
+						sx={{ fontFamily: "Inter, sans-serif", opacity: 0.7 }}
+					>
+						{t("login_scroll_hint") || "Learn more"}
+					</Typography>
+					<KeyboardArrowDownIcon
+						sx={{
+							fontSize: 20,
+							animation: "bounce 2s infinite",
+							"@keyframes bounce": {
+								"0%, 100%": { transform: "translateY(0)" },
+								"50%": { transform: "translateY(6px)" },
+							},
+						}}
+					/>
 				</MotionBox>
+			</Box>
+
+			{/* ── Features Section ── */}
+			<Box
+				sx={{
+					py: { xs: 6, sm: 10 },
+					px: { xs: 2, sm: 4 },
+					maxWidth: 960,
+					mx: "auto",
+				}}
+			>
+				<Typography
+					variant="h4"
+					sx={{
+						fontWeight: 800,
+						color: "text.primary",
+						textAlign: "center",
+						fontFamily: "Inter, sans-serif",
+						mb: 2,
+						fontSize: { xs: "1.5rem", sm: "2rem" },
+					}}
+				>
+					{t("login_features_title") || "Why MemoDeck?"}
+				</Typography>
+				<Typography
+					variant="body1"
+					sx={{
+						color: "text.secondary",
+						textAlign: "center",
+						fontFamily: "Inter, sans-serif",
+						mb: 6,
+						maxWidth: 600,
+						mx: "auto",
+					}}
+				>
+					{t("login_features_subtitle") ||
+						"A modern flashcard platform built for effective learning"}
+				</Typography>
+
+				<Box
+					sx={{
+						display: "grid",
+						gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+						gap: 3,
+					}}
+				>
+					{[
+						{
+							icon: <StyleIcon sx={{ fontSize: 28, color: "#3b82f6" }} />,
+							title: t("login_feat_decks_title") || "Custom Flashcard Decks",
+							desc:
+								t("login_feat_decks_desc") ||
+								"Create unlimited decks on any topic. Organize, edit, and import your study materials with ease.",
+							color: "#3b82f6",
+						},
+						{
+							icon: (
+								<SportsEsportsIcon sx={{ fontSize: 28, color: "#8b5cf6" }} />
+							),
+							title: t("login_feat_modes_title") || "4 Game Modes",
+							desc:
+								t("login_feat_modes_desc") ||
+								"Standard, Write, Multiple Choice, and Match — plus timed and survival challenges.",
+							color: "#8b5cf6",
+						},
+						{
+							icon: <BarChartIcon sx={{ fontSize: 28, color: "#22c55e" }} />,
+							title: t("login_feat_stats_title") || "Progress Tracking",
+							desc:
+								t("login_feat_stats_desc") ||
+								"Charts, heatmaps, streak tracking, and per-deck analytics to measure your improvement.",
+							color: "#22c55e",
+						},
+						{
+							icon: <EmojiEventsIcon sx={{ fontSize: 28, color: "#f59e0b" }} />,
+							title: t("login_feat_achievements_title") || "Achievements",
+							desc:
+								t("login_feat_achievements_desc") ||
+								"Earn badges for streaks, accuracy, and study volume. Stay motivated with visible rewards.",
+							color: "#f59e0b",
+						},
+					].map((feat, i) => (
+						<Box
+							key={i}
+							sx={{
+								p: 3,
+								borderRadius: "16px",
+								background: (theme) =>
+									theme.palette.mode === "dark"
+										? "rgba(30, 41, 59, 0.6)"
+										: "rgba(255, 255, 255, 0.8)",
+								border: (theme) =>
+									`1px solid ${
+										theme.palette.mode === "dark"
+											? "rgba(255, 255, 255, 0.08)"
+											: "rgba(0, 0, 0, 0.06)"
+									}`,
+							}}
+						>
+							<Box
+								sx={{
+									width: 48,
+									height: 48,
+									borderRadius: "12px",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									background: (theme) =>
+										`linear-gradient(135deg, ${alpha(feat.color, 0.15)} 0%, ${alpha(feat.color, 0.05)} 100%)`,
+									mb: 2,
+								}}
+							>
+								{feat.icon}
+							</Box>
+							<Typography
+								variant="h6"
+								sx={{
+									fontWeight: 700,
+									color: "text.primary",
+									fontFamily: "Inter, sans-serif",
+									fontSize: "1rem",
+									mb: 1,
+								}}
+							>
+								{feat.title}
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{
+									color: "text.secondary",
+									fontFamily: "Inter, sans-serif",
+									lineHeight: 1.7,
+								}}
+							>
+								{feat.desc}
+							</Typography>
+						</Box>
+					))}
+				</Box>
+			</Box>
+
+			{/* ── FAQ Section ── */}
+			<Box
+				sx={{
+					py: { xs: 6, sm: 8 },
+					px: { xs: 2, sm: 4 },
+					maxWidth: 700,
+					mx: "auto",
+				}}
+			>
+				<Typography
+					variant="h4"
+					sx={{
+						fontWeight: 800,
+						color: "text.primary",
+						textAlign: "center",
+						fontFamily: "Inter, sans-serif",
+						mb: 4,
+						fontSize: { xs: "1.5rem", sm: "2rem" },
+					}}
+				>
+					{t("login_faq_title") || "Frequently Asked Questions"}
+				</Typography>
+
+				{[
+					{
+						q: t("login_faq1_q") || "Is MemoDeck free?",
+						a:
+							t("login_faq1_a") ||
+							"Yes! The free plan includes deck creation, all game modes, statistics, and achievements. Upgrade to Pro or Premium for more decks and advanced features.",
+					},
+					{
+						q: t("login_faq2_q") || "What can I study with MemoDeck?",
+						a:
+							t("login_faq2_a") ||
+							"Anything you want — languages, science, history, medicine, programming, exam prep, and more. Create your own custom flashcards.",
+					},
+					{
+						q: t("login_faq3_q") || "Does it work on mobile?",
+						a:
+							t("login_faq3_a") ||
+							"MemoDeck is a progressive web app that works on any device. Add it to your home screen for native-app-like access.",
+					},
+					{
+						q: t("login_faq4_q") || "How do I sign in?",
+						a:
+							t("login_faq4_a") ||
+							"Simply click 'Continue with Google' above. No separate registration needed — your Google account is all you need.",
+					},
+				].map((faq, i) => (
+					<Accordion
+						key={i}
+						disableGutters
+						elevation={0}
+						sx={{
+							mb: 1,
+							borderRadius: "12px !important",
+							overflow: "hidden",
+							background: (theme) =>
+								theme.palette.mode === "dark"
+									? "rgba(30, 41, 59, 0.6)"
+									: "rgba(255, 255, 255, 0.8)",
+							border: (theme) =>
+								`1px solid ${
+									theme.palette.mode === "dark"
+										? "rgba(255, 255, 255, 0.08)"
+										: "rgba(0, 0, 0, 0.06)"
+								}`,
+							"&:before": { display: "none" },
+							"&.Mui-expanded": { mt: 0, mb: 1 },
+						}}
+					>
+						<AccordionSummary
+							expandIcon={<ExpandMoreIcon sx={{ color: "text.secondary" }} />}
+						>
+							<Typography
+								sx={{
+									fontWeight: 600,
+									fontFamily: "Inter, sans-serif",
+									color: "text.primary",
+									fontSize: "0.95rem",
+								}}
+							>
+								{faq.q}
+							</Typography>
+						</AccordionSummary>
+						<AccordionDetails>
+							<Typography
+								sx={{
+									fontFamily: "Inter, sans-serif",
+									color: "text.secondary",
+									lineHeight: 1.7,
+								}}
+							>
+								{faq.a}
+							</Typography>
+						</AccordionDetails>
+					</Accordion>
+				))}
+			</Box>
+
+			{/* ── Footer ── */}
+			<Box
+				sx={{
+					py: 3,
+					px: { xs: 2, sm: 4 },
+					maxWidth: 960,
+					mx: "auto",
+					borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					flexWrap: "wrap",
+					gap: 2,
+				}}
+			>
+				<Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+					<Link
+						to="/about"
+						style={{
+							color: "#3b82f6",
+							textDecoration: "none",
+							fontFamily: "Inter, sans-serif",
+							fontSize: "0.875rem",
+						}}
+					>
+						{t("about") || "About"}
+					</Link>
+					<Link
+						to="/privacy"
+						style={{
+							color: "#3b82f6",
+							textDecoration: "none",
+							fontFamily: "Inter, sans-serif",
+							fontSize: "0.875rem",
+						}}
+					>
+						{t("privacy_policy") || "Privacy Policy"}
+					</Link>
+					<Link
+						to="/terms"
+						style={{
+							color: "#3b82f6",
+							textDecoration: "none",
+							fontFamily: "Inter, sans-serif",
+							fontSize: "0.875rem",
+						}}
+					>
+						{t("terms_of_service") || "Terms of Service"}
+					</Link>
+					<Link
+						to="/plans"
+						style={{
+							color: "#3b82f6",
+							textDecoration: "none",
+							fontFamily: "Inter, sans-serif",
+							fontSize: "0.875rem",
+						}}
+					>
+						{t("plans_title") || "Plans"}
+					</Link>
+				</Box>
+				<Typography
+					variant="body2"
+					sx={{
+						color: "text.secondary",
+						fontFamily: "Inter, sans-serif",
+					}}
+				>
+					© {new Date().getFullYear()} MemoDeck.{" "}
+					<a href="mailto:memodeck26@gmail.com" style={{ color: "inherit" }}>
+						memodeck26@gmail.com
+					</a>
+				</Typography>
 			</Box>
 		</Box>
 	);

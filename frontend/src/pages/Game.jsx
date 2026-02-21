@@ -249,7 +249,12 @@ export default function Game({ onBackToDecks }) {
 						processNewAchievements(result.newlyEarned);
 					}
 				})
-				.catch((err) => console.error("Error recording session or checking achievements:", err));
+				.catch((err) =>
+					console.error(
+						"Error recording session or checking achievements:",
+						err,
+					),
+				);
 
 			// Show ad overlay for free plan users when game ends
 			if (hasAds && !adShown) {

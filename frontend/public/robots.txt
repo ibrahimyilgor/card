@@ -4,10 +4,21 @@
 # Allow all crawlers
 User-agent: *
 Allow: /
+Allow: /login
+Allow: /about
+Allow: /privacy
+Allow: /terms
+Allow: /plans
 
 # Disallow private/authenticated areas
 Disallow: /api/
 Disallow: /session-expired
+Disallow: /game/
+Disallow: /stats
+Disallow: /achievements
+Disallow: /settings
+Disallow: /account
+Disallow: /admin
 Disallow: /*.json$
 
 # Allow specific public assets
