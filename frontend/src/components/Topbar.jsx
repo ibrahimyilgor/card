@@ -98,6 +98,7 @@ export default function Topbar({ onLogout, currentPath, user }) {
 	const [navLoading, setNavLoading] = useState(false);
 	const [anchorEl, setAnchorEl] = useState(null);
 	const [streak, setStreak] = useState(null);
+	const [playedToday, setPlayedToday] = useState(true);
 
 	// Debounce yardımcı fonksiyonu (lodash olmadan)
 	const debounce = (func, wait) => {
@@ -128,21 +129,30 @@ export default function Topbar({ onLogout, currentPath, user }) {
 		setNavLoading(false);
 	}, [location.pathname]);
 
-	// Streak fetch
-	useEffect(() => {
+	// Streak fetch helper
+	const fetchStreak = useCallback(() => {
 		const isLoggedIn = !!(user || localStorage.getItem("token"));
 		if (!isLoggedIn) return;
 
-		let mounted = true;
 		getCurrentStreak()
 			.then((data) => {
-				if (mounted) setStreak(data.currentStreak || 0);
+				setStreak(data.currentStreak || 0);
+				setPlayedToday(data.playedToday ?? true);
 			})
 			.catch(() => {});
-		return () => {
-			mounted = false;
-		};
 	}, [user]);
+
+	// Fetch streak on mount
+	useEffect(() => {
+		fetchStreak();
+	}, [fetchStreak]);
+
+	// Listen for streak-updated event (fired after game ends)
+	useEffect(() => {
+		const handler = () => fetchStreak();
+		window.addEventListener("streak-updated", handler);
+		return () => window.removeEventListener("streak-updated", handler);
+	}, [fetchStreak]);
 
 	const photoURL = user?.photoURL;
 	const displayName = user?.displayName;
@@ -318,7 +328,15 @@ export default function Topbar({ onLogout, currentPath, user }) {
 				{/* Profile & Streak */}
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 					{/* Streak indicator */}
-					<Tooltip title={t("current_streak") || "Current Streak"} arrow>
+					<Tooltip
+						title={
+							playedToday
+								? t("current_streak") || "Current Streak"
+								: t("play_to_continue_streak") ||
+									"Play today to continue your streak!"
+						}
+						arrow
+					>
 						<MotionBox
 							whileHover={{ scale: 1.08 }}
 							whileTap={{ scale: 0.95 }}
@@ -330,16 +348,25 @@ export default function Topbar({ onLogout, currentPath, user }) {
 								py: 0.5,
 								borderRadius: "10px",
 								cursor: "pointer",
-								background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-								boxShadow: "0 2px 8px rgba(239, 68, 68, 0.35)",
+								background: playedToday
+									? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
+									: "linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)",
+								boxShadow: playedToday
+									? "0 2px 8px rgba(239, 68, 68, 0.35)"
+									: "0 2px 8px rgba(107, 114, 128, 0.3)",
 								transition: "all 0.2s ease",
 								"&:hover": {
-									boxShadow: "0 4px 14px rgba(239, 68, 68, 0.45)",
+									boxShadow: playedToday
+										? "0 4px 14px rgba(239, 68, 68, 0.45)"
+										: "0 4px 14px rgba(107, 114, 128, 0.4)",
 								},
 							}}
 						>
 							<LocalFireDepartmentIcon
-								sx={{ fontSize: 18, color: "#fbbf24" }}
+								sx={{
+									fontSize: 18,
+									color: playedToday ? "#fbbf24" : "#d1d5db",
+								}}
 							/>
 							<Typography
 								sx={{
@@ -511,6 +538,7 @@ export default function Topbar({ onLogout, currentPath, user }) {
 										justifyContent: "flex-start",
 										py: 1.5,
 										px: 2,
+										mb: 1,
 										borderRadius: 2,
 										fontWeight: 600,
 										fontFamily: "Inter, sans-serif",

@@ -223,6 +223,7 @@ export default function Game({ onBackToDecks }) {
 					? Math.round((scores.correct / totalAnswers) * 100)
 					: 0;
 
+			// Record session first, then check achievements so streak includes today
 			recordSession({
 				deckId: parseInt(deckId),
 				gameMode,
@@ -232,19 +233,23 @@ export default function Game({ onBackToDecks }) {
 				correctAnswers: isMatchMode ? 0 : scores.correct,
 				wrongAnswers: isMatchMode ? 0 : scores.incorrect,
 				durationSeconds,
-			}).catch((err) => console.error("Error recording session:", err));
-
-			// Skip accuracy achievements for match mode (it's a memory game)
-			checkAchievements({
-				accuracy: isMatchMode ? 0 : accuracy,
-				cardsStudied,
 			})
+				.then(() => {
+					// Notify Topbar to refresh streak display
+					window.dispatchEvent(new Event("streak-updated"));
+
+					// Now check achievements (session is recorded, streak is up-to-date)
+					return checkAchievements({
+						accuracy: isMatchMode ? 0 : accuracy,
+						cardsStudied,
+					});
+				})
 				.then((result) => {
-					if (result.newlyEarned && result.newlyEarned.length > 0) {
+					if (result?.newlyEarned && result.newlyEarned.length > 0) {
 						processNewAchievements(result.newlyEarned);
 					}
 				})
-				.catch((err) => console.error("Error checking achievements:", err));
+				.catch((err) => console.error("Error recording session or checking achievements:", err));
 
 			// Show ad overlay for free plan users when game ends
 			if (hasAds && !adShown) {
