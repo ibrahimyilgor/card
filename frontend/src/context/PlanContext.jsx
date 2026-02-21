@@ -70,7 +70,8 @@ export const PlanProvider = ({ children, user }) => {
 	const canPlay = limitStatus?.canPlay ?? true;
 	const canCreateDeck = limitStatus?.canCreateDeck ?? true;
 	const canCreateFlashcard = limitStatus?.canCreateFlashcard ?? true;
-	const hasAds = limitStatus?.hasAds ?? false;
+	// Ads disabled until AdSense approval — keep the flag ready for re-enable
+	const hasAds = false; // limitStatus?.hasAds ?? false;
 	const advancedStats = limitStatus?.advancedStats ?? false;
 	const planCode = limitStatus?.planCode ?? "free";
 

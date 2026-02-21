@@ -134,10 +134,10 @@ module.exports = (pool) => {
 
 			console.log("[Achievements] Current streak:", currentStreak);
 
-			// Check streak achievements
+			// Check streak achievements — only award when streak exactly hits a threshold
 			const streakThresholds = [3, 7, 14, 30];
 			for (const threshold of streakThresholds) {
-				if (currentStreak >= threshold) {
+				if (currentStreak === threshold) {
 					const earned = await awardAchievement(
 						pool,
 						accountId,
@@ -294,7 +294,13 @@ async function awardAchievement(pool, accountId, category, threshold) {
 						return null;
 					}
 				}
-				// Otherwise, return the existing achievement so frontend can show modal
+				// Update earned_at to today so subsequent games today won't show it again
+				await pool.query(
+					`UPDATE account_achievements 
+					SET earned_at = CURRENT_TIMESTAMP
+					WHERE account_id = $1 AND achievement_id = $2`,
+					[accountId, achievement.id],
+				);
 				const done_count = existingResult.rows[0]?.done_count || 1;
 				console.log(
 					`[Achievements] Account ${accountId} already earned streak achievement ${achievement.id} previously; returning object for modal (done_count=${done_count})`,

@@ -299,12 +299,16 @@ export default function Plans() {
 		const fetchData = async () => {
 			setLoading(true);
 			try {
-				const [plansRes, myPlanRes] = await Promise.all([
-					getAllPlans(),
-					getMyPlan(),
-				]);
+				const plansRes = await getAllPlans();
 				setPlans(plansRes.data.plans || []);
-				setMyPlan(myPlanRes.data.plan || null);
+
+				// getMyPlan requires auth — gracefully handle unauthenticated visitors
+				try {
+					const myPlanRes = await getMyPlan();
+					setMyPlan(myPlanRes.data.plan || null);
+				} catch {
+					setMyPlan(null);
+				}
 			} catch (err) {
 				console.error(err);
 				setError(t("plans_fetch_error") || "Failed to load plans");

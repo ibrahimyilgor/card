@@ -11,6 +11,7 @@ module.exports = (pool) => {
 		if (err && err.stack) console.error(err.stack);
 	};
 	// Lightweight endpoint: current streak only (used by Topbar)
+	// Returns playedToday flag so the UI can show gray (pending) vs active streak
 	router.get("/streak", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
 		try {
@@ -21,17 +22,32 @@ module.exports = (pool) => {
 					WHERE account_id = $1
 					ORDER BY study_date DESC
 				),
+				played_today AS (
+					SELECT EXISTS(SELECT 1 FROM dates WHERE study_date = CURRENT_DATE) as val
+				),
 				streak AS (
 					SELECT study_date,
 						   study_date + (ROW_NUMBER() OVER (ORDER BY study_date DESC))::int as grp
 					FROM dates
+				),
+				anchor AS (
+					SELECT CASE
+						WHEN (SELECT val FROM played_today) THEN
+							(SELECT grp FROM streak WHERE study_date = CURRENT_DATE)
+						ELSE
+							(SELECT grp FROM streak WHERE study_date = CURRENT_DATE - 1)
+					END as grp_value
 				)
-				SELECT COUNT(*) as streak_days
-				FROM streak
-				WHERE grp = (SELECT grp FROM streak WHERE study_date = CURRENT_DATE)`,
+				SELECT
+					COALESCE((SELECT COUNT(*) FROM streak WHERE grp = (SELECT grp_value FROM anchor)), 0) as streak_days,
+					(SELECT val FROM played_today) as played_today`,
 				[accountId],
 			);
-			res.json({ currentStreak: parseInt(result.rows[0]?.streak_days) || 0 });
+			const row = result.rows[0];
+			res.json({
+				currentStreak: parseInt(row?.streak_days) || 0,
+				playedToday: row?.played_today ?? false,
+			});
 		} catch (error) {
 			logError("streak", error);
 			res.status(500).json({ error: "Error fetching streak" });

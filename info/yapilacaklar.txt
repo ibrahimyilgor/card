@@ -1,4 +1,4 @@
--her oyun modunu incele, oyun sonu summarylerini incele düzelt.
+-her oyun modunu incele, oyun sonu summarylerini incele düzelt. (örnk. çemberleri)
 
 -plana göre özelliklerin açılıp kapatılması.
     +plan açıklamalarının düzenlemesi (mobil-web)

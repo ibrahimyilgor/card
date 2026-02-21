@@ -6,6 +6,7 @@ import {
 	Navigate,
 	useNavigate,
 	useLocation,
+	Link,
 } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { getProfile, getMe } from "./services/accountServices";
@@ -25,6 +26,9 @@ import Account from "./pages/Account";
 import Achievements from "./pages/Achievements";
 import SessionExpired from "./pages/SessionExpired";
 import Admin from "./pages/Admin";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import About from "./pages/About";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { darkTheme, lightTheme } from "./styles/theme";
@@ -177,12 +181,29 @@ const MainLayout = ({ children, onLogout, themeMode, user }) => {
 					flexShrink: 0,
 					py: 1,
 					px: 2,
-					textAlign: "center",
-					fontSize: "0.875rem",
+					display: "flex",
+					justifyContent: "center",
+					alignItems: "center",
+					gap: 2,
+					flexWrap: "wrap",
+					fontSize: "0.8rem",
 					color: "text.secondary",
 					borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+					fontFamily: "Inter, sans-serif",
 				}}
 			>
+				<Link to="/about" style={{ color: "inherit", textDecoration: "none" }}>
+					About
+				</Link>
+				<Link
+					to="/privacy"
+					style={{ color: "inherit", textDecoration: "none" }}
+				>
+					Privacy
+				</Link>
+				<Link to="/terms" style={{ color: "inherit", textDecoration: "none" }}>
+					Terms
+				</Link>
 				<Box component="span">
 					<a
 						href="mailto:memodeck26@gmail.com"
@@ -301,9 +322,13 @@ const AppContent = () => {
 	}, []);
 
 	// Determine if we should show the layout with Topbar
-	const isAuthPage = ["/login", "/session-expired"].includes(
-		location.pathname,
-	);
+	const isAuthPage = [
+		"/login",
+		"/session-expired",
+		"/privacy",
+		"/terms",
+		"/about",
+	].includes(location.pathname);
 
 	// Use dark theme for auth pages
 	const activeTheme = isAuthPage ? darkTheme : currentTheme;
@@ -320,7 +345,7 @@ const AppContent = () => {
 								sx={{
 									height: "100vh",
 									backgroundColor: "background.default",
-									overflow: "hidden",
+									overflow: "auto",
 								}}
 							>
 								<AnimatePresence mode="wait" initial={false}>
@@ -338,6 +363,30 @@ const AppContent = () => {
 											element={
 												<AnimatedPage>
 													<SessionExpired />
+												</AnimatedPage>
+											}
+										/>
+										<Route
+											path="/privacy"
+											element={
+												<AnimatedPage>
+													<Privacy />
+												</AnimatedPage>
+											}
+										/>
+										<Route
+											path="/terms"
+											element={
+												<AnimatedPage>
+													<Terms />
+												</AnimatedPage>
+											}
+										/>
+										<Route
+											path="/about"
+											element={
+												<AnimatedPage>
+													<About />
 												</AnimatedPage>
 											}
 										/>
@@ -391,11 +440,9 @@ const AppContent = () => {
 									<Route
 										path="/plans"
 										element={
-											<ProtectedRoute user={user} loading={authLoading}>
-												<AnimatedPage>
-													<Plans />
-												</AnimatedPage>
-											</ProtectedRoute>
+											<AnimatedPage>
+												<Plans />
+											</AnimatedPage>
 										}
 									/>
 									<Route
