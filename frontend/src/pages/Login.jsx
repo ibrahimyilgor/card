@@ -948,58 +948,13 @@ export default function Login({ onLogin }) {
 					mx: "auto",
 					borderTop: (theme) => `1px solid ${theme.palette.divider}`,
 					display: "flex",
-					justifyContent: "space-between",
+					justifyContent: "center",
 					alignItems: "center",
 					flexWrap: "wrap",
 					gap: 2,
 				}}
 			>
-				<Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-					<Link
-						to="/about"
-						style={{
-							color: "#3b82f6",
-							textDecoration: "none",
-							fontFamily: "Inter, sans-serif",
-							fontSize: "0.875rem",
-						}}
-					>
-						{t("about") || "About"}
-					</Link>
-					<Link
-						to="/privacy"
-						style={{
-							color: "#3b82f6",
-							textDecoration: "none",
-							fontFamily: "Inter, sans-serif",
-							fontSize: "0.875rem",
-						}}
-					>
-						{t("privacy_policy") || "Privacy Policy"}
-					</Link>
-					<Link
-						to="/terms"
-						style={{
-							color: "#3b82f6",
-							textDecoration: "none",
-							fontFamily: "Inter, sans-serif",
-							fontSize: "0.875rem",
-						}}
-					>
-						{t("terms_of_service") || "Terms of Service"}
-					</Link>
-					<Link
-						to="/plans"
-						style={{
-							color: "#3b82f6",
-							textDecoration: "none",
-							fontFamily: "Inter, sans-serif",
-							fontSize: "0.875rem",
-						}}
-					>
-						{t("plans_title") || "Plans"}
-					</Link>
-				</Box>
+				{/* Footer links removed per request */}
 				<Typography
 					variant="body2"
 					sx={{

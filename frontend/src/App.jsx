@@ -26,9 +26,6 @@ import Account from "./pages/Account";
 import Achievements from "./pages/Achievements";
 import SessionExpired from "./pages/SessionExpired";
 import Admin from "./pages/Admin";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import About from "./pages/About";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { darkTheme, lightTheme } from "./styles/theme";
@@ -192,18 +189,6 @@ const MainLayout = ({ children, onLogout, themeMode, user }) => {
 					fontFamily: "Inter, sans-serif",
 				}}
 			>
-				<Link to="/about" style={{ color: "inherit", textDecoration: "none" }}>
-					About
-				</Link>
-				<Link
-					to="/privacy"
-					style={{ color: "inherit", textDecoration: "none" }}
-				>
-					Privacy
-				</Link>
-				<Link to="/terms" style={{ color: "inherit", textDecoration: "none" }}>
-					Terms
-				</Link>
 				<Box component="span">
 					<a
 						href="mailto:memodeck26@gmail.com"
@@ -363,30 +348,6 @@ const AppContent = () => {
 											element={
 												<AnimatedPage>
 													<SessionExpired />
-												</AnimatedPage>
-											}
-										/>
-										<Route
-											path="/privacy"
-											element={
-												<AnimatedPage>
-													<Privacy />
-												</AnimatedPage>
-											}
-										/>
-										<Route
-											path="/terms"
-											element={
-												<AnimatedPage>
-													<Terms />
-												</AnimatedPage>
-											}
-										/>
-										<Route
-											path="/about"
-											element={
-												<AnimatedPage>
-													<About />
 												</AnimatedPage>
 											}
 										/>

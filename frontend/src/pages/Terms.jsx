@@ -257,28 +257,7 @@ export default function Terms() {
 						flexWrap: "wrap",
 					}}
 				>
-					<Link
-						to="/privacy"
-						style={{
-							color: theme.palette.primary.main,
-							textDecoration: "none",
-							fontFamily: "Inter, sans-serif",
-							fontSize: "0.875rem",
-						}}
-					>
-						{t("privacy_policy") || "Privacy Policy"}
-					</Link>
-					<Link
-						to="/about"
-						style={{
-							color: theme.palette.primary.main,
-							textDecoration: "none",
-							fontFamily: "Inter, sans-serif",
-							fontSize: "0.875rem",
-						}}
-					>
-						{t("about") || "About"}
-					</Link>
+					{/* Footer links adjusted: removed About and Privacy per request */}
 					<Link
 						to="/login"
 						style={{
