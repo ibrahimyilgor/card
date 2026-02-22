@@ -292,6 +292,7 @@ export default function Game({ onBackToDecks }) {
 				if (challengeType === "survival") {
 					lives.loseLife();
 					if (lives.lives <= 1) {
+						answerProcessingRef.current = false;
 						setGameEnded(true);
 						return;
 					}
@@ -356,6 +357,7 @@ export default function Game({ onBackToDecks }) {
 
 	const handleStartWithNewSettings = useCallback(
 		(newSettings) => {
+			answerProcessingRef.current = false;
 			setSettings(newSettings);
 			setShowSettingsModal(false);
 			setCurrentCardIndex(0);

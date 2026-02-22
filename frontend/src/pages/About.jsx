@@ -621,47 +621,13 @@ export default function About() {
 						pt: 3,
 						borderTop: `1px solid ${theme.palette.divider}`,
 						display: "flex",
-						justifyContent: "space-between",
+						justifyContent: "center",
 						alignItems: "center",
 						flexWrap: "wrap",
 						gap: 2,
 					}}
 				>
-					<Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-						<Link
-							to="/privacy"
-							style={{
-								color: theme.palette.primary.main,
-								textDecoration: "none",
-								fontFamily: "Inter, sans-serif",
-								fontSize: "0.875rem",
-							}}
-						>
-							{t("privacy_policy") || "Privacy Policy"}
-						</Link>
-						<Link
-							to="/terms"
-							style={{
-								color: theme.palette.primary.main,
-								textDecoration: "none",
-								fontFamily: "Inter, sans-serif",
-								fontSize: "0.875rem",
-							}}
-						>
-							{t("terms_of_service") || "Terms of Service"}
-						</Link>
-						<Link
-							to="/plans"
-							style={{
-								color: theme.palette.primary.main,
-								textDecoration: "none",
-								fontFamily: "Inter, sans-serif",
-								fontSize: "0.875rem",
-							}}
-						>
-							{t("plans_title") || "Plans"}
-						</Link>
-					</Box>
+					{/* Footer links removed per request */}
 					<Typography
 						variant="body2"
 						sx={{
