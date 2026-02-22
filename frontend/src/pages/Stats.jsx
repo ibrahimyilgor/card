@@ -493,6 +493,8 @@ export default function Stats() {
 
 	// Fetch decks list (for dropdown)
 	useEffect(() => {
+		if (isLocked) return; // don't call backend for free users
+
 		const fetchDecks = async () => {
 			try {
 				const res = await getDecksStats();
@@ -502,7 +504,7 @@ export default function Stats() {
 			}
 		};
 		fetchDecks();
-	}, []);
+	}, [isLocked]);
 
 	// Initialize with 30d preset
 	useEffect(() => {
@@ -511,6 +513,11 @@ export default function Stats() {
 
 	// Fetch filtered data when filters change
 	useEffect(() => {
+		if (isLocked) {
+			setLoading(false);
+			return; // skip backend calls entirely for free users
+		}
+
 		const fetchData = async () => {
 			setLoading(true);
 			try {
@@ -543,7 +550,7 @@ export default function Stats() {
 		) {
 			fetchData();
 		}
-	}, [selectedDeck, dateRange, sortBy, sortOrder, activePreset]);
+	}, [selectedDeck, dateRange, sortBy, sortOrder, activePreset, isLocked]);
 
 	// Handle sort change
 	const handleSort = useCallback(
@@ -843,7 +850,7 @@ export default function Stats() {
 			}
 
 			setDocFont(11);
-			doc.setTextColor(226, 232, 240);
+			doc.setTextColor(102, 126, 234);
 			doc.text(t("card_performance") || "Card Performance", 15, yPos);
 			yPos += 2;
 
@@ -888,11 +895,11 @@ export default function Stats() {
 					overflow: "ellipsize",
 				},
 				headStyles: {
-					fillColor: [79, 70, 229], // Indigo gradient başlangıcı
+					fillColor: [79, 70, 229], // Indigo
 					textColor: [255, 255, 255],
 					fontSize: 9,
 					font: fontEmbedded ? "Roboto" : "helvetica",
-					fontStyle: "bold",
+					fontStyle: "normal",
 					halign: "center",
 					cellPadding: { top: 4, right: 6, bottom: 4, left: 6 },
 				},
@@ -904,7 +911,7 @@ export default function Stats() {
 					1: { cellWidth: 28, halign: "center" },
 					2: { cellWidth: 28, halign: "center" },
 					3: { cellWidth: 28, halign: "center" },
-					4: { cellWidth: 28, halign: "center", fontStyle: "bold" },
+					4: { cellWidth: 28, halign: "center", fontStyle: "normal" },
 				},
 				didParseCell: (data) => {
 					// Correct sütunu yeşil
@@ -1429,7 +1436,7 @@ export default function Stats() {
 										variant="subtitle2"
 										sx={{
 											color: "text.cardTitle",
-											fontFamily: "Inter",
+											fontFamily: "Inter, sans-serif",
 											fontWeight: 600,
 										}}
 									>
@@ -1602,7 +1609,7 @@ export default function Stats() {
 										sx={{
 											fontWeight: 600,
 											color: "text.cardTitle",
-											fontFamily: "Inter",
+											fontFamily: "Inter, sans-serif",
 											mb: 3,
 										}}
 									>
@@ -1661,7 +1668,7 @@ export default function Stats() {
 										sx={{
 											fontWeight: 600,
 											color: "text.cardTitle",
-											fontFamily: "Inter",
+											fontFamily: "Inter, sans-serif",
 											mb: 3,
 										}}
 									>
@@ -1713,7 +1720,7 @@ export default function Stats() {
 										sx={{
 											fontWeight: 600,
 											color: "text.cardTitle",
-											fontFamily: "Inter",
+											fontFamily: "Inter, sans-serif",
 											mb: 3,
 										}}
 									>
@@ -1757,7 +1764,7 @@ export default function Stats() {
 									sx={{
 										fontWeight: 600,
 										color: "text.cardTitle",
-										fontFamily: "Inter",
+										fontFamily: "Inter, sans-serif",
 										mb: 2,
 										display: "flex",
 										alignItems: "center",
@@ -1769,12 +1776,16 @@ export default function Stats() {
 								</Typography>
 
 								{effectiveCardsTable.length > 0 ? (
-									<TableContainer sx={{ maxHeight: 400 }}>
+									<TableContainer sx={{ maxHeight: 400, pr: 2 }}>
 										<Table stickyHeader size="small">
 											<TableHead>
 												<TableRow>
 													<TableCell
-														sx={{ color: "text.cardSubtitle", minWidth: 200 }}
+														sx={{
+															color: "text.cardSubtitle",
+															minWidth: 200,
+															fontFamily: "Inter, sans-serif",
+														}}
 													>
 														{t("card_title") || "Card"}
 													</TableCell>
@@ -1785,7 +1796,10 @@ export default function Stats() {
 													)}
 													<TableCell
 														align="center"
-														sx={{ color: "text.cardSubtitle" }}
+														sx={{
+															color: "text.cardSubtitle",
+															fontFamily: "Inter, sans-serif",
+														}}
 													>
 														<TableSortLabel
 															active={sortBy === "times_played"}
@@ -1799,7 +1813,10 @@ export default function Stats() {
 													</TableCell>
 													<TableCell
 														align="center"
-														sx={{ color: "text.cardSubtitle" }}
+														sx={{
+															color: "text.cardSubtitle",
+															fontFamily: "Inter, sans-serif",
+														}}
 													>
 														<TableSortLabel
 															active={sortBy === "correct"}
@@ -1813,7 +1830,10 @@ export default function Stats() {
 													</TableCell>
 													<TableCell
 														align="center"
-														sx={{ color: "text.cardSubtitle" }}
+														sx={{
+															color: "text.cardSubtitle",
+															fontFamily: "Inter, sans-serif",
+														}}
 													>
 														<TableSortLabel
 															active={sortBy === "wrong"}
@@ -1827,9 +1847,15 @@ export default function Stats() {
 													</TableCell>
 													<TableCell
 														align="center"
-														sx={{ color: "text.cardSubtitle" }}
+														sx={{
+															color: "text.cardSubtitle",
+															fontFamily: "Inter, sans-serif",
+														}}
 													>
 														<TableSortLabel
+															sx={{
+																fontFamily: "Inter, sans-serif",
+															}}
 															active={sortBy === "accuracy"}
 															direction={
 																sortBy === "accuracy" ? sortOrder : "desc"
