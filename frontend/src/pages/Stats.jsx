@@ -565,13 +565,6 @@ export default function Stats() {
 		[sortBy],
 	);
 
-	// Refresh data
-	const handleRefresh = useCallback(() => {
-		if (activePreset) {
-			handlePresetClick(activePreset);
-		}
-	}, [activePreset, handlePresetClick]);
-
 	// Download report as PDF file
 	const handleDownloadReport = useCallback(async () => {
 		if (!effectiveStats) return;
@@ -1399,14 +1392,6 @@ export default function Stats() {
 											disabled={!effectiveStats || isLocked}
 										>
 											<DownloadIcon />
-										</IconButton>
-									</Tooltip>
-									<Tooltip title={t("refresh") || "Refresh"}>
-										<IconButton
-											onClick={handleRefresh}
-											sx={{ color: "text.cardSubtitle" }}
-										>
-											<RefreshIcon />
 										</IconButton>
 									</Tooltip>
 								</Box>
