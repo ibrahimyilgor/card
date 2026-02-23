@@ -13,6 +13,8 @@ import {
 	IconButton,
 	Avatar,
 } from "@mui/material";
+import EventNoteIcon from "@mui/icons-material/EventNote";
+
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
@@ -154,6 +156,19 @@ export default function Account() {
 	// Reset statistics states
 	const [resetModalOpen, setResetModalOpen] = useState(false);
 	const [resetLoading, setResetLoading] = useState(false);
+
+	const getPlanColor = (code) => {
+		switch (code) {
+			case "pro":
+				return theme.palette.warning.main;
+			case "premium":
+				return theme.palette.secondary.main;
+			default:
+				return theme.palette.primary.main;
+		}
+	};
+
+	const planColor = getPlanColor(plan?.code) || theme.palette.text.secondary;
 
 	useEffect(() => {
 		setLoading(true);
@@ -354,22 +369,16 @@ export default function Account() {
 													background:
 														plan?.code === "free"
 															? `linear-gradient(135deg, ${alpha(theme.palette.text.secondary, 0.15)} 0%, ${alpha(theme.palette.text.secondary, 0.05)} 100%)`
-															: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.15)} 0%, ${alpha(theme.palette.warning.main, 0.05)} 100%)`,
+															: `linear-gradient(135deg, ${alpha(planColor, 0.15)} 0%, ${alpha(planColor, 0.05)} 100%)`,
 													border:
 														plan?.code === "free"
 															? `1px solid ${alpha(theme.palette.text.secondary, 0.2)}`
-															: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+															: `1px solid ${alpha(planColor, 0.2)}`,
 												}}
 											>
-												{plan?.code === "free" ? (
-													<StarOutlineIcon
-														sx={{ fontSize: 24, color: "text.secondary" }}
-													/>
-												) : (
-													<StarIcon
-														sx={{ fontSize: 24, color: "warning.main" }}
-													/>
-												)}
+												<EventNoteIcon
+													sx={{ fontSize: 24, color: planColor }}
+												/>
 											</Box>
 											<Box>
 												<Typography
@@ -386,8 +395,8 @@ export default function Account() {
 												<Typography
 													variant="subtitle1"
 													sx={{
+														color: planColor,
 														fontWeight: 600,
-														color: "text.cardTitle",
 														fontFamily: "Inter, sans-serif",
 													}}
 												>
