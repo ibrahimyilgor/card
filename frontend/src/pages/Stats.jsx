@@ -1327,7 +1327,7 @@ export default function Stats() {
 
 			{/* ── Main content (blurred & non-interactive for free users) ── */}
 			<MotionConfig reducedMotion={isLocked ? "always" : "never"}>
-				<Box sx={{ position: "relative" }}>
+				<Box sx={{ position: "relative", padding: 4 }}>
 					{/* blur overlay — sits on top, içerik normal DOM akışında kalır */}
 					{isLocked && (
 						<Box
