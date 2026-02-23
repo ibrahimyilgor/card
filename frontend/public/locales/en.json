@@ -438,5 +438,9 @@
 	"login_faq3_q": "Does it work on mobile?",
 	"login_faq3_a": "MemoDeck is a progressive web app that works on any device. Add it to your home screen for native-app-like access.",
 	"login_faq4_q": "How do I sign in?",
-	"login_faq4_a": "Simply click 'Continue with Google' above. No separate registration needed — your Google account is all you need."
+	"login_faq4_a": "Simply click 'Continue with Google' above. No separate registration needed — your Google account is all you need.",
+	"plan_description_free": "Basic features for beginners",
+	"plan_description_pro": "Advanced features for regular learners",
+	"plan_description_premium": "Unlimited access to all features",
+	"plan_flashcards": "Flashcards"
 }

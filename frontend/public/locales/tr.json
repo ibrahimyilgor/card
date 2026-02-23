@@ -432,5 +432,9 @@
 	"login_faq3_q": "Mobilde çalışıyor mu?",
 	"login_faq3_a": "MemoDeck, herhangi bir cihazda çalışan bir progresif web uygulamasıdır. Yerel uygulama benzeri erişim için ana ekranınıza ekleyin.",
 	"login_faq4_q": "Nasıl giriş yapabilirim?",
-	"login_faq4_a": "Yukarıdaki 'Google ile Devam Et' düğmesine tıklamanız yeterli. Ayrı bir kayıt gerekmez — Google hesabınız yeterli."
+	"login_faq4_a": "Yukarıdaki 'Google ile Devam Et' düğmesine tıklamanız yeterli. Ayrı bir kayıt gerekmez — Google hesabınız yeterli.",
+	"plan_description_free": "Başlangıç için temel özellikler",
+	"plan_description_pro": "Düzenli öğrenenler için gelişmiş özellikler",
+	"plan_description_premium": "Tüm özelliklere sınırsız erişim",
+	"plan_flashcards": "Kart"
 }
