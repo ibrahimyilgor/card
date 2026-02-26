@@ -4,10 +4,6 @@
 -plana ekleme, plandan çıkarma vs
     +google play bağlantısı ile planı ayarlama
 
--istatistikler sayfası
-    +mobilin dosya ismi. stats_report_yyyy_mm_dd olmalı.
-    +deck değişikliği olunca statisticsteki kartlar ve deckler de ekleniyor mu kontrol et
-    +grafiklerin yeniden ayarlanması
 
 -webde sayfaların sağ sol boşlukları aynı olmalı
 

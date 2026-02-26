@@ -213,6 +213,7 @@
 	"daily_activity": "Daily Activity",
 	"accuracy_trend": "Accuracy Trend",
 	"study_time_chart": "Study Time",
+	"minutes_short": "min",
 	"correct_answers": "Correct Answers",
 	"wrong_answers": "Wrong Answers",
 	"avg_session": "Avg Session",
