@@ -4,10 +4,13 @@
 -plana ekleme, plandan çıkarma vs
     +google play bağlantısı ile planı ayarlama
 
-
 -webde sayfaların sağ sol boşlukları aynı olmalı
+-webde deck sayfasındaki kartlar fazla olduğunda cıkan scroll
+-webde gereksiz overflow y
 
--reklam ekleme
+-mobile reklam ekleme
 
 -test ekleme
+
+-web-mobil authorization kontrolü
 
