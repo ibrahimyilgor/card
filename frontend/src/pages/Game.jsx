@@ -650,6 +650,7 @@ export default function Game({ onBackToDecks }) {
 					scores={scores}
 					progress={progress}
 					gameMode={gameMode}
+					challengeType={challengeType}
 					t={t}
 				/>
 			</MotionBox>

@@ -1,11 +1,18 @@
 import React from "react";
 import { Box, Typography, LinearProgress } from "@mui/material";
 
-const GameProgress = ({ scores, progress, gameMode, t }) => {
+const GameProgress = ({ scores, progress, gameMode, t, challengeType }) => {
+	// If challengeType is provided, use it to decide whether to hide the progress bar.
+	// Fall back to checking gameMode for backward compatibility.
+	const isTimedOrSurvival =
+		(challengeType &&
+			(challengeType === "timed" || challengeType === "survival")) ||
+		(!challengeType && (gameMode === "timed" || gameMode === "survival"));
+
 	return (
 		<>
 			{/* Progress bar - hidden for survival and timed modes */}
-			{gameMode !== "survival" && gameMode !== "timed" && (
+			{!isTimedOrSurvival && (
 				<LinearProgress
 					variant="determinate"
 					value={progress}
@@ -19,7 +26,7 @@ const GameProgress = ({ scores, progress, gameMode, t }) => {
 						"& .MuiLinearProgress-bar": {
 							borderRadius: 4,
 							background:
-								gameMode === "timed"
+								challengeType === "timed" || gameMode === "timed"
 									? "linear-gradient(90deg, #f59e0b 0%, #ef4444 100%)"
 									: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
 						},

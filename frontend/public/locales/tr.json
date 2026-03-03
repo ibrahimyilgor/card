@@ -437,5 +437,7 @@
 	"plan_description_free": "Başlangıç için temel özellikler",
 	"plan_description_pro": "Düzenli öğrenenler için gelişmiş özellikler",
 	"plan_description_premium": "Tüm özelliklere sınırsız erişim",
-	"plan_flashcards": "Kart"
+	"plan_flashcards": "Kart",
+	"limitWarningDescriptionOverage": "Plan limitlerinizi aştınız. Lütfen içeriğinizi azaltın veya devam etmek için planınızı yükseltin.",
+	"deckOverageMessage": "{{count}} deste limitin üzerinde. Oynamak için silin."
 }

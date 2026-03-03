@@ -443,5 +443,7 @@
 	"plan_description_free": "Basic features for beginners",
 	"plan_description_pro": "Advanced features for regular learners",
 	"plan_description_premium": "Unlimited access to all features",
-	"plan_flashcards": "Flashcards"
+	"plan_flashcards": "Flashcards",
+	"limitWarningDescriptionOverage": "You have exceeded your plan limits. Please reduce your content or upgrade your plan to continue.",
+	"deckOverageMessage": "{{count}} deck(s) over limit. Delete to play games."
 }
