@@ -1,6 +1,3 @@
--plana göre özelliklerin açılıp kapatılması.
-    +reklam free mobil için
-
 -plana ekleme, plandan çıkarma vs
     +google play bağlantısı ile planı ayarlama
 
@@ -8,7 +5,7 @@
 -webde deck sayfasındaki kartlar fazla olduğunda cıkan scroll
 -webde gereksiz overflow y
 
--mobile reklam ekleme
+-mobil game summary
 
 -test ekleme
 
