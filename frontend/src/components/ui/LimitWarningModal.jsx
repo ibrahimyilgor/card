@@ -184,12 +184,7 @@ const LimitWarningModal = ({
 										fontWeight: 500,
 									}}
 								>
-									⚠️{" "}
-									{t(
-										"deckOverageMessage",
-										"{{count}} deck(s) over limit. Delete to play games.",
-										{ count: deckOverage },
-									)}
+									⚠️ {t("deckOverageMessage", { count: deckOverage })}
 								</Typography>
 							)}
 						</Box>
@@ -255,11 +250,7 @@ const LimitWarningModal = ({
 										fontWeight: 500,
 									}}
 								>
-									{t(
-										"flashcardOverageMessage",
-										"{{count}} card(s) over limit. Delete to play games.",
-										{ count: flashcardOverage },
-									)}
+									{t("flashcardOverageMessage", { count: flashcardOverage })}
 								</Typography>
 							)}
 						</Box>

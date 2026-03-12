@@ -44,13 +44,12 @@ import {
 	LinearScale,
 	PointElement,
 	LineElement,
-	BarElement,
 	Title,
 	Tooltip as ChartTooltip,
 	Legend,
 	Filler,
 } from "chart.js";
-import { Line, Bar } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import StyleIcon from "@mui/icons-material/Style";
@@ -169,7 +168,6 @@ ChartJS.register(
 	LinearScale,
 	PointElement,
 	LineElement,
-	BarElement,
 	Title,
 	ChartTooltip,
 	Legend,
@@ -185,7 +183,7 @@ const DATE_PRESETS = [
 	{ key: "30d", days: 30 },
 	{ key: "90d", days: 90 },
 	{ key: "180d", days: 180 },
-	{ key: "1y", days: 365 },
+	{ key: "1Y", days: 365 },
 ];
 
 // Stats card component
@@ -533,6 +531,7 @@ export default function Stats() {
 				]);
 
 				setFilteredStats(statsRes);
+				console.log("ibrahim", chartRes);
 				setChartData(chartRes);
 				setCardsTable(cardsRes.cards || []);
 			} catch (err) {
@@ -564,13 +563,6 @@ export default function Stats() {
 		},
 		[sortBy],
 	);
-
-	// Refresh data
-	const handleRefresh = useCallback(() => {
-		if (activePreset) {
-			handlePresetClick(activePreset);
-		}
-	}, [activePreset, handlePresetClick]);
 
 	// Download report as PDF file
 	const handleDownloadReport = useCallback(async () => {
@@ -820,7 +812,10 @@ export default function Stats() {
 				image: accuracyChartImage,
 				title: t("accuracy_trend") || "Accuracy Trend",
 			},
-			{ image: studyTimeChartImage, title: t("study_time") || "Study Time" },
+			{
+				image: studyTimeChartImage,
+				title: `${t("study_time") || "Study Time"} (${t("minutes_short") || "min"})`,
+			},
 		];
 
 		charts.forEach((chart) => {
@@ -1064,10 +1059,23 @@ export default function Stats() {
 		if (isDaily) {
 			const dataMap = new Map();
 			rawData.forEach((d) => {
-				// Convert ISO UTC timestamp to the user's local date string
-				const key = d.date
-					? dayjs.utc(d.date).local().format("YYYY-MM-DD")
-					: undefined;
+				// Determine a stable local-midnight key for the date.
+				// If the server sent an ISO UTC timestamp (contains T or Z),
+				// take the UTC Y/M/D and construct a local Date at midnight.
+				let key;
+				if (!d.date) {
+					key = undefined;
+				} else if (/T|Z/.test(d.date)) {
+					const utc = dayjs.utc(d.date);
+					key = dayjs(new Date(utc.year(), utc.month(), utc.date())).format(
+						"YYYY-MM-DD",
+					);
+				} else if (/^\d{4}-\d{2}-\d{2}$/.test(d.date)) {
+					// Plain date string — treat as local date
+					key = dayjs(d.date + "T00:00:00").format("YYYY-MM-DD");
+				} else {
+					key = dayjs(d.date).format("YYYY-MM-DD");
+				}
 				if (dataMap.has(key)) {
 					const ex = dataMap.get(key);
 					dataMap.set(key, {
@@ -1098,10 +1106,23 @@ export default function Stats() {
 		} else {
 			const dataMap = new Map();
 			rawData.forEach((d) => {
-				// Convert ISO UTC timestamp to the user's local month key
-				const monthKey = d.date
-					? dayjs.utc(d.date).local().format("YYYY-MM")
-					: undefined;
+				// Determine a stable local-month key.
+				let monthKey;
+				if (!d.date) {
+					monthKey = undefined;
+				} else if (/T|Z/.test(d.date)) {
+					const utc = dayjs.utc(d.date);
+					monthKey = dayjs(new Date(utc.year(), utc.month(), 1)).format(
+						"YYYY-MM",
+					);
+				} else if (/^\d{4}-\d{2}$/.test(d.date)) {
+					// Already a YYYY-MM key
+					monthKey = d.date;
+				} else if (/^\d{4}-\d{2}-\d{2}$/.test(d.date)) {
+					monthKey = dayjs(d.date + "T00:00:00").format("YYYY-MM");
+				} else {
+					monthKey = dayjs(d.date).format("YYYY-MM");
+				}
 				if (dataMap.has(monthKey)) {
 					const ex = dataMap.get(monthKey);
 					dataMap.set(monthKey, {
@@ -1195,7 +1216,7 @@ export default function Stats() {
 		[filledChartData, chartColors, t, formatDateLabel],
 	);
 
-	// Study time bar chart data
+	// Study time line chart data
 	const studyTimeChartData = useMemo(
 		() => ({
 			labels: (filledChartData.data || []).map((d) =>
@@ -1207,37 +1228,32 @@ export default function Stats() {
 					data: (filledChartData.data || []).map((d) =>
 						Math.round((parseInt(d.studyTimeSeconds) || 0) / 60),
 					),
-					backgroundColor: chartColors.secondary,
-					borderRadius: 8,
+					borderColor: chartColors.secondary,
+					backgroundColor: `${chartColors.secondary}20`,
+					fill: true,
+					pointBackgroundColor: chartColors.secondary,
 				},
 			],
 		}),
 		[filledChartData, chartColors, t, formatDateLabel],
 	);
 
-	// Bar chart options
-	const barChartOptions = useMemo(
+	// Study time line chart options (y-axis shows minutes with 'm' suffix)
+	const studyTimeLineOptions = useMemo(
 		() => ({
-			responsive: true,
-			maintainAspectRatio: false,
-			plugins: { legend: { display: false } },
+			...lineChartOptions,
 			scales: {
-				x: {
-					grid: { display: false },
-					ticks: { color: chartColors.text, font: { family: "Inter" } },
-				},
+				...lineChartOptions.scales,
 				y: {
-					grid: { color: chartColors.grid },
+					...lineChartOptions.scales.y,
 					ticks: {
-						color: chartColors.text,
-						font: { family: "Inter" },
+						...lineChartOptions.scales.y.ticks,
 						callback: (v) => `${v}m`,
 					},
-					beginAtZero: true,
 				},
 			},
 		}),
-		[chartColors],
+		[lineChartOptions],
 	);
 
 	// Calculate accuracy percentage
@@ -1258,7 +1274,7 @@ export default function Stats() {
 	}
 
 	return (
-		<PageContainer>
+		<PageContainer style={{ maxWidth: 1400 }}>
 			{/* ── Locked / preview banner ── */}
 			{isLocked && (
 				<MotionBox
@@ -1327,7 +1343,7 @@ export default function Stats() {
 
 			{/* ── Main content (blurred & non-interactive for free users) ── */}
 			<MotionConfig reducedMotion={isLocked ? "always" : "never"}>
-				<Box sx={{ position: "relative", padding: 4 }}>
+				<Box sx={{ position: "relative" }}>
 					{/* blur overlay — sits on top, içerik normal DOM akışında kalır */}
 					{isLocked && (
 						<Box
@@ -1399,14 +1415,6 @@ export default function Stats() {
 											disabled={!effectiveStats || isLocked}
 										>
 											<DownloadIcon />
-										</IconButton>
-									</Tooltip>
-									<Tooltip title={t("refresh") || "Refresh"}>
-										<IconButton
-											onClick={handleRefresh}
-											sx={{ color: "text.cardSubtitle" }}
-										>
-											<RefreshIcon />
 										</IconButton>
 									</Tooltip>
 								</Box>
@@ -1724,14 +1732,15 @@ export default function Stats() {
 											mb: 3,
 										}}
 									>
-										{t("study_time_chart") || "Study Time"}
+										{t("study_time_chart") || "Study Time"} (
+										{t("minutes_short") || "min"})
 									</Typography>
 									<Box sx={{ height: 280 }}>
 										{filledChartData.data?.length > 0 ? (
-											<Bar
+											<Line
 												id="study-time-chart"
 												data={studyTimeChartData}
-												options={barChartOptions}
+												options={studyTimeLineOptions}
 											/>
 										) : (
 											<Box

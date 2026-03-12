@@ -213,6 +213,7 @@
 	"daily_activity": "Daily Activity",
 	"accuracy_trend": "Accuracy Trend",
 	"study_time_chart": "Study Time",
+	"minutes_short": "min",
 	"correct_answers": "Correct Answers",
 	"wrong_answers": "Wrong Answers",
 	"avg_session": "Avg Session",
@@ -241,7 +242,7 @@
 	"login_failed": "Login failed",
 	"invalid_credentials": "Invalid username or password",
 	"plan": "Plan",
-	"account_page_subtitle": "Manage your account information and security settings",
+	"account_page_subtitle": "Manage your account",
 	"account_info_section_title": "Account Information",
 	"loading": "Loading...",
 	"username": "Username",
@@ -295,7 +296,7 @@
 	"deck_title_placeholder": "e.g., Spanish Vocabulary",
 	"delete_account": "Delete Account",
 	"delete_account_title": "Delete Account",
-	"delete_account_message": "This action cannot be undone and all your data including decks, flashcards, and statistics will be permanently deleted.",
+	"delete_account_message": "This will delete your account and all associated data permanently.",
 	"delete_account_confirm": "Delete Account",
 	"delete_account_success": "Your account has been deleted successfully",
 	"delete_account_error": "Failed to delete account",
@@ -438,5 +439,11 @@
 	"login_faq3_q": "Does it work on mobile?",
 	"login_faq3_a": "MemoDeck is a progressive web app that works on any device. Add it to your home screen for native-app-like access.",
 	"login_faq4_q": "How do I sign in?",
-	"login_faq4_a": "Simply click 'Continue with Google' above. No separate registration needed — your Google account is all you need."
+	"login_faq4_a": "Simply click 'Continue with Google' above. No separate registration needed — your Google account is all you need.",
+	"plan_description_free": "Basic features for beginners",
+	"plan_description_pro": "Advanced features for regular learners",
+	"plan_description_premium": "Unlimited access to all features",
+	"plan_flashcards": "Flashcards",
+	"limitWarningDescriptionOverage": "You have exceeded your plan limits. Please reduce your content or upgrade your plan to continue.",
+	"deckOverageMessage": "{{count}} deck(s) over limit. Delete to play games."
 }

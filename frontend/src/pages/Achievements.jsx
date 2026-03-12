@@ -232,8 +232,8 @@ export default function Achievements() {
 	}, {});
 
 	return (
-		<PageContainer>
-			<Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, sm: 3 } }}>
+		<PageContainer sx={{ maxWidth: 1400 }}>
+			<Box>
 				{/* Header */}
 				<MotionBox
 					initial={{ opacity: 0, y: -20 }}

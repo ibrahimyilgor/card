@@ -34,17 +34,6 @@ function PlanCard({
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 
-	const getPlanIcon = (code) => {
-		switch (code) {
-			case "pro":
-				return <StarIcon sx={{ fontSize: 32 }} />;
-			case "premium":
-				return <WorkspacePremiumIcon sx={{ fontSize: 32 }} />;
-			default:
-				return <EventNoteIcon sx={{ fontSize: 32 }} />;
-		}
-	};
-
 	const getPlanColor = (code) => {
 		switch (code) {
 			case "pro":
@@ -120,27 +109,6 @@ function PlanCard({
 					/>
 				)}
 
-				{/* Plan icon */}
-				<Box
-					sx={{
-						width: 64,
-						height: 64,
-						borderRadius: "16px",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						background: `linear-gradient(135deg, ${alpha(
-							planColor,
-							0.2,
-						)} 0%, ${alpha(planColor, 0.05)} 100%)`,
-						border: `1px solid ${alpha(planColor, 0.3)}`,
-						color: planColor,
-						mb: 2,
-					}}
-				>
-					{getPlanIcon(plan.code)}
-				</Box>
-
 				{/* Plan name & price */}
 				<Typography
 					variant="h5"
@@ -191,7 +159,7 @@ function PlanCard({
 						minHeight: 40,
 					}}
 				>
-					{plan.description}
+					{t("plan_description_" + plan.code) || "No description available"}
 				</Typography>
 
 				{/* Features */}
@@ -210,7 +178,7 @@ function PlanCard({
 						text={
 							plan.max_flashcards === null
 								? t("unlimited_flashcards") || "Unlimited flashcards"
-								: `${plan.max_flashcards} ${t("flashcards") || "flashcards"}`
+								: `${plan.max_flashcards} ${t("plan_flashcards") || "flashcards"}`
 						}
 						color={planColor}
 					/>
@@ -238,20 +206,22 @@ function PlanCard({
 				</Box>
 
 				{/* Action button */}
-				<StyledButton
-					variant={isDisabled ? "secondary" : "primary"}
-					fullWidth
-					disabled={isDisabled}
-					onClick={onClick}
-					sx={{
-						backgroundColor: isDisabled ? undefined : planColor,
-						"&:hover": {
-							backgroundColor: isDisabled ? undefined : alpha(planColor, 0.9),
-						},
-					}}
-				>
-					{buttonText}
-				</StyledButton>
+				{currentIndex !== planIndex && (
+					<StyledButton
+						variant={isDisabled ? "secondary" : "primary"}
+						fullWidth
+						disabled={isDisabled}
+						onClick={onClick}
+						sx={{
+							backgroundColor: isDisabled ? undefined : planColor,
+							"&:hover": {
+								backgroundColor: isDisabled ? undefined : alpha(planColor, 0.9),
+							},
+						}}
+					>
+						{buttonText}
+					</StyledButton>
+				)}
 			</StyledCard>
 		</MotionBox>
 	);

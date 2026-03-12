@@ -55,7 +55,9 @@ const GameHeader = ({
 									: "rgba(245, 158, 11, 0.1)",
 						}}
 					>
-						<TimerIcon sx={{ color: timer.timeLeft < 10 ? "#ef4444" : "#f59e0b" }} />
+						<TimerIcon
+							sx={{ color: timer.timeLeft < 10 ? "#ef4444" : "#f59e0b" }}
+						/>
 						<Typography
 							variant="h6"
 							sx={{
