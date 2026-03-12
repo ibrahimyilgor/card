@@ -1274,7 +1274,7 @@ export default function Stats() {
 	}
 
 	return (
-		<PageContainer>
+		<PageContainer style={{ maxWidth: 1400 }}>
 			{/* ── Locked / preview banner ── */}
 			{isLocked && (
 				<MotionBox
@@ -1343,7 +1343,7 @@ export default function Stats() {
 
 			{/* ── Main content (blurred & non-interactive for free users) ── */}
 			<MotionConfig reducedMotion={isLocked ? "always" : "never"}>
-				<Box sx={{ position: "relative", padding: 4 }}>
+				<Box sx={{ position: "relative" }}>
 					{/* blur overlay — sits on top, içerik normal DOM akışında kalır */}
 					{isLocked && (
 						<Box

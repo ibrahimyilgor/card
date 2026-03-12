@@ -1,13 +1,8 @@
 -plana ekleme, plandan çıkarma vs
     +google play bağlantısı ile planı ayarlama
 
--webde sayfaların sağ sol boşlukları aynı olmalı
 -webde deck sayfasındaki kartlar fazla olduğunda cıkan scroll
 -webde gereksiz overflow y
 
--mobil game summary
-
--test ekleme
-
 -web-mobil authorization kontrolü
-
+-gir çık yaparken plan değiştiyse tokeni sıfırlamalı
