@@ -6,3 +6,5 @@
 
 -web-mobil authorization kontrolü
 -gir çık yaparken plan değiştiyse tokeni sıfırlamalı
+
+-mobilde reklamla ilgili kısımları sil
