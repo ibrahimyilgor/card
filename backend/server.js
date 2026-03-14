@@ -39,6 +39,7 @@ const gameRouter = require("./game")(pool);
 const statsRouter = require("./stats")(pool);
 const achievementsRouter = require("./achievements")(pool);
 const adminRouter = require("./admin")(pool);
+const subscriptionsRouter = require("./subscriptions")(pool);
 
 app.use(express.json());
 app.use("/auth", authRouter);
@@ -49,6 +50,7 @@ app.use("/flashcards", flashcardsRouter);
 app.use("/stats", statsRouter);
 app.use("/achievements", achievementsRouter);
 app.use("/admin", adminRouter);
+app.use("/subscriptions", subscriptionsRouter);
 
 app.get("/api", async (req, res) => {
 	const result = await pool.query("SELECT NOW()");

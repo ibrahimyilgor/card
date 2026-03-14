@@ -1,5 +1,12 @@
 const express = require("express");
 const authenticateToken = require("./middleware/authenticateToken");
+const googlePlayService = require("./services/googlePlayService");
+const {
+	resolveTargetPlanCode,
+	applyPlanTransition,
+	upsertPlanSubscription,
+	normalizeSubscriptionState,
+} = require("./services/subscriptionSyncService");
 
 module.exports = (pool) => {
 	const router = express.Router();
@@ -142,11 +149,53 @@ module.exports = (pool) => {
 					"SELECT * FROM plan WHERE code = 'free'",
 				);
 				return res.json({
-					plan: freePlan.rows[0] || null,
+					plan: {
+						...(freePlan.rows[0] || null),
+						currentPeriodEnd: null,
+						autoRenewing: false,
+						subscriptionState: null,
+					},
 					hasActivePlan: false,
 				});
 			}
-			res.json({ plan: result.rows[0], hasActivePlan: true });
+
+			const activePlan = result.rows[0];
+			let currentPeriodEnd = activePlan.ends_at || null;
+			let autoRenewing = false;
+			let subscriptionState = null;
+
+			try {
+				const subResult = await pool.query(
+					`SELECT expires_at, auto_renewing, subscription_state
+					 FROM plan_subscription
+					 WHERE account_id = $1
+					 ORDER BY updated_at DESC
+					 LIMIT 1`,
+					[accountId],
+				);
+
+				if (subResult.rows.length > 0) {
+					const sub = subResult.rows[0];
+					currentPeriodEnd = sub.expires_at || currentPeriodEnd;
+					autoRenewing = Boolean(sub.auto_renewing);
+					subscriptionState = sub.subscription_state || null;
+				}
+			} catch (subErr) {
+				// plan_subscription table may not exist yet in older deployments.
+				if (subErr?.code !== "42P01") {
+					console.error("Error reading subscription info:", subErr);
+				}
+			}
+
+			res.json({
+				plan: {
+					...activePlan,
+					currentPeriodEnd,
+					autoRenewing,
+					subscriptionState,
+				},
+				hasActivePlan: true,
+			});
 		} catch (err) {
 			console.error(err);
 			res.status(500).json({ error: "Failed to fetch user plan" });
@@ -227,6 +276,141 @@ module.exports = (pool) => {
 		} catch (err) {
 			console.error(err);
 			res.status(500).json({ error: "Failed to fetch limit status" });
+		}
+	});
+
+	/**
+	 * Verify subscription purchase and sync user's plan.
+	 */
+	router.post("/subscriptions/verify", authenticateToken, async (req, res) => {
+		const client = await pool.connect();
+
+		try {
+			const accountId = req.user.accountId;
+			const {
+				platform = "google_play",
+				productId,
+				purchaseToken,
+				rawPayload,
+			} = req.body || {};
+
+			if (platform !== "google_play") {
+				return res.status(400).json({ error: "Unsupported platform" });
+			}
+
+			if (!productId || !purchaseToken) {
+				return res
+					.status(400)
+					.json({ error: "productId and purchaseToken are required" });
+			}
+
+			const verifyDisabled = process.env.GOOGLE_PLAY_VERIFY_DISABLED === "true";
+			const isProduction = process.env.NODE_ENV === "production";
+			const googleVerifyConfigured = Boolean(
+				process.env.GOOGLE_PLAY_PACKAGE_NAME &&
+					process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON,
+			);
+			const shouldUseFallbackVerify = verifyDisabled || !googleVerifyConfigured;
+			let verification;
+
+			if (!verifyDisabled && isProduction && !googleVerifyConfigured) {
+				return res.status(500).json({
+					error:
+						"Google Play verification is not configured. Set GOOGLE_PLAY_PACKAGE_NAME and GOOGLE_PLAY_SERVICE_ACCOUNT_JSON.",
+				});
+			}
+
+			if (shouldUseFallbackVerify) {
+				if (!verifyDisabled && !googleVerifyConfigured) {
+					console.warn(
+						"[Subscriptions] Google Play verification config missing; using fallback verification in non-production.",
+					);
+				}
+
+				const {
+					subscriptionState = "active",
+					autoRenewing = true,
+					currentPeriodEnd = null,
+				} = req.body || {};
+
+				verification = {
+					productId,
+					purchaseToken,
+					subscriptionState,
+					autoRenewing,
+					currentPeriodEnd,
+					rawPayload: rawPayload || { source: "verify_disabled" },
+				};
+			} else {
+				verification = await googlePlayService.verifySubscription({
+					packageName: process.env.GOOGLE_PLAY_PACKAGE_NAME,
+					productId,
+					purchaseToken,
+				});
+			}
+
+			const normalizedState = normalizeSubscriptionState(
+				verification.subscriptionState,
+			);
+
+			const parsedPeriodEnd = verification.currentPeriodEnd
+				? new Date(verification.currentPeriodEnd)
+				: null;
+			if (parsedPeriodEnd && Number.isNaN(parsedPeriodEnd.getTime())) {
+				return res.status(400).json({ error: "Invalid currentPeriodEnd" });
+			}
+
+			const effectivePeriodEnd = parsedPeriodEnd
+				? parsedPeriodEnd.toISOString()
+				: null;
+
+			const targetPlanCode = resolveTargetPlanCode(
+				verification.productId,
+				normalizedState,
+			);
+			if (!targetPlanCode) {
+				return res.status(400).json({ error: "Unknown productId" });
+			}
+
+			await client.query("BEGIN");
+
+			await upsertPlanSubscription(client, {
+				accountId,
+				platform,
+				productId: verification.productId,
+				purchaseToken: verification.purchaseToken,
+				subscriptionState: normalizedState,
+				currentPeriodEnd: effectivePeriodEnd,
+				autoRenewing: verification.autoRenewing,
+				rawPayload: verification.rawPayload || rawPayload || null,
+			});
+
+			const targetPlan = await applyPlanTransition(
+				client,
+				accountId,
+				targetPlanCode,
+				`google_play_${normalizedState}`,
+				effectivePeriodEnd,
+			);
+
+			await client.query("COMMIT");
+
+			res.json({
+				success: true,
+				plan: {
+					code: targetPlan.code,
+					name: targetPlan.name,
+					currentPeriodEnd: effectivePeriodEnd,
+					autoRenewing: Boolean(verification.autoRenewing),
+					subscriptionState: normalizedState,
+				},
+			});
+		} catch (err) {
+			await client.query("ROLLBACK");
+			console.error("Error verifying subscription:", err);
+			res.status(500).json({ error: "Failed to verify subscription" });
+		} finally {
+			client.release();
 		}
 	});
 

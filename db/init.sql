@@ -135,3 +135,39 @@ CREATE TABLE IF NOT EXISTS account_plan_history (
   -- upgrade, downgrade, cancel, expired, trial_end vb.
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS plan_subscription (
+  id SERIAL PRIMARY KEY,
+  account_id INT UNIQUE REFERENCES account(id) ON DELETE CASCADE,
+  platform VARCHAR(30) NOT NULL DEFAULT 'google_play',
+  product_id VARCHAR(120) NOT NULL,
+  purchase_token TEXT NOT NULL,
+  subscription_state VARCHAR(50),
+  expires_at TIMESTAMP,
+  auto_renewing BOOLEAN DEFAULT FALSE,
+  raw_payload JSONB,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_plan_subscription_product_id
+  ON plan_subscription(product_id);
+
+CREATE INDEX IF NOT EXISTS idx_plan_subscription_expires_at
+  ON plan_subscription(expires_at);
+
+CREATE INDEX IF NOT EXISTS idx_plan_subscription_purchase_token
+  ON plan_subscription(purchase_token);
+
+CREATE TABLE IF NOT EXISTS subscription_webhook_event (
+  id SERIAL PRIMARY KEY,
+  provider VARCHAR(30) NOT NULL DEFAULT 'google_play',
+  event_key VARCHAR(255) NOT NULL,
+  payload JSONB,
+  processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(provider, event_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscription_webhook_event_processed_at
+  ON subscription_webhook_event(processed_at);
