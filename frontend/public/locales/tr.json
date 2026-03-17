@@ -439,5 +439,8 @@
 	"plan_description_premium": "Tüm özelliklere sınırsız erişim",
 	"plan_flashcards": "Kart",
 	"limitWarningDescriptionOverage": "Plan limitlerinizi aştınız. Lütfen içeriğinizi azaltın veya devam etmek için planınızı yükseltin.",
-	"deckOverageMessage": "{{count}} deste limitin üzerinde. Oynamak için silin."
+	"deckOverageMessage": "{{count}} deste limitin üzerinde. Oynamak için silin.",
+	"flip_back_label": "ARKA",
+	"tap_to_flip": "Çevirmek için dokun",
+	"tap_to_flip_back": "Geri çevirmek için dokun"
 }

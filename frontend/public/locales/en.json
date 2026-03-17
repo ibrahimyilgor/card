@@ -445,5 +445,8 @@
 	"plan_description_premium": "Unlimited access to all features",
 	"plan_flashcards": "Flashcards",
 	"limitWarningDescriptionOverage": "You have exceeded your plan limits. Please reduce your content or upgrade your plan to continue.",
-	"deckOverageMessage": "{{count}} deck(s) over limit. Delete to play games."
+	"deckOverageMessage": "{{count}} deck(s) over limit. Delete to play games.",
+	"flip_back_label": "BACK",
+	"tap_to_flip": "Tap to flip",
+	"tap_to_flip_back": "Tap to flip back"
 }

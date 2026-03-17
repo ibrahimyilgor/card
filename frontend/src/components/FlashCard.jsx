@@ -1,13 +1,83 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Box, Typography, useTheme } from "@mui/material";
 import TouchAppIcon from "@mui/icons-material/TouchApp";
 import { playSound, SOUNDS } from "../utils/sounds";
+import { I18nContext } from "../utils/i18n";
 
 const MotionBox = motion.create(Box);
 
 export default function FlashCard({ front, back, isFlipped, onFlip }) {
 	const theme = useTheme();
+	const { t } = useContext(I18nContext);
+	const frontScrollRef = useRef(null);
+	const backScrollRef = useRef(null);
+	const frontRafRef = useRef(null);
+	const backRafRef = useRef(null);
+	const [frontHasOverflow, setFrontHasOverflow] = useState(false);
+	const [backHasOverflow, setBackHasOverflow] = useState(false);
+
+	const stopAutoScroll = useCallback((rafRef) => {
+		if (rafRef.current) {
+			cancelAnimationFrame(rafRef.current);
+			rafRef.current = null;
+		}
+	}, []);
+
+	const startAutoScroll = useCallback((containerRef, rafRef) => {
+		const node = containerRef.current;
+		if (!node) return;
+
+		const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
+		if (maxScroll <= 1) return;
+
+		let y = node.scrollTop || 0;
+		let lastTs = 0;
+
+		const speedPxPerSec = 20;
+
+		const tick = (ts) => {
+			const currentNode = containerRef.current;
+			if (!currentNode) return;
+
+			const currentMax = Math.max(
+				0,
+				currentNode.scrollHeight - currentNode.clientHeight,
+			);
+			if (currentMax <= 1) {
+				currentNode.scrollTop = 0;
+				return;
+			}
+
+			if (!lastTs) lastTs = ts;
+			const dt = Math.min(64, ts - lastTs);
+			lastTs = ts;
+
+			y += (speedPxPerSec * dt) / 1000;
+
+			if (y >= currentMax) {
+				y = 0;
+			}
+
+			currentNode.scrollTop = y;
+			rafRef.current = requestAnimationFrame(tick);
+		};
+
+		stopAutoScroll(rafRef);
+		rafRef.current = requestAnimationFrame(tick);
+	}, [stopAutoScroll]);
+
+	const evaluateOverflow = useCallback(() => {
+		const frontNode = frontScrollRef.current;
+		const backNode = backScrollRef.current;
+
+		setFrontHasOverflow(
+			!!frontNode && frontNode.scrollHeight > frontNode.clientHeight + 1,
+		);
+		setBackHasOverflow(
+			!!backNode && backNode.scrollHeight > backNode.clientHeight + 1,
+		);
+	}, []);
 
 	const handleFlip = () => {
 		playSound(SOUNDS.FLIP);
@@ -33,6 +103,35 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 		window.addEventListener("keydown", onKeyDown);
 		return () => window.removeEventListener("keydown", onKeyDown);
 	}, [onFlip]);
+
+	useEffect(() => {
+		evaluateOverflow();
+		window.addEventListener("resize", evaluateOverflow);
+		return () => window.removeEventListener("resize", evaluateOverflow);
+	}, [front, back, isFlipped, evaluateOverflow]);
+
+	useEffect(() => {
+		stopAutoScroll(frontRafRef);
+		stopAutoScroll(backRafRef);
+
+		if (!isFlipped && frontHasOverflow) {
+			startAutoScroll(frontScrollRef, frontRafRef);
+		}
+		if (isFlipped && backHasOverflow) {
+			startAutoScroll(backScrollRef, backRafRef);
+		}
+
+		return () => {
+			stopAutoScroll(frontRafRef);
+			stopAutoScroll(backRafRef);
+		};
+	}, [
+		isFlipped,
+		frontHasOverflow,
+		backHasOverflow,
+		startAutoScroll,
+		stopAutoScroll,
+	]);
 
 	const cardVariants = {
 		front: {
@@ -130,31 +229,51 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 
 					<AnimatePresence mode="wait" initial={false}>
 						{!isFlipped && (
-							<MotionBox
-								key="front-content"
-								variants={contentVariants}
-								initial="hidden"
-								animate="visible"
-								exit="hidden"
+							<Box
+								ref={frontScrollRef}
+								onScroll={evaluateOverflow}
 								sx={{
-									textAlign: "center",
 									width: "100%",
+									height: { xs: "66%", sm: "68%", md: "70%" },
+									overflowY: "auto",
+									scrollbarWidth: "none",
+									msOverflowStyle: "none",
+									"&::-webkit-scrollbar": { display: "none" },
+									px: 1,
+									py: 2,
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
 								}}
 							>
-								<Typography
-									variant="h5"
+								<MotionBox
+									key="front-content"
+									variants={contentVariants}
+									initial="hidden"
+									animate="visible"
+									exit="hidden"
 									sx={{
-										fontWeight: 600,
-										color: "text.cardTitle",
-										fontFamily: "Inter, sans-serif",
-										lineHeight: 1.4,
-										wordBreak: "break-word",
-										fontSize: { xs: "1.1rem", sm: "1.3rem", md: "1.5rem" },
+										textAlign: "center",
+										width: "100%",
 									}}
 								>
-									{front}
-								</Typography>
-							</MotionBox>
+									<Typography
+										variant="h5"
+										sx={{
+											fontWeight: 600,
+											color: "text.cardTitle",
+											fontFamily: "Inter, sans-serif",
+											lineHeight: 1.4,
+											wordBreak: "break-word",
+											fontSize: frontHasOverflow
+												? { xs: "1rem", sm: "1.2rem", md: "1.35rem" }
+												: { xs: "1.1rem", sm: "1.3rem", md: "1.5rem" },
+										}}
+									>
+										{front}
+									</Typography>
+								</MotionBox>
+							</Box>
 						)}
 					</AnimatePresence>
 
@@ -175,7 +294,7 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 							variant="caption"
 							sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}
 						>
-							Tap to flip
+							{t("tap_to_flip")}
 						</Typography>
 					</Box>
 				</Box>
@@ -225,45 +344,65 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 
 					<AnimatePresence mode="wait" initial={false}>
 						{isFlipped && (
-							<MotionBox
-								key="back-content"
-								variants={contentVariants}
-								initial="hidden"
-								animate="visible"
-								exit="hidden"
+							<Box
+								ref={backScrollRef}
+								onScroll={evaluateOverflow}
 								sx={{
-									textAlign: "center",
 									width: "100%",
+									height: { xs: "66%", sm: "68%", md: "70%" },
+									overflowY: "auto",
+									scrollbarWidth: "none",
+									msOverflowStyle: "none",
+									"&::-webkit-scrollbar": { display: "none" },
+									px: 1,
+									py: 2,
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
 								}}
 							>
-								<Typography
-									variant="body2"
+								<MotionBox
+									key="back-content"
+									variants={contentVariants}
+									initial="hidden"
+									animate="visible"
+									exit="hidden"
 									sx={{
-										color: "success.light",
-										fontWeight: 600,
-										textTransform: "uppercase",
-										letterSpacing: "0.1em",
-										fontSize: "0.7rem",
-										mb: 2,
-										fontFamily: "Inter, sans-serif",
+										textAlign: "center",
+										width: "100%",
 									}}
 								>
-									Answer
-								</Typography>
-								<Typography
-									variant="h5"
-									sx={{
-										fontWeight: 600,
-										color: "text.cardTitle",
-										fontFamily: "Inter, sans-serif",
-										lineHeight: 1.4,
-										wordBreak: "break-word",
-										fontSize: { xs: "1.1rem", sm: "1.3rem", md: "1.5rem" },
-									}}
-								>
-									{back}
-								</Typography>
-							</MotionBox>
+									<Typography
+										variant="body2"
+										sx={{
+											color: "success.light",
+											fontWeight: 600,
+											textTransform: "uppercase",
+											letterSpacing: "0.1em",
+											fontSize: "0.7rem",
+											mb: 2,
+											fontFamily: "Inter, sans-serif",
+										}}
+									>
+										{t("flip_back_label")}
+									</Typography>
+									<Typography
+										variant="h5"
+										sx={{
+											fontWeight: 600,
+											color: "text.cardTitle",
+											fontFamily: "Inter, sans-serif",
+											lineHeight: 1.4,
+											wordBreak: "break-word",
+											fontSize: backHasOverflow
+												? { xs: "1rem", sm: "1.2rem", md: "1.35rem" }
+												: { xs: "1.1rem", sm: "1.3rem", md: "1.5rem" },
+										}}
+									>
+										{back}
+									</Typography>
+								</MotionBox>
+							</Box>
 						)}
 					</AnimatePresence>
 
@@ -284,7 +423,7 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 							variant="caption"
 							sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}
 						>
-							Tap to flip back
+							{t("tap_to_flip_back")}
 						</Typography>
 					</Box>
 				</Box>
