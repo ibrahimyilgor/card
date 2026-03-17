@@ -8,6 +8,7 @@ const MotionBox = motion.create(Box);
 const MultipleChoiceView = ({
 	currentCardIndex,
 	flashcard,
+	questionText,
 	selectedChoice,
 	showChoiceResult,
 	onChoiceSelect,
@@ -54,7 +55,7 @@ const MultipleChoiceView = ({
 							fontFamily: "Inter, sans-serif",
 						}}
 					>
-						{flashcard?.front_text}
+						{questionText || flashcard?.front_text}
 					</Typography>
 				</Box>
 

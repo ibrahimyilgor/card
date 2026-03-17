@@ -219,6 +219,7 @@ module.exports = (pool) => {
 	// Get flashcards with multiple choice options
 	router.get("/:deckId/options", authenticateToken, async (req, res) => {
 		const { deckId } = req.params;
+		const direction = req.query.direction === "reverse" ? "reverse" : "normal";
 		try {
 			// Verify deck ownership
 			const { exists, isOwner } = await verifyDeckOwnership(
@@ -262,6 +263,8 @@ module.exports = (pool) => {
 			);
 			const flashcards = result.rows;
 
+			const correctField = direction === "reverse" ? "front_text" : "back_text";
+
 			// Generate options for each flashcard
 			const flashcardsWithOptions = flashcards.map((card, index) => {
 				// Get 3 random wrong answers from other cards
@@ -270,9 +273,9 @@ module.exports = (pool) => {
 
 				// Create options array with correct answer and wrong answers
 				const options = [
-					{ text: card.back_text, isCorrect: true },
+					{ text: card[correctField], isCorrect: true },
 					...shuffledOthers.map((c) => ({
-						text: c.back_text,
+						text: c[correctField],
 						isCorrect: false,
 					})),
 				];
@@ -297,7 +300,7 @@ module.exports = (pool) => {
 
 	// Validate typed answer for write mode
 	router.post("/validate-answer", authenticateToken, async (req, res) => {
-		const { flashcardId, userAnswer } = req.body;
+		const { flashcardId, userAnswer, cardDirection } = req.body;
 		try {
 			// Verify flashcard ownership
 			const { exists, isOwner } = await verifyFlashcardOwnership(
@@ -309,10 +312,13 @@ module.exports = (pool) => {
 			if (!isOwner) return res.status(403).json({ error: "Access denied" });
 
 			const result = await pool.query(
-				"SELECT back_text FROM flashcard WHERE id = $1",
+				"SELECT front_text, back_text FROM flashcard WHERE id = $1",
 				[flashcardId],
 			);
-			const correctAnswer = result.rows[0].back_text;
+			const correctAnswer =
+				cardDirection === "reverse"
+					? result.rows[0].front_text
+					: result.rows[0].back_text;
 
 			// Normalize both answers for comparison (lowercase, trim whitespace)
 			const normalizedUserAnswer = userAnswer.toLowerCase().trim();

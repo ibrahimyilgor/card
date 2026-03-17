@@ -38,6 +38,7 @@ import {
 import { usePlan } from "../../context/PlanContext";
 
 const MotionBox = motion.create(Box);
+const MAX_TEXT_LENGTH = 512;
 
 // Inline Add Form Component
 function InlineAddForm({ onSubmit, onCancel, loading, t }) {
@@ -45,13 +46,16 @@ function InlineAddForm({ onSubmit, onCancel, loading, t }) {
 	const [front, setFront] = React.useState("");
 	const [back, setBack] = React.useState("");
 	const frontRef = React.useRef(null);
+	const frontTooLong = front.length > MAX_TEXT_LENGTH;
+	const backTooLong = back.length > MAX_TEXT_LENGTH;
 
 	React.useEffect(() => {
 		// Auto-focus the front input when form appears
 		setTimeout(() => frontRef.current?.focus(), 100);
 	}, []);
 
-	const canSubmit = front.trim() && back.trim() && !loading;
+	const canSubmit =
+		front.trim() && back.trim() && !loading && !frontTooLong && !backTooLong;
 
 	const handleSubmit = () => {
 		if (!canSubmit) return;
@@ -117,6 +121,13 @@ function InlineAddForm({ onSubmit, onCancel, loading, t }) {
 							}
 							value={front}
 							onChange={(e) => setFront(e.target.value)}
+							error={frontTooLong}
+							helperText={
+								frontTooLong
+									? t("max_characters_error", { max: MAX_TEXT_LENGTH })
+									: `${front.length}/${MAX_TEXT_LENGTH}`
+							}
+							inputProps={{ maxLength: MAX_TEXT_LENGTH + 1 }}
 							onKeyDown={handleKeyDown}
 							fullWidth
 						/>
@@ -127,6 +138,13 @@ function InlineAddForm({ onSubmit, onCancel, loading, t }) {
 							}
 							value={back}
 							onChange={(e) => setBack(e.target.value)}
+							error={backTooLong}
+							helperText={
+								backTooLong
+									? t("max_characters_error", { max: MAX_TEXT_LENGTH })
+									: `${back.length}/${MAX_TEXT_LENGTH}`
+							}
+							inputProps={{ maxLength: MAX_TEXT_LENGTH + 1 }}
 							onKeyDown={handleKeyDown}
 							fullWidth
 						/>
@@ -206,6 +224,8 @@ function InlineEditForm({ flashcard, onSubmit, onCancel, loading, t }) {
 	const [front, setFront] = React.useState(flashcard.front_text);
 	const [back, setBack] = React.useState(flashcard.back_text);
 	const frontRef = React.useRef(null);
+	const frontTooLong = front.length > MAX_TEXT_LENGTH;
+	const backTooLong = back.length > MAX_TEXT_LENGTH;
 
 	React.useEffect(() => {
 		setTimeout(() => frontRef.current?.focus(), 100);
@@ -214,7 +234,13 @@ function InlineEditForm({ flashcard, onSubmit, onCancel, loading, t }) {
 	const hasChanges =
 		front.trim() !== flashcard.front_text ||
 		back.trim() !== flashcard.back_text;
-	const canSubmit = front.trim() && back.trim() && !loading && hasChanges;
+	const canSubmit =
+		front.trim() &&
+		back.trim() &&
+		!loading &&
+		hasChanges &&
+		!frontTooLong &&
+		!backTooLong;
 
 	const handleSubmit = () => {
 		if (!canSubmit) return;
@@ -278,6 +304,13 @@ function InlineEditForm({ flashcard, onSubmit, onCancel, loading, t }) {
 							}
 							value={front}
 							onChange={(e) => setFront(e.target.value)}
+							error={frontTooLong}
+							helperText={
+								frontTooLong
+									? t("max_characters_error", { max: MAX_TEXT_LENGTH })
+									: `${front.length}/${MAX_TEXT_LENGTH}`
+							}
+							inputProps={{ maxLength: MAX_TEXT_LENGTH + 1 }}
 							onKeyDown={handleKeyDown}
 							fullWidth
 						/>
@@ -288,6 +321,13 @@ function InlineEditForm({ flashcard, onSubmit, onCancel, loading, t }) {
 							}
 							value={back}
 							onChange={(e) => setBack(e.target.value)}
+							error={backTooLong}
+							helperText={
+								backTooLong
+									? t("max_characters_error", { max: MAX_TEXT_LENGTH })
+									: `${back.length}/${MAX_TEXT_LENGTH}`
+							}
+							inputProps={{ maxLength: MAX_TEXT_LENGTH + 1 }}
 							onKeyDown={handleKeyDown}
 							fullWidth
 						/>
@@ -558,6 +598,14 @@ export default function FlashcardModal({
 
 	// Inline edit handler — update in place
 	const handleInlineEdit = async (flashcardId, front, back) => {
+		if (front.length > MAX_TEXT_LENGTH || back.length > MAX_TEXT_LENGTH) {
+			setSnackbar({
+				open: true,
+				message: t("max_characters_error", { max: MAX_TEXT_LENGTH }),
+				severity: "error",
+			});
+			return;
+		}
 		setEditLoading(true);
 		try {
 			const res = await updateFlashcard(flashcardId, {
@@ -601,6 +649,14 @@ export default function FlashcardModal({
 
 	// Inline add handler — stays in the same modal
 	const handleInlineAdd = async (front, back) => {
+		if (front.length > MAX_TEXT_LENGTH || back.length > MAX_TEXT_LENGTH) {
+			setSnackbar({
+				open: true,
+				message: t("max_characters_error", { max: MAX_TEXT_LENGTH }),
+				severity: "error",
+			});
+			return;
+		}
 		setAddLoading(true);
 		try {
 			const res = await createFlashcard({

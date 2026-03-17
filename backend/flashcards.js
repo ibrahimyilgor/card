@@ -11,6 +11,19 @@ const sanitizeText = (text) => {
 
 module.exports = (pool) => {
 	const router = express.Router();
+	const MAX_FLASHCARD_TEXT_LENGTH = 512;
+	const MAX_DECK_TITLE_LENGTH = 255;
+	const MAX_DECK_DESCRIPTION_LENGTH = 512;
+
+	const sendLengthValidationError = (res, field, receivedLength, maxLength) => {
+		return res.status(400).json({
+			error: "Validation failed",
+			message: `${field} cannot exceed ${maxLength} characters`,
+			field,
+			maxLength,
+			receivedLength,
+		});
+	};
 
 	// Helper function to verify deck ownership
 	const verifyDeckOwnership = async (deckId, accountId) => {
@@ -120,6 +133,27 @@ module.exports = (pool) => {
 				.status(400)
 				.json({ error: "deckId, frontText and backText required" });
 		}
+		if (!frontText.trim() || !backText.trim()) {
+			return res
+				.status(400)
+				.json({ error: "deckId, frontText and backText required" });
+		}
+		if (frontText.length > MAX_FLASHCARD_TEXT_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"frontText",
+				frontText.length,
+				MAX_FLASHCARD_TEXT_LENGTH,
+			);
+		}
+		if (backText.length > MAX_FLASHCARD_TEXT_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"backText",
+				backText.length,
+				MAX_FLASHCARD_TEXT_LENGTH,
+			);
+		}
 		try {
 			// Verify deck ownership before creating flashcard
 			const { exists, isOwner } = await verifyDeckOwnership(
@@ -158,6 +192,25 @@ module.exports = (pool) => {
 		const { frontText, backText } = req.body;
 		if (!frontText && !backText) {
 			return res.status(400).json({ error: "frontText or backText required" });
+		}
+		if (!frontText?.trim() || !backText?.trim()) {
+			return res.status(400).json({ error: "frontText or backText required" });
+		}
+		if (frontText.length > MAX_FLASHCARD_TEXT_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"frontText",
+				frontText.length,
+				MAX_FLASHCARD_TEXT_LENGTH,
+			);
+		}
+		if (backText.length > MAX_FLASHCARD_TEXT_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"backText",
+				backText.length,
+				MAX_FLASHCARD_TEXT_LENGTH,
+			);
 		}
 		try {
 			// Verify flashcard ownership
@@ -213,6 +266,22 @@ module.exports = (pool) => {
 		// Validate title
 		if (!title || typeof title !== "string" || title.trim().length === 0) {
 			return res.status(400).json({ error: "Deck title is required" });
+		}
+		if (title.length > MAX_DECK_TITLE_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"title",
+				title.length,
+				MAX_DECK_TITLE_LENGTH,
+			);
+		}
+		if (description && description.length > MAX_DECK_DESCRIPTION_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"description",
+				description.length,
+				MAX_DECK_DESCRIPTION_LENGTH,
+			);
 		}
 
 		// Validate flashcards array
@@ -273,10 +342,8 @@ module.exports = (pool) => {
 			await client.query("BEGIN");
 
 			// Create deck
-			const sanitizedTitle = sanitizeText(title).substring(0, 255);
-			const sanitizedDescription = description
-				? sanitizeText(description).substring(0, 1000)
-				: "";
+			const sanitizedTitle = sanitizeText(title);
+			const sanitizedDescription = description ? sanitizeText(description) : "";
 
 			const deckResult = await client.query(
 				"INSERT INTO deck (account_id, title, description) VALUES ($1, $2, $3) RETURNING *",
@@ -287,8 +354,6 @@ module.exports = (pool) => {
 			// Process and insert flashcards
 			let importedCount = 0;
 			let skippedCount = 0;
-			const MAX_TEXT_LENGTH = 5000;
-
 			for (const card of flashcards) {
 				const front =
 					card.front || card.frontText || card.Front || card.FRONT || "";
@@ -300,12 +365,17 @@ module.exports = (pool) => {
 					continue;
 				}
 
-				// Sanitize and truncate
-				const sanitizedFront = sanitizeText(front).substring(
-					0,
-					MAX_TEXT_LENGTH,
-				);
-				const sanitizedBack = sanitizeText(back).substring(0, MAX_TEXT_LENGTH);
+				if (
+					front.length > MAX_FLASHCARD_TEXT_LENGTH ||
+					back.length > MAX_FLASHCARD_TEXT_LENGTH
+				) {
+					skippedCount++;
+					continue;
+				}
+
+				// Sanitize
+				const sanitizedFront = sanitizeText(front);
+				const sanitizedBack = sanitizeText(back);
 
 				// Skip if sanitized result is empty
 				if (sanitizedFront.length === 0 || sanitizedBack.length === 0) {

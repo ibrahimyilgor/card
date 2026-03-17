@@ -3,6 +3,18 @@ const authenticateToken = require("./middleware/authenticateToken");
 
 module.exports = (pool) => {
 	const router = express.Router();
+	const MAX_DECK_TITLE_LENGTH = 255;
+	const MAX_DECK_DESCRIPTION_LENGTH = 512;
+
+	const sendLengthValidationError = (res, field, receivedLength, maxLength) => {
+		return res.status(400).json({
+			error: "Validation failed",
+			message: `${field} cannot exceed ${maxLength} characters`,
+			field,
+			maxLength,
+			receivedLength,
+		});
+	};
 
 	// Helper function to verify deck ownership
 	const verifyDeckOwnership = async (deckId, accountId) => {
@@ -112,8 +124,24 @@ module.exports = (pool) => {
 			req.body;
 		// Use accountId from token, not from body
 		const accountId = req.user.accountId;
-		if (!title) {
+		if (!title || !title.trim()) {
 			return res.status(400).json({ error: "title required" });
+		}
+		if (title.length > MAX_DECK_TITLE_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"title",
+				title.length,
+				MAX_DECK_TITLE_LENGTH,
+			);
+		}
+		if (description && description.length > MAX_DECK_DESCRIPTION_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"description",
+				description.length,
+				MAX_DECK_DESCRIPTION_LENGTH,
+			);
 		}
 		try {
 			// Check plan limits before creating deck
@@ -151,8 +179,24 @@ module.exports = (pool) => {
 		const { deckId } = req.params;
 		const { title, description, difficulty_enabled, mode, card_direction } =
 			req.body;
-		if (!title) {
+		if (!title || !title.trim()) {
 			return res.status(400).json({ error: "title required" });
+		}
+		if (title.length > MAX_DECK_TITLE_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"title",
+				title.length,
+				MAX_DECK_TITLE_LENGTH,
+			);
+		}
+		if (description && description.length > MAX_DECK_DESCRIPTION_LENGTH) {
+			return sendLengthValidationError(
+				res,
+				"description",
+				description.length,
+				MAX_DECK_DESCRIPTION_LENGTH,
+			);
 		}
 		try {
 			// Verify ownership
@@ -195,7 +239,12 @@ module.exports = (pool) => {
 			}
 
 			const result = await pool.query(
-				"SELECT difficulty_enabled, mode, card_direction, challenge_type, time_limit, starting_lives FROM deck WHERE id = $1",
+				`SELECT d.difficulty_enabled, d.mode, d.card_direction, d.challenge_type, d.time_limit, d.starting_lives,
+						COUNT(f.id)::int AS flashcard_count
+				 FROM deck d
+				 LEFT JOIN flashcard f ON f.deck_id = d.id
+				 WHERE d.id = $1
+				 GROUP BY d.id`,
 				[deckId],
 			);
 			res.json({ settings: result.rows[0] });
@@ -215,6 +264,8 @@ module.exports = (pool) => {
 			time_limit,
 			starting_lives,
 		} = req.body;
+		const effectiveCardDirection =
+			mode === "match" ? "normal" : card_direction || "normal";
 		try {
 			// Verify ownership
 			const ownership = await verifyDeckOwnership(deckId, req.user.accountId);
@@ -230,7 +281,7 @@ module.exports = (pool) => {
 				[
 					difficulty_enabled,
 					mode,
-					card_direction || "normal",
+					effectiveCardDirection,
 					challenge_type || "none",
 					time_limit || 60,
 					starting_lives || 3,

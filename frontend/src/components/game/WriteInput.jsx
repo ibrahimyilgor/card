@@ -41,7 +41,10 @@ export default function WriteInput({
 		const words = correctAnswer.split(" ");
 		if (words.length > 1) {
 			return words
-				.map((word) => word.charAt(0) + "_".repeat(word.length - 1))
+				.map((word) => {
+					if (!word) return "";
+					return word.charAt(0) + "_".repeat(Math.max(0, word.length - 1));
+				})
 				.join(" ");
 		}
 		return (

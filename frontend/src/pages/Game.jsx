@@ -97,6 +97,12 @@ export default function Game({ onBackToDecks }) {
 	const gameMode = settings.mode || "standard";
 	const challengeType = settings.challengeType || "none";
 	const cardDirection = settings.cardDirection || "normal";
+	const standardCardCount = Math.max(
+		1,
+		parseInt(settings.standardCardCount, 10) || 1,
+	);
+	const selectedCardCount =
+		challengeType === "none" ? standardCardCount : Number.POSITIVE_INFINITY;
 	const hardModeEnabled = settings.hardModeEnabled || false;
 
 	// Debounce lock for answer processing
@@ -137,16 +143,31 @@ export default function Game({ onBackToDecks }) {
 			if (hardModeEnabled) {
 				res = await getHardFlashcards(deckId);
 			} else if (gameMode === "multiple_choice") {
-				res = await getFlashcardsWithOptions(deckId);
+				res = await getFlashcardsWithOptions(deckId, cardDirection);
 			} else {
 				res = await getGameFlashcards(deckId);
 			}
 
 			if (res.data && Array.isArray(res.data.flashcards)) {
 				let cards = [...res.data.flashcards];
+				const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
 
-				if (gameMode !== "match") {
-					cards = cards.sort(() => Math.random() - 0.5);
+				if (gameMode === "match") {
+					cards =
+						selectedCardCount === Number.POSITIVE_INFINITY
+							? cards
+							: shuffledCards.slice(
+									0,
+									Math.min(selectedCardCount, cards.length),
+								);
+				} else {
+					cards =
+						selectedCardCount === Number.POSITIVE_INFINITY
+							? shuffledCards
+							: shuffledCards.slice(
+									0,
+									Math.min(selectedCardCount, cards.length),
+								);
 				}
 
 				setFlashcards(cards);
@@ -166,7 +187,7 @@ export default function Game({ onBackToDecks }) {
 		} finally {
 			setLoading(false);
 		}
-	}, [deckId, gameMode, hardModeEnabled]);
+	}, [deckId, gameMode, hardModeEnabled, cardDirection, selectedCardCount]);
 
 	useEffect(() => {
 		fetchFlashcards();
@@ -379,7 +400,7 @@ export default function Game({ onBackToDecks }) {
 	const handleWriteSubmit = async (userAnswer) => {
 		const flashcard = flashcards[currentCardIndex];
 		try {
-			const res = await validateAnswer(flashcard.id, userAnswer);
+			const res = await validateAnswer(flashcard.id, userAnswer, cardDirection);
 			setWriteResult(res.data);
 			setTimeout(() => {
 				handleAnswer(res.data.isClose);
@@ -695,6 +716,11 @@ export default function Game({ onBackToDecks }) {
 					<MultipleChoiceView
 						currentCardIndex={currentCardIndex}
 						flashcard={flashcards[currentCardIndex]}
+						questionText={
+							cardDirection === "reverse"
+								? flashcards[currentCardIndex]?.back_text
+								: flashcards[currentCardIndex]?.front_text
+						}
 						selectedChoice={selectedChoice}
 						showChoiceResult={showChoiceResult}
 						onChoiceSelect={handleChoiceSelect}
