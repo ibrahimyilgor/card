@@ -13,6 +13,8 @@ import {
 import { usePlan } from "../../context/PlanContext";
 
 const MotionBox = motion.create(Box);
+const MAX_DECK_TITLE_LENGTH = 255;
+const MAX_DECK_DESCRIPTION_LENGTH = 512;
 
 export default function DeckModal({
 	open,
@@ -35,6 +37,9 @@ export default function DeckModal({
 	);
 	const [mode, setMode] = useState(editDeck?.mode || "standard");
 	const [showLimitModal, setShowLimitModal] = useState(false);
+	const titleTooLong = title.length > MAX_DECK_TITLE_LENGTH;
+	const descTooLong = desc.length > MAX_DECK_DESCRIPTION_LENGTH;
+	const hasLengthError = titleTooLong || descTooLong;
 
 	useEffect(() => {
 		setTitle(initialTitle);
@@ -44,7 +49,7 @@ export default function DeckModal({
 	}, [initialTitle, initialDesc, editDeck, open]);
 
 	const handleSave = () => {
-		if (title.trim()) {
+		if (title.trim() && !hasLengthError) {
 			// If editing, always allow; if creating new, check limit
 			if (!editDeck && !canCreateDeck) {
 				setShowLimitModal(true);
@@ -72,7 +77,7 @@ export default function DeckModal({
 					<StyledButton
 						variant="success"
 						onClick={handleSave}
-						disabled={loading || !title.trim()}
+						disabled={loading || !title.trim() || hasLengthError}
 					>
 						{loading
 							? t("saving") || "Saving..."
@@ -88,6 +93,13 @@ export default function DeckModal({
 					label={t("deck_title")}
 					value={title}
 					onChange={(e) => setTitle(e.target.value)}
+					error={titleTooLong}
+					helperText={
+						titleTooLong
+							? t("max_characters_error", { max: MAX_DECK_TITLE_LENGTH })
+							: `${title.length}/${MAX_DECK_TITLE_LENGTH}`
+					}
+					inputProps={{ maxLength: MAX_DECK_TITLE_LENGTH + 1 }}
 					fullWidth
 					autoFocus
 					placeholder={
@@ -99,6 +111,13 @@ export default function DeckModal({
 					label={t("deck_description")}
 					value={desc}
 					onChange={(e) => setDesc(e.target.value)}
+					error={descTooLong}
+					helperText={
+						descTooLong
+							? t("max_characters_error", { max: MAX_DECK_DESCRIPTION_LENGTH })
+							: `${desc.length}/${MAX_DECK_DESCRIPTION_LENGTH}`
+					}
+					inputProps={{ maxLength: MAX_DECK_DESCRIPTION_LENGTH + 1 }}
 					fullWidth
 					multiline
 					minRows={3}

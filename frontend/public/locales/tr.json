@@ -279,6 +279,8 @@
 	"view_plans": "Planları Gör",
 	"card_direction": "Kart Yönü",
 	"card_direction_desc": "Önce hangi yüzün gösterileceğini seçin",
+	"card_count": "Kart Sayısı",
+	"card_count_desc": "Kaç rastgele kart çalışılacağını seçin",
 	"direction_normal": "Normal",
 	"direction_reverse": "Ters",
 	"hard_mode": "Zor Mod",
@@ -440,6 +442,7 @@
 	"plan_flashcards": "Kart",
 	"limitWarningDescriptionOverage": "Plan limitlerinizi aştınız. Lütfen içeriğinizi azaltın veya devam etmek için planınızı yükseltin.",
 	"deckOverageMessage": "{{count}} deste limitin üzerinde. Oynamak için silin.",
+	"max_characters_error": "En fazla {{max}} karakter girebilirsiniz",
 	"flip_back_label": "ARKA",
 	"tap_to_flip": "Çevirmek için dokun",
 	"tap_to_flip_back": "Geri çevirmek için dokun"

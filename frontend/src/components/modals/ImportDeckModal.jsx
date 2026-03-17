@@ -22,6 +22,8 @@ import { I18nContext } from "../../utils/i18n";
 import { StyledModal, StyledTextField, StyledButton } from "../ui";
 
 const MotionBox = motion.create(Box);
+const MAX_DECK_TITLE_LENGTH = 255;
+const MAX_DECK_DESCRIPTION_LENGTH = 512;
 
 // Parse CSV content - skip first row (A1/B1 headers)
 const parseCSV = (content) => {
@@ -35,7 +37,7 @@ const parseCSV = (content) => {
 		const line = lines[i];
 		// Handle CSV with quotes and commas inside quotes
 		const matches = line.match(
-			/("([^"]*(?:""[^"]*)*)"|[^,]*),("([^"]*(?:""[^"]*)*)"|[^,]*)/
+			/("([^"]*(?:""[^"]*)*)"|[^,]*),("([^"]*(?:""[^"]*)*)"|[^,]*)/,
 		);
 
 		let front, back;
@@ -104,6 +106,10 @@ export default function ImportDeckModal({
 	const [fileName, setFileName] = useState("");
 	const [error, setError] = useState("");
 	const [isDragging, setIsDragging] = useState(false);
+	const titleTooLong = deckTitle.length > MAX_DECK_TITLE_LENGTH;
+	const descriptionTooLong =
+		deckDescription.length > MAX_DECK_DESCRIPTION_LENGTH;
+	const hasLengthError = titleTooLong || descriptionTooLong;
 
 	const resetState = () => {
 		setDeckTitle("");
@@ -140,7 +146,7 @@ export default function ImportDeckModal({
 		if (!validExtensions.includes(extension)) {
 			setError(
 				t("invalid_file_format") ||
-					"Invalid file format. Please use CSV or JSON."
+					"Invalid file format. Please use CSV or JSON.",
 			);
 			return;
 		}
@@ -200,7 +206,7 @@ export default function ImportDeckModal({
 	};
 
 	const handleImport = () => {
-		if (!deckTitle.trim() || flashcards.length === 0) return;
+		if (!deckTitle.trim() || flashcards.length === 0 || hasLengthError) return;
 		onImport(deckTitle.trim(), deckDescription.trim(), flashcards);
 	};
 
@@ -219,13 +225,18 @@ export default function ImportDeckModal({
 					<StyledButton
 						variant="success"
 						onClick={handleImport}
-						disabled={loading || !deckTitle.trim() || flashcards.length === 0}
+						disabled={
+							loading ||
+							!deckTitle.trim() ||
+							flashcards.length === 0 ||
+							hasLengthError
+						}
 					>
 						{loading
 							? t("importing") || "Importing..."
 							: `${t("import") || "Import"} (${flashcards.length} ${
 									t("cards") || "cards"
-							  })`}
+								})`}
 					</StyledButton>
 				</>
 			}
@@ -242,8 +253,8 @@ export default function ImportDeckModal({
 							isDragging
 								? theme.palette.primary.main
 								: error
-								? theme.palette.error.main
-								: alpha(theme.palette.divider, 0.3)
+									? theme.palette.error.main
+									: alpha(theme.palette.divider, 0.3)
 						}`,
 						borderRadius: 3,
 						p: 4,
@@ -253,8 +264,8 @@ export default function ImportDeckModal({
 						backgroundColor: isDragging
 							? alpha(theme.palette.primary.main, 0.05)
 							: fileName
-							? alpha(theme.palette.success.main, 0.05)
-							: "transparent",
+								? alpha(theme.palette.success.main, 0.05)
+								: "transparent",
 						"&:hover": {
 							borderColor: theme.palette.primary.main,
 							backgroundColor: alpha(theme.palette.primary.main, 0.05),
@@ -350,13 +361,17 @@ export default function ImportDeckModal({
 							variant="body2"
 							sx={{ color: theme.palette.text.secondary, mb: 1 }}
 						>
-							<strong>CSV:</strong> {t("import_csv_format") || "First row should be headers (front, back). Each following row is a flashcard."}
+							<strong>CSV:</strong>{" "}
+							{t("import_csv_format") ||
+								"First row should be headers (front, back). Each following row is a flashcard."}
 						</Typography>
 						<Typography
 							variant="body2"
 							sx={{ color: theme.palette.text.secondary }}
 						>
-							<strong>JSON:</strong> {t("import_json_format") || 'Array of objects with "front" and "back" properties.'}
+							<strong>JSON:</strong>{" "}
+							{t("import_json_format") ||
+								'Array of objects with "front" and "back" properties.'}
 						</Typography>
 						<Box
 							component="pre"
@@ -371,7 +386,7 @@ export default function ImportDeckModal({
 								fontFamily: "monospace",
 							}}
 						>
-{`CSV:
+							{`CSV:
 front,back
 Hello,Merhaba
 Goodbye,Güle güle
@@ -413,6 +428,13 @@ JSON:
 							label={t("deck_title") || "Deck Title"}
 							value={deckTitle}
 							onChange={(e) => setDeckTitle(e.target.value)}
+							error={titleTooLong}
+							helperText={
+								titleTooLong
+									? t("max_characters_error", { max: MAX_DECK_TITLE_LENGTH })
+									: `${deckTitle.length}/${MAX_DECK_TITLE_LENGTH}`
+							}
+							inputProps={{ maxLength: MAX_DECK_TITLE_LENGTH + 1 }}
 							fullWidth
 							placeholder={
 								t("deck_title_placeholder") || "e.g., Spanish Vocabulary"
@@ -422,6 +444,15 @@ JSON:
 							label={t("deck_description") || "Deck Description"}
 							value={deckDescription}
 							onChange={(e) => setDeckDescription(e.target.value)}
+							error={descriptionTooLong}
+							helperText={
+								descriptionTooLong
+									? t("max_characters_error", {
+											max: MAX_DECK_DESCRIPTION_LENGTH,
+										})
+									: `${deckDescription.length}/${MAX_DECK_DESCRIPTION_LENGTH}`
+							}
+							inputProps={{ maxLength: MAX_DECK_DESCRIPTION_LENGTH + 1 }}
 							fullWidth
 							multiline
 							minRows={2}

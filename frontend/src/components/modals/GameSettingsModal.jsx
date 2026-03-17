@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import {
 	getDeckSettings,
 	updateDeckSettings,
+	getDecks,
 } from "../../services/deckServices";
 import {
 	Box,
@@ -221,8 +222,10 @@ export default function GameSettingsModal({
 		timeLimit: 60, // seconds (1 minute default)
 		lives: 3,
 		cardDirection: "normal", // "normal" or "reverse"
+		standardCardCount: 1,
 		hardModeEnabled: false, // only study hard cards (saved as difficulty_enabled in db)
 	});
+	const [deckFlashcardCount, setDeckFlashcardCount] = useState(0);
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
@@ -231,6 +234,16 @@ export default function GameSettingsModal({
 			try {
 				const res = await getDeckSettings(deckId);
 				if (res.data && res.data.settings) {
+					let flashcardCount = Number(res.data.settings.flashcard_count);
+					if (!Number.isFinite(flashcardCount) || flashcardCount < 0) {
+						const decksRes = await getDecks();
+						const deck = (decksRes.data?.decks || []).find(
+							(item) => String(item.id) === String(deckId),
+						);
+						flashcardCount = Number(deck?.flashcard_count) || 0;
+					}
+					const maxSelectable = Math.max(1, flashcardCount);
+					setDeckFlashcardCount(flashcardCount);
 					setSettings((prev) => ({
 						...prev,
 						hardModeEnabled: res.data.settings.difficulty_enabled || false,
@@ -239,6 +252,10 @@ export default function GameSettingsModal({
 						challengeType: res.data.settings.challenge_type || "none",
 						timeLimit: res.data.settings.time_limit || 60,
 						lives: res.data.settings.starting_lives || 3,
+						standardCardCount: Math.min(
+							Math.max(prev.standardCardCount || 1, 1),
+							maxSelectable,
+						),
 					}));
 				}
 			} catch (err) {
@@ -250,23 +267,47 @@ export default function GameSettingsModal({
 
 	// When mode changes to "match", disable survival challenge
 	useEffect(() => {
-		if (settings.mode === "match" && settings.challengeType === "survival") {
-			setSettings((prev) => ({ ...prev, challengeType: "none" }));
-		}
+		if (settings.mode !== "match") return;
+
+		setSettings((prev) => {
+			const next = { ...prev };
+			let changed = false;
+
+			if (next.challengeType === "survival") {
+				next.challengeType = "none";
+				changed = true;
+			}
+			if (next.cardDirection !== "normal") {
+				next.cardDirection = "normal";
+				changed = true;
+			}
+
+			return changed ? next : prev;
+		});
 	}, [settings.mode]);
 
 	const handleSaveAndStart = async () => {
 		setLoading(true);
+		const effectiveCardDirection =
+			settings.mode === "match" ? "normal" : settings.cardDirection;
+		const effectiveStandardCardCount = Math.min(
+			Math.max(settings.standardCardCount || 1, 1),
+			Math.max(1, deckFlashcardCount),
+		);
 		try {
 			await updateDeckSettings(deckId, {
 				difficulty_enabled: settings.hardModeEnabled,
 				mode: settings.mode,
-				card_direction: settings.cardDirection,
+				card_direction: effectiveCardDirection,
 				challenge_type: settings.challengeType,
 				time_limit: settings.timeLimit,
 				starting_lives: settings.lives,
 			});
-			onStart(settings);
+			onStart({
+				...settings,
+				cardDirection: effectiveCardDirection,
+				standardCardCount: effectiveStandardCardCount,
+			});
 		} catch (err) {
 			console.error("Error saving deck settings:", err);
 		} finally {
@@ -275,6 +316,12 @@ export default function GameSettingsModal({
 	};
 
 	const selectedMode = GAME_MODES.find((m) => m.value === settings.mode);
+	const maxStandardCards = Math.max(1, deckFlashcardCount);
+	const displayMaxStandardCards = Math.max(0, deckFlashcardCount);
+	const displaySelectedCardCount =
+		displayMaxStandardCards === 0
+			? 0
+			: Math.min(settings.standardCardCount || 1, maxStandardCards);
 	const selectedChallenge = CHALLENGE_TYPES.find(
 		(c) => c.value === settings.challengeType,
 	);
@@ -611,55 +658,107 @@ export default function GameSettingsModal({
 				)}
 
 				{/* Card Direction Option */}
-				<SettingOption
-					icon={SwapHorizIcon}
-					title={t("card_direction") || "Card Direction"}
-					description={
-						t("card_direction_desc") || "Choose which side to show first"
-					}
-					iconColor="#06b6d4"
-					delay={0.1}
-				>
-					<ToggleButtonGroup
-						value={settings.cardDirection}
-						exclusive
-						onChange={(e, value) => {
-							if (value !== null) {
-								setSettings((prev) => ({ ...prev, cardDirection: value }));
-							}
-						}}
-						size="small"
-						fullWidth
-						sx={{
-							width: "100%",
-							"& .MuiToggleButton-root": {
-								flex: 1,
-								px: 2,
-								py: 0.5,
-								fontFamily: "Inter, sans-serif",
-								fontSize: "0.75rem",
-								fontWeight: 500,
-								textTransform: "none",
-								border: (theme) => `1px solid ${theme.palette.border.main}`,
-								"&.Mui-selected": {
-									backgroundColor: alpha("#06b6d4", 0.15),
-									color: "#06b6d4",
-									borderColor: "#06b6d4",
-									"&:hover": {
-										backgroundColor: alpha("#06b6d4", 0.25),
+				{settings.mode !== "match" && (
+					<SettingOption
+						icon={SwapHorizIcon}
+						title={t("card_direction") || "Card Direction"}
+						description={
+							t("card_direction_desc") || "Choose which side to show first"
+						}
+						iconColor="#06b6d4"
+						delay={0.1}
+					>
+						<ToggleButtonGroup
+							value={settings.cardDirection}
+							exclusive
+							onChange={(e, value) => {
+								if (value !== null) {
+									setSettings((prev) => ({ ...prev, cardDirection: value }));
+								}
+							}}
+							size="small"
+							fullWidth
+							sx={{
+								width: "100%",
+								"& .MuiToggleButton-root": {
+									flex: 1,
+									width: "50%",
+									minWidth: 0,
+									px: 2,
+									py: 0.5,
+									fontFamily: "Inter, sans-serif",
+									fontSize: "0.75rem",
+									fontWeight: 500,
+									textTransform: "none",
+									border: (theme) => `1px solid ${theme.palette.border.main}`,
+									"&.Mui-selected": {
+										backgroundColor: alpha("#06b6d4", 0.15),
+										color: "#06b6d4",
+										borderColor: "#06b6d4",
+										"&:hover": {
+											backgroundColor: alpha("#06b6d4", 0.25),
+										},
 									},
 								},
-							},
-						}}
+							}}
+						>
+							<ToggleButton value="normal">
+								{t("direction_normal") || "Normal"}
+							</ToggleButton>
+							<ToggleButton value="reverse">
+								{t("direction_reverse") || "Reverse"}
+							</ToggleButton>
+						</ToggleButtonGroup>
+					</SettingOption>
+				)}
+
+				{settings.challengeType === "none" && (
+					<SettingOption
+						icon={SpeedIcon}
+						title={t("card_count") || "Card Count"}
+						description={
+							t("card_count_desc") || "Choose how many random cards to study"
+						}
+						iconColor="#3b82f6"
+						delay={0.12}
 					>
-						<ToggleButton value="normal">
-							{t("direction_normal") || "Normal"}
-						</ToggleButton>
-						<ToggleButton value="reverse">
-							{t("direction_reverse") || "Reverse"}
-						</ToggleButton>
-					</ToggleButtonGroup>
-				</SettingOption>
+						<Box sx={{ minWidth: 170 }}>
+							<Slider
+								value={displaySelectedCardCount || 1}
+								onChange={(e, value) =>
+									setSettings((prev) => ({
+										...prev,
+										standardCardCount: value,
+									}))
+								}
+								min={1}
+								max={maxStandardCards}
+								step={1}
+								disabled={deckFlashcardCount === 0}
+								valueLabelDisplay="auto"
+								sx={{
+									color: "#3b82f6",
+									"& .MuiSlider-thumb": {
+										"&:hover, &.Mui-focusVisible": {
+											boxShadow: `0 0 0 8px ${alpha("#3b82f6", 0.16)}`,
+										},
+									},
+								}}
+							/>
+							<Typography
+								variant="caption"
+								sx={{
+									display: "block",
+									textAlign: "center",
+									color: "text.cardSubtitle",
+									fontFamily: "Inter, sans-serif",
+								}}
+							>
+								{`${displaySelectedCardCount} / ${displayMaxStandardCards}`}
+							</Typography>
+						</Box>
+					</SettingOption>
+				)}
 
 				{/* Hard Mode Option */}
 				<SettingOption
