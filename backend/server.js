@@ -52,23 +52,15 @@ app.use("/achievements", achievementsRouter);
 app.use("/admin", adminRouter);
 app.use("/subscriptions", subscriptionsRouter);
 
-app.get("/api", async (req, res) => {
-	const result = await pool.query("SELECT NOW()");
-	res.json({ time: result.rows[0].now });
+app.get("/health", async (req, res) => {
+	res.status(200).json({
+		ok: true,
+		service: "backend",
+		uptimeSec: Math.floor(process.uptime()),
+		timestamp: new Date().toISOString(),
+	});
 });
 
 app.listen(port, () => {
 	console.log(`Backend listening at port: ${port}`);
-});
-
-// Cron job to clean expired refresh tokens daily at 3 AM
-cron.schedule("0 3 * * *", async () => {
-	try {
-		const result = await pool.query(
-			"DELETE FROM refresh_token WHERE expires_at < NOW()",
-		);
-		console.log(`[Cron] Cleaned ${result.rowCount} expired refresh tokens`);
-	} catch (err) {
-		console.error("[Cron] Error cleaning expired refresh tokens:", err);
-	}
 });
