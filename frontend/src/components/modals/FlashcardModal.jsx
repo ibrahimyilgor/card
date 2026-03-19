@@ -19,6 +19,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import StyleIcon from "@mui/icons-material/Style";
@@ -402,7 +404,14 @@ function InlineEditForm({ flashcard, onSubmit, onCancel, loading, t }) {
 }
 
 // Flashcard Item Component
-function FlashcardItem({ flashcard, onEdit, onDelete, index, isSearching }) {
+function FlashcardItem({
+	flashcard,
+	onEdit,
+	onDelete,
+	onToggleEnabled,
+	index,
+	isSearching,
+}) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 
@@ -492,6 +501,34 @@ function FlashcardItem({ flashcard, onEdit, onDelete, index, isSearching }) {
 
 						{/* Actions */}
 						<Box sx={{ display: "flex", gap: 0.5, flexShrink: 0 }}>
+							<Tooltip
+								title={
+									flashcard.enabled
+										? t("disable_flashcard") || "Disable"
+										: t("enable_flashcard") || "Enable"
+								}
+								arrow
+							>
+								<IconButton
+									size="small"
+									onClick={() => onToggleEnabled(flashcard)}
+									sx={{
+										color: flashcard.enabled ? "primary.main" : "text.disabled",
+										transition: "all 0.2s",
+										"&:hover": {
+											backgroundColor: (theme) =>
+												alpha(theme.palette.primary.main, 0.1),
+											transform: "scale(1.1)",
+										},
+									}}
+								>
+									{flashcard.enabled ? (
+										<VisibilityIcon fontSize="small" />
+									) : (
+										<VisibilityOffIcon fontSize="small" />
+									)}
+								</IconButton>
+							</Tooltip>
 							<Tooltip title={t("edit") || "Edit"} arrow>
 								<IconButton
 									size="small"
@@ -509,6 +546,7 @@ function FlashcardItem({ flashcard, onEdit, onDelete, index, isSearching }) {
 									<EditIcon fontSize="small" />
 								</IconButton>
 							</Tooltip>
+
 							<Tooltip title={t("delete") || "Delete"} arrow>
 								<IconButton
 									size="small"
@@ -549,6 +587,7 @@ export default function FlashcardModal({
 	const [loading, setLoading] = useState(true);
 	const [addLoading, setAddLoading] = useState(false);
 	const [editLoading, setEditLoading] = useState(false);
+	const [bulkLoading, setBulkLoading] = useState(false);
 	const [isInlineAdding, setIsInlineAdding] = useState(false);
 	const [editingFlashcardId, setEditingFlashcardId] = useState(null);
 	const [searchQuery, setSearchQuery] = useState("");
@@ -570,6 +609,17 @@ export default function FlashcardModal({
 			flashcard.back_text.toLowerCase().includes(query)
 		);
 	});
+
+	const enabledCount = flashcards.filter(
+		(flashcard) => flashcard.enabled,
+	).length;
+	const disabledCount = flashcards.length - enabledCount;
+	const filteredEnabledCount = filteredFlashcards.filter(
+		(flashcard) => flashcard.enabled,
+	).length;
+	const filteredDisabledCount =
+		filteredFlashcards.length - filteredEnabledCount;
+	const isSearching = Boolean(searchQuery.trim());
 
 	const handleDeleteFlashcard = async (flashcardId) => {
 		try {
@@ -593,6 +643,97 @@ export default function FlashcardModal({
 					"Error deleting flashcard",
 				severity: "error",
 			});
+		}
+	};
+
+	const handleToggleFlashcardEnabled = async (flashcard) => {
+		try {
+			const nextEnabled = !flashcard.enabled;
+			const res = await updateFlashcard(flashcard.id, { enabled: nextEnabled });
+			const updatedEnabled =
+				typeof res?.data?.flashcard?.enabled === "boolean"
+					? res.data.flashcard.enabled
+					: nextEnabled;
+
+			setFlashcards((prev) =>
+				prev.map((f) =>
+					f.id === flashcard.id ? { ...f, enabled: updatedEnabled } : f,
+				),
+			);
+			setSnackbar({
+				open: true,
+				message: updatedEnabled
+					? t("flashcard_enabled") || "Flashcard enabled"
+					: t("flashcard_disabled") || "Flashcard disabled",
+				severity: "success",
+			});
+		} catch (err) {
+			setSnackbar({
+				open: true,
+				message:
+					err?.response?.data?.error ||
+					t("flashcard_error") ||
+					"Error updating flashcard",
+				severity: "error",
+			});
+		}
+	};
+
+	const handleBulkSetEnabled = async (nextEnabled) => {
+		const targetFlashcards = filteredFlashcards.filter(
+			(flashcard) => flashcard.enabled !== nextEnabled,
+		);
+
+		if (targetFlashcards.length === 0) {
+			setSnackbar({
+				open: true,
+				message: nextEnabled
+					? t("all_cards_already_enabled") ||
+						"Selected cards are already enabled"
+					: t("all_cards_already_disabled") ||
+						"Selected cards are already disabled",
+				severity: "success",
+			});
+			return;
+		}
+
+		setBulkLoading(true);
+		try {
+			await Promise.all(
+				targetFlashcards.map((flashcard) =>
+					updateFlashcard(flashcard.id, { enabled: nextEnabled }),
+				),
+			);
+
+			const targetIds = new Set(
+				targetFlashcards.map((flashcard) => flashcard.id),
+			);
+			setFlashcards((prev) =>
+				prev.map((flashcard) =>
+					targetIds.has(flashcard.id)
+						? { ...flashcard, enabled: nextEnabled }
+						: flashcard,
+				),
+			);
+
+			setSnackbar({
+				open: true,
+				message: nextEnabled
+					? t("all_selected_cards_enabled") || "Selected cards enabled"
+					: t("all_selected_cards_disabled") || "Selected cards disabled",
+				severity: "success",
+			});
+		} catch (err) {
+			setSnackbar({
+				open: true,
+				message:
+					err?.response?.data?.error ||
+					t("flashcard_error") ||
+					"Error updating flashcards",
+				severity: "error",
+			});
+		} finally {
+			setBulkLoading(false);
 		}
 	};
 
@@ -746,7 +887,7 @@ export default function FlashcardModal({
 				onClose={onClose}
 				title={t("flashcards") || "Flashcards"}
 				icon={<StyleIcon sx={{ fontSize: 24, color: "white" }} />}
-				maxWidth="sm"
+				maxWidth={760}
 				actions={
 					<>
 						<StyledButton variant="ghost" onClick={onClose}>
@@ -795,36 +936,147 @@ export default function FlashcardModal({
 							sx={{ mb: 1.5 }}
 						/>
 
-						{/* Card count badge */}
-						<MotionBox
-							initial={{ y: -10 }}
-							animate={{ y: 0 }}
+						<Box
 							sx={{
-								display: "inline-flex",
+								display: "flex",
 								alignItems: "center",
+								justifyContent: "space-between",
 								gap: 1,
-								px: 2,
-								py: 0.75,
-								borderRadius: 2,
-								background: (theme) => alpha(theme.palette.primary.main, 0.1),
-								border: (theme) =>
-									`1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+								flexWrap: "wrap",
 							}}
 						>
-							<Typography
-								variant="caption"
+							{/* Card count badges */}
+							<MotionBox
+								initial={{ y: -10 }}
+								animate={{ y: 0 }}
 								sx={{
-									fontWeight: 600,
-									color: "primary.main",
-									fontFamily: "Inter, sans-serif",
+									display: "flex",
+									alignItems: "center",
+									gap: 1,
+									flexWrap: "wrap",
 								}}
 							>
-								{searchQuery
-									? `${filteredFlashcards.length} / ${flashcards.length}`
-									: flashcards.length}{" "}
-								{flashcards.length === 1 ? "card" : "cards"}
-							</Typography>
-						</MotionBox>
+								<Box
+									sx={{
+										display: "inline-flex",
+										alignItems: "center",
+										px: 2,
+										py: 0.75,
+										borderRadius: 2,
+										background: (theme) =>
+											alpha(theme.palette.primary.main, 0.1),
+										border: (theme) =>
+											`1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+									}}
+								>
+									<Typography
+										variant="caption"
+										sx={{
+											fontWeight: 600,
+											color: "primary.main",
+											fontFamily: "Inter, sans-serif",
+										}}
+									>
+										{isSearching
+											? `${filteredFlashcards.length}/${flashcards.length}`
+											: flashcards.length}{" "}
+										{t("cards_flashcard_count")}
+									</Typography>
+								</Box>
+
+								<Box
+									sx={{
+										display: "inline-flex",
+										alignItems: "center",
+										px: 2,
+										py: 0.75,
+										borderRadius: 2,
+										background: (theme) =>
+											alpha(theme.palette.success.main, 0.12),
+										border: (theme) =>
+											`1px solid ${alpha(theme.palette.success.main, 0.28)}`,
+									}}
+								>
+									<Typography
+										variant="caption"
+										sx={{
+											fontWeight: 600,
+											color: "success.main",
+											fontFamily: "Inter, sans-serif",
+										}}
+									>
+										{isSearching
+											? `${filteredEnabledCount}/${filteredFlashcards.length}`
+											: enabledCount}{" "}
+										{t("enabled") || "enabled"}
+									</Typography>
+								</Box>
+
+								<Box
+									sx={{
+										display: "inline-flex",
+										alignItems: "center",
+										px: 2,
+										py: 0.75,
+										borderRadius: 2,
+										background: (theme) =>
+											alpha(theme.palette.error.main, 0.12),
+										border: (theme) =>
+											`1px solid ${alpha(theme.palette.error.main, 0.28)}`,
+									}}
+								>
+									<Typography
+										variant="caption"
+										sx={{
+											fontWeight: 600,
+											color: "error.main",
+											fontFamily: "Inter, sans-serif",
+										}}
+									>
+										{isSearching
+											? `${filteredDisabledCount}/${filteredFlashcards.length}`
+											: disabledCount}{" "}
+										{t("disabled") || "disabled"}
+									</Typography>
+								</Box>
+							</MotionBox>
+
+							{/* Bulk enable/disable actions */}
+							<Box
+								sx={{ display: "flex", gap: 1, flexWrap: "wrap", ml: "auto" }}
+							>
+								<StyledButton
+									variant="success"
+									size="small"
+									onClick={() => handleBulkSetEnabled(true)}
+									disabled={bulkLoading || filteredFlashcards.length === 0}
+									sx={{ px: 1.5, py: 0.4, minHeight: 30, fontSize: "0.76rem" }}
+								>
+									{t("enable_all") || "Enable all"}
+								</StyledButton>
+								<StyledButton
+									variant="ghost"
+									size="small"
+									onClick={() => handleBulkSetEnabled(false)}
+									disabled={bulkLoading || filteredFlashcards.length === 0}
+									sx={{
+										px: 1.5,
+										py: 0.4,
+										minHeight: 30,
+										fontSize: "0.76rem",
+										backgroundColor: "error.main",
+										color: "common.white",
+										borderColor: "error.main",
+										"&:hover": {
+											backgroundColor: "error.dark",
+											borderColor: "error.dark",
+										},
+									}}
+								>
+									{t("disable_all") || "Disable all"}
+								</StyledButton>
+							</Box>
+						</Box>
 					</Box>
 				)}
 
@@ -911,6 +1163,7 @@ export default function FlashcardModal({
 										flashcard={flashcard}
 										onEdit={handleEdit}
 										onDelete={handleDeleteFlashcard}
+										onToggleEnabled={handleToggleFlashcardEnabled}
 										index={index}
 										isSearching={!!searchQuery}
 									/>

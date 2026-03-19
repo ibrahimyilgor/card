@@ -445,5 +445,18 @@
 	"max_characters_error": "En fazla {{max}} karakter girebilirsiniz",
 	"flip_back_label": "ARKA",
 	"tap_to_flip": "Çevirmek için dokun",
-	"tap_to_flip_back": "Geri çevirmek için dokun"
+	"tap_to_flip_back": "Geri çevirmek için dokun",
+	"flashcard_enabled": "Kart etkinleştirildi",
+	"flashcard_disabled": "Kart devre dışı bırakıldı",
+	"disable_flashcard": "Devre dışı bırak",
+	"enable_flashcard": "Etkinleştir",
+	"enable_all": "Hepsini etkinleştir",
+	"disable_all": "Hepsini devre dışı bırak",
+	"all_cards_already_enabled": "Seçili kartlar zaten etkin",
+	"all_cards_already_disabled": "Seçili kartlar zaten devre dışı",
+	"all_selected_cards_enabled": "Seçili kartlar etkinleştirildi",
+	"all_selected_cards_disabled": "Seçili kartlar devre dışı bırakıldı",
+	"enabled": "etkin",
+	"disabled": "devre dışı",
+	"cards_flashcard_count": "kart"
 }

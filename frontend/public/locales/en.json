@@ -451,5 +451,18 @@
 	"max_characters_error": "Maximum {{max}} characters allowed",
 	"flip_back_label": "BACK",
 	"tap_to_flip": "Tap to flip",
-	"tap_to_flip_back": "Tap to flip back"
+	"tap_to_flip_back": "Tap to flip back",
+	"flashcard_enabled": "Flashcard enabled",
+	"flashcard_disabled": "Flashcard disabled",
+	"disable_flashcard": "Disable",
+	"enable_flashcard": "Enable",
+	"enable_all": "Enable all",
+	"disable_all": "Disable all",
+	"all_cards_already_enabled": "Selected cards are already enabled",
+	"all_cards_already_disabled": "Selected cards are already disabled",
+	"all_selected_cards_enabled": "Selected cards enabled",
+	"all_selected_cards_disabled": "Selected cards disabled",
+	"enabled": "enabled",
+	"disabled": "disabled",
+	"cards_flashcard_count": "card(s)"
 }

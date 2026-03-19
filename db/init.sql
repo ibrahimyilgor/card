@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS flashcard (
   difficulty INT DEFAULT 3 CHECK (difficulty BETWEEN 1 AND 5),
   correct_count INT DEFAULT 0,
   wrong_count INT DEFAULT 0,
+  enabled BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

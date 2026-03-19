@@ -242,7 +242,7 @@ module.exports = (pool) => {
 				`SELECT d.difficulty_enabled, d.mode, d.card_direction, d.challenge_type, d.time_limit, d.starting_lives,
 						COUNT(f.id)::int AS flashcard_count
 				 FROM deck d
-				 LEFT JOIN flashcard f ON f.deck_id = d.id
+				 LEFT JOIN flashcard f ON f.deck_id = d.id AND f.enabled = TRUE
 				 WHERE d.id = $1
 				 GROUP BY d.id`,
 				[deckId],
