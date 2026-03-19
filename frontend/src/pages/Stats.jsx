@@ -357,16 +357,14 @@ export default function Stats() {
 				const monthKey = /^\d{4}-\d{2}$/.test(dateStr)
 					? dateStr + "-01"
 					: dateStr;
-				return (
-					/T|Z/.test(monthKey) ? dayjs.utc(monthKey).local() : dayjs(monthKey)
-				).format("MMM YYYY");
+				return dayjs(monthKey).format("MMM YYYY");
 			}
 
 			// Plain YYYY-MM-DD: parse as local; ISO timestamp: convert UTC→local
 			if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
 				return dayjs(dateStr).format("MMM D");
 			}
-			return dayjs.utc(dateStr).local().format("MMM D");
+			return dayjs(dateStr).format("MMM D");
 		},
 		[lang],
 	);
@@ -1066,10 +1064,7 @@ export default function Stats() {
 				if (!d.date) {
 					key = undefined;
 				} else if (/T|Z/.test(d.date)) {
-					const utc = dayjs.utc(d.date);
-					key = dayjs(new Date(utc.year(), utc.month(), utc.date())).format(
-						"YYYY-MM-DD",
-					);
+					key = dayjs(d.date).format("YYYY-MM-DD");
 				} else if (/^\d{4}-\d{2}-\d{2}$/.test(d.date)) {
 					// Plain date string — treat as local date
 					key = dayjs(d.date + "T00:00:00").format("YYYY-MM-DD");
@@ -1111,10 +1106,7 @@ export default function Stats() {
 				if (!d.date) {
 					monthKey = undefined;
 				} else if (/T|Z/.test(d.date)) {
-					const utc = dayjs.utc(d.date);
-					monthKey = dayjs(new Date(utc.year(), utc.month(), 1)).format(
-						"YYYY-MM",
-					);
+					monthKey = dayjs(d.date).format("YYYY-MM");
 				} else if (/^\d{4}-\d{2}$/.test(d.date)) {
 					// Already a YYYY-MM key
 					monthKey = d.date;

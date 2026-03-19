@@ -1,28 +1,5 @@
 -plana ekleme, plandan çıkarma vs
     +google play bağlantısı ile planı ayarlama
 
--webde deck sayfasındaki kartlar fazla olduğunda cıkan scroll
--webde gereksiz overflow y
-
--web-mobil authorization kontrolü
--gir çık yaparken plan değiştiyse tokeni sıfırlamalı
-
-subscriptionoffers are required for google play subscriptions hatası nedir
-
-Bu hatanın projedeki bağlamını netleştirmek için önce kodda Google Play abonelik akışını ve subscriptionOffers kullanımını arayacağım, sonra .env.prod içeriğinizle ilişkilendirip net çözümü söyleyeceğim.
-
-Abonelik hatasının mobil tarafta ve backend doğrulamada nereden geldiğini buldum; şimdi ilgili dosyaları okuyup tam sebep/çözümü netleştiriyorum.
-
-Mobil kodda requestSubscription çağrısı var ama subscriptionOffers geçilmiyor; şimdi mevcut react-native-iap patch’inizde bu zorunlu mu diye kontrol ediyorum.
-
-Sebep netleşti: uygulama react-native-iap’ın yeni Google Play sözleşmesini kullanıyor ama satın alma isteğinde subscriptionOffers göndermiyor. Son olarak ekranda neden bu mesajı gördüğünüzü göstermek için hata yakalama satırlarını da kontrol ediyorum.
-
-Bu hata şu anlama gelir: Android’de abonelik başlatırken Google Play’e subscriptionOffers (özellikle offerToken) göndermiyorsunuz.
-
-Satın alma çağrınızda sadece sku var: googleBillingService.js:72
-react-native-iap yeni sürümlerde Google Play abonelik için subscriptionOffers ister; yoksa tam bu hatayı fırlatır.
-Ürünleri alıyorsunuz: googleBillingService.js:59 ama çağrıda offer seçip iletmiyorsunuz.
-Hata mesajı UI’da doğrudan error.message olarak gösteriliyor: PlansScreen.js:109
-Ek not (ayrı bir problem): backend’de .env.prod:6 değeri JSON olmalı; çünkü googlePlayService.js:19 JSON.parse yapıyor. pro_monthly,pro_yearly burada geçersizdir.
-
-İstersen bir sonraki adımda subscriptionOffers’ı ürün yanıtından seçip requestSubscription’a doğru formatta nasıl vereceğini, dosyanıza birebir uyarlayıp yazayım.
+-refactor
+-test

@@ -106,14 +106,22 @@ const resolveSubscriptionState = (payload) => {
 	const isExpired = expiresAt > 0 && expiresAt <= Date.now();
 
 	if (isExpired) return "expired";
+	if (payload.paymentState === 0) return "pending";
+	if (payload.autoResumeTimeMillis) return "paused";
+	if (payload.cancelReason === 1 || payload.cancelReason === 3) {
+		return "revoked";
+	}
 	if (payload.cancelReason !== undefined && payload.cancelReason !== null) {
 		return "canceled";
 	}
-	if (payload.paymentState === 0) return "pending";
 	return "active";
 };
 
-const verifySubscription = async ({ packageName, productId, purchaseToken }) => {
+const verifySubscription = async ({
+	packageName,
+	productId,
+	purchaseToken,
+}) => {
 	if (!packageName) {
 		throw new Error("GOOGLE_PLAY_PACKAGE_NAME is required");
 	}
@@ -138,7 +146,9 @@ const verifySubscription = async ({ packageName, productId, purchaseToken }) => 
 
 	if (!response.ok) {
 		const errorBody = await response.text();
-		throw new Error(`Google Play verify failed (${response.status}): ${errorBody}`);
+		throw new Error(
+			`Google Play verify failed (${response.status}): ${errorBody}`,
+		);
 	}
 
 	const payload = await response.json();

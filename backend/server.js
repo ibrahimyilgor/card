@@ -40,6 +40,9 @@ const statsRouter = require("./stats")(pool);
 const achievementsRouter = require("./achievements")(pool);
 const adminRouter = require("./admin")(pool);
 const subscriptionsRouter = require("./subscriptions")(pool);
+const {
+	createSubscriptionReconciliationWorker,
+} = require("./workers/subscriptionReconciliationWorker");
 
 app.use(express.json());
 app.use("/auth", authRouter);
@@ -63,4 +66,47 @@ app.get("/health", async (req, res) => {
 
 app.listen(port, () => {
 	console.log(`Backend listening at port: ${port}`);
+
+	const reconciliationEnabled = true;
+	if (!reconciliationEnabled) {
+		console.log(
+			"Subscription reconciliation is disabled (ENABLE_SUBSCRIPTION_RECONCILIATION=false)",
+		);
+		return;
+	}
+
+	const cronExpression = "0 */6 * * *";
+	if (!cron.validate(cronExpression)) {
+		console.error(
+			`Invalid SUBSCRIPTION_RECONCILIATION_CRON: ${cronExpression}`,
+		);
+		return;
+	}
+
+	const worker = createSubscriptionReconciliationWorker(pool);
+	cron.schedule(cronExpression, async () => {
+		try {
+			await worker.runOnce();
+		} catch (error) {
+			console.error(
+				"[subscription-reconcile] scheduled run failed:",
+				error?.message,
+			);
+		}
+	});
+
+	console.log(
+		`Subscription reconciliation enabled with schedule: ${cronExpression}`,
+	);
+
+	if (true) {
+		worker
+			.runOnce()
+			.catch((error) =>
+				console.error(
+					"[subscription-reconcile] startup run failed:",
+					error?.message,
+				),
+			);
+	}
 });

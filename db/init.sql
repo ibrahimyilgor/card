@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS study_session (
   correct_answers INT DEFAULT 0,
   wrong_answers INT DEFAULT 0,
   duration_seconds INT DEFAULT 0,
-  session_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  session_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_study_session_account ON study_session(account_id);

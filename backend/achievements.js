@@ -3,6 +3,71 @@ const authenticateToken = require("./middleware/authenticateToken");
 
 module.exports = (pool) => {
 	const router = express.Router();
+	const DEFAULT_TIMEZONE = "UTC";
+
+	const resolveClientTimezone = (req) => {
+		const headerTimezone =
+			typeof req?.headers?.["x-client-timezone"] === "string"
+				? req.headers["x-client-timezone"]
+				: "";
+		const queryTimezone =
+			typeof req?.query?.timezone === "string" ? req.query.timezone : "";
+		const headerOffsetRaw =
+			typeof req?.headers?.["x-client-timezone-offset-minutes"] === "string"
+				? req.headers["x-client-timezone-offset-minutes"]
+				: "";
+		const queryOffsetRaw =
+			typeof req?.query?.timezoneOffsetMinutes === "string"
+				? req.query.timezoneOffsetMinutes
+				: "";
+
+		const rawTimezone = (headerTimezone || queryTimezone).trim();
+
+		const rawOffset = (headerOffsetRaw || queryOffsetRaw).trim();
+		const parsedOffset = Number.parseInt(rawOffset, 10);
+		const offsetMinutes = Number.isFinite(parsedOffset) ? parsedOffset : null;
+
+		const toOffsetTimezone = (minutes) => {
+			if (!Number.isFinite(minutes)) return null;
+			if (minutes < -840 || minutes > 840) return null;
+			// PostgreSQL uses POSIX timezone format where + is West of UTC and - is East of UTC.
+			const sign = minutes >= 0 ? "-" : "+";
+			const absoluteMinutes = Math.abs(minutes);
+			const hours = String(Math.floor(absoluteMinutes / 60)).padStart(2, "0");
+			const mins = String(absoluteMinutes % 60).padStart(2, "0");
+			return `${sign}${hours}:${mins}`;
+		};
+
+		const parseUtcGmtOffset = (timezone) => {
+			const match = timezone.match(
+				/^(?:UTC|GMT)\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/i,
+			);
+			if (!match) return null;
+			const [, sign, hoursText, minsText] = match;
+			const hours = Number.parseInt(hoursText, 10);
+			const mins = Number.parseInt(minsText || "0", 10);
+			if (!Number.isFinite(hours) || !Number.isFinite(mins)) return null;
+			if (hours > 14 || mins > 59) return null;
+			const totalMinutes = hours * 60 + mins;
+			const signedMinutes = sign === "+" ? totalMinutes : -totalMinutes;
+			return toOffsetTimezone(signedMinutes);
+		};
+
+		if (rawTimezone) {
+			try {
+				new Intl.DateTimeFormat("en-US", { timeZone: rawTimezone });
+				if (rawTimezone === "UTC" && offsetMinutes && offsetMinutes !== 0) {
+					return toOffsetTimezone(offsetMinutes) || DEFAULT_TIMEZONE;
+				}
+				return rawTimezone;
+			} catch {
+				const utcGmtOffsetTimezone = parseUtcGmtOffset(rawTimezone);
+				if (utcGmtOffsetTimezone) return utcGmtOffsetTimezone;
+			}
+		}
+
+		return toOffsetTimezone(offsetMinutes) || DEFAULT_TIMEZONE;
+	};
 
 	// One-time cleanup: remove duplicate achievement rows (keep the one with the lowest id)
 	(async () => {
@@ -96,6 +161,7 @@ module.exports = (pool) => {
 	// Check and award achievements after game completion
 	router.post("/check", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
+		const clientTimezone = resolveClientTimezone(req);
 		const { accuracy, cardsStudied } = req.body;
 
 		console.log("[Achievements] Check request:", {
@@ -110,7 +176,7 @@ module.exports = (pool) => {
 			// 1. Check STREAK achievements (consecutive days with study sessions)
 			const streakResult = await pool.query(
 				`WITH daily_sessions AS (
-					SELECT DISTINCT DATE(session_date) as study_date
+					SELECT DISTINCT DATE(timezone($2, session_date)) as study_date
 					FROM study_session
 					WHERE account_id = $1
 					ORDER BY study_date DESC
@@ -125,9 +191,9 @@ module.exports = (pool) => {
 				SELECT COUNT(*) as streak_length
 				FROM streak_calc
 				WHERE grp = (
-					SELECT grp FROM streak_calc WHERE study_date = CURRENT_DATE
+					SELECT grp FROM streak_calc WHERE study_date = DATE(timezone($2, NOW()))
 				)`,
-				[accountId],
+				[accountId, clientTimezone],
 			);
 
 			const currentStreak = parseInt(streakResult.rows[0]?.streak_length || 0);

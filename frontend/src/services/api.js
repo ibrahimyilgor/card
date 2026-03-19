@@ -10,6 +10,15 @@ const api = axios.create({
 // Add Firebase token to requests
 api.interceptors.request.use(async (config) => {
 	try {
+		config.headers = config.headers || {};
+		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		if (timeZone) {
+			config.headers["X-Client-Timezone"] = timeZone;
+		}
+		config.headers["X-Client-Timezone-Offset-Minutes"] = String(
+			-new Date().getTimezoneOffset(),
+		);
+
 		const token = await firebaseAuth.getIdToken();
 		if (token) {
 			config.headers.Authorization = "Bearer " + token;
