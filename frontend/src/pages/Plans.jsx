@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useSEO } from "../utils/seo";
 import PageContainer from "../components/ui/PageContainer";
@@ -14,10 +14,7 @@ import {
 } from "@mui/material";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import StarIcon from "@mui/icons-material/Star";
-import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusive";
-import BlockIcon from "@mui/icons-material/Block";
 import { getAllPlans, getMyPlan } from "../services/accountServices";
 import { I18nContext } from "../utils/i18n";
 
