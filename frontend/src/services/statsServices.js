@@ -1,14 +1,31 @@
 import api from "./api";
 
+const getClientTimezone = () => {
+	try {
+		return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+	} catch {
+		return "UTC";
+	}
+};
+
+const appendClientTimeContext = (params) => {
+	params.append("timezone", getClientTimezone());
+	params.append("timezoneOffsetMinutes", String(-new Date().getTimezoneOffset()));
+};
+
 // Get current streak (lightweight, used by Topbar)
 export const getCurrentStreak = async () => {
-	const response = await api.get("/stats/streak");
+	const params = new URLSearchParams();
+	appendClientTimeContext(params);
+	const response = await api.get(`/stats/streak?${params.toString()}`);
 	return response.data;
 };
 
 // Get comprehensive overview stats
 export const getOverviewStats = async () => {
-	const response = await api.get("/stats/overview");
+	const params = new URLSearchParams();
+	appendClientTimeContext(params);
+	const response = await api.get(`/stats/overview?${params.toString()}`);
 	return response.data;
 };
 
@@ -25,6 +42,7 @@ export const getDailyStats = async (
 	} else if (period) {
 		params.append("period", period);
 	}
+	appendClientTimeContext(params);
 	const response = await api.get(`/stats/daily?${params.toString()}`);
 	return response.data;
 };
@@ -58,13 +76,17 @@ export const recordSession = async (sessionData) => {
 
 // Get activity heatmap data
 export const getHeatmapData = async () => {
-	const response = await api.get("/stats/heatmap");
+	const params = new URLSearchParams();
+	appendClientTimeContext(params);
+	const response = await api.get(`/stats/heatmap?${params.toString()}`);
 	return response.data;
 };
 
 // Get time-based insights
 export const getInsights = async () => {
-	const response = await api.get("/stats/insights");
+	const params = new URLSearchParams();
+	appendClientTimeContext(params);
+	const response = await api.get(`/stats/insights?${params.toString()}`);
 	return response.data;
 };
 
@@ -78,6 +100,7 @@ export const getFilteredStats = async (
 	params.append("deckId", deckId);
 	if (startDate) params.append("startDate", startDate);
 	if (endDate) params.append("endDate", endDate);
+	appendClientTimeContext(params);
 	const response = await api.get(`/stats/filtered?${params.toString()}`);
 	return response.data;
 };
@@ -92,6 +115,7 @@ export const getChartData = async (
 	params.append("deckId", deckId);
 	if (startDate) params.append("startDate", startDate);
 	if (endDate) params.append("endDate", endDate);
+	appendClientTimeContext(params);
 	const response = await api.get(`/stats/chart-data?${params.toString()}`);
 	return response.data;
 };

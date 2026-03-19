@@ -188,29 +188,61 @@ module.exports = (pool) => {
 
 	// Update an existing flashcard
 	router.put("/:flashcardId", authenticateToken, async (req, res) => {
+		console.log(
+			`[Flashcards] PUT /${req.params.flashcardId} - Body:`,
+			req.body,
+		);
 		const { flashcardId } = req.params;
-		const { frontText, backText } = req.body;
-		if (!frontText && !backText) {
-			return res.status(400).json({ error: "frontText or backText required" });
+		const { frontText, backText, enabled } = req.body;
+		const hasFrontText = Object.prototype.hasOwnProperty.call(
+			req.body,
+			"frontText",
+		);
+		const hasBackText = Object.prototype.hasOwnProperty.call(
+			req.body,
+			"backText",
+		);
+		const hasEnabled = Object.prototype.hasOwnProperty.call(
+			req.body,
+			"enabled",
+		);
+
+		if (!hasFrontText && !hasBackText && !hasEnabled) {
+			return res
+				.status(400)
+				.json({ error: "frontText, backText or enabled required" });
 		}
-		if (!frontText?.trim() || !backText?.trim()) {
-			return res.status(400).json({ error: "frontText or backText required" });
+
+		if (hasFrontText) {
+			if (typeof frontText !== "string" || !frontText.trim()) {
+				return res.status(400).json({ error: "frontText cannot be empty" });
+			}
+			if (frontText.length > MAX_FLASHCARD_TEXT_LENGTH) {
+				return sendLengthValidationError(
+					res,
+					"frontText",
+					frontText.length,
+					MAX_FLASHCARD_TEXT_LENGTH,
+				);
+			}
 		}
-		if (frontText.length > MAX_FLASHCARD_TEXT_LENGTH) {
-			return sendLengthValidationError(
-				res,
-				"frontText",
-				frontText.length,
-				MAX_FLASHCARD_TEXT_LENGTH,
-			);
+
+		if (hasBackText) {
+			if (typeof backText !== "string" || !backText.trim()) {
+				return res.status(400).json({ error: "backText cannot be empty" });
+			}
+			if (backText.length > MAX_FLASHCARD_TEXT_LENGTH) {
+				return sendLengthValidationError(
+					res,
+					"backText",
+					backText.length,
+					MAX_FLASHCARD_TEXT_LENGTH,
+				);
+			}
 		}
-		if (backText.length > MAX_FLASHCARD_TEXT_LENGTH) {
-			return sendLengthValidationError(
-				res,
-				"backText",
-				backText.length,
-				MAX_FLASHCARD_TEXT_LENGTH,
-			);
+
+		if (hasEnabled && typeof enabled !== "boolean") {
+			return res.status(400).json({ error: "enabled must be a boolean" });
 		}
 		try {
 			// Verify flashcard ownership
@@ -222,12 +254,21 @@ module.exports = (pool) => {
 				return res.status(404).json({ error: "Flashcard not found" });
 			if (!isOwner) return res.status(403).json({ error: "Access denied" });
 
+			const nextFrontText = hasFrontText ? frontText : null;
+			const nextBackText = hasBackText ? backText : null;
+			const nextEnabled = hasEnabled ? enabled : null;
+
 			const result = await pool.query(
-				"UPDATE flashcard SET front_text = $1, back_text = $2 WHERE id = $3 RETURNING *",
-				[frontText || "", backText || "", flashcardId],
+				"UPDATE flashcard SET front_text = COALESCE($1, front_text), back_text = COALESCE($2, back_text), enabled = COALESCE(CAST($3 AS boolean), enabled), updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING *",
+				[nextFrontText, nextBackText, nextEnabled, flashcardId],
+			);
+			console.log(
+				`[Flashcards] Updated flashcard ${flashcardId} successfully`,
+				result.rows[0],
 			);
 			res.json({ flashcard: result.rows[0] });
 		} catch (err) {
+			console.error(`[Flashcards] PUT /${flashcardId} error:`, err);
 			res.status(500).json({ error: "Failed to update flashcard" });
 		}
 	});

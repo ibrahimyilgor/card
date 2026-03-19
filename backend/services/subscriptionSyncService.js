@@ -8,6 +8,7 @@ const EXPIRED_OR_RESTRICTED_STATES = new Set([
 	"revoked",
 	"on_hold",
 	"paused",
+	"pending",
 ]);
 
 const normalizeSubscriptionState = (subscriptionState) => {
@@ -18,14 +19,34 @@ const normalizeSubscriptionState = (subscriptionState) => {
 	return raw.replace("subscription_state_", "");
 };
 
-const resolveTargetPlanCode = (productId, subscriptionState) => {
+const resolveTargetPlanCode = (
+	productId,
+	subscriptionState,
+	currentPeriodEnd = null,
+) => {
 	const normalizedState = normalizeSubscriptionState(subscriptionState);
+	const paidPlanCode = PRODUCT_PLAN_MAP[productId] || null;
+
+	if (!paidPlanCode) {
+		return null;
+	}
+
+	if (normalizedState === "active") {
+		return paidPlanCode;
+	}
+
+	if (normalizedState === "canceled") {
+		if (!currentPeriodEnd) return "free";
+		const expiry = new Date(currentPeriodEnd);
+		if (Number.isNaN(expiry.getTime())) return "free";
+		return expiry > new Date() ? paidPlanCode : "free";
+	}
 
 	if (EXPIRED_OR_RESTRICTED_STATES.has(normalizedState)) {
 		return "free";
 	}
 
-	return PRODUCT_PLAN_MAP[productId] || null;
+	return "free";
 };
 
 const applyPlanTransition = async (

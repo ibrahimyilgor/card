@@ -1,0 +1,28 @@
+{
+  "plans": [
+    {
+      "code": "free",
+      "name": "Free Plan",
+      "price_monthly": "0.00",
+      "max_decks": 5,
+      "max_flashcards": 100,
+      "advanced_stats": false
+    },
+    {
+      "code": "pro",
+      "name": "Pro Plan",
+      "price_monthly": "4.99",
+      "max_decks": 25,
+      "max_flashcards": 1000,
+      "advanced_stats": true
+    },
+    {
+      "code": "premium",
+      "name": "Premium Plan",
+      "price_monthly": "9.99",
+      "max_decks": null,
+      "max_flashcards": null,
+      "advanced_stats": true
+    }
+  ]
+}

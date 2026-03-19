@@ -631,9 +631,8 @@ export default function Info({ accountId, onStartGame }) {
 		<PageContainer
 			maxWidth="1400px"
 			sx={{
-				display: "flex",
-				flexDirection: "column",
-				height: "100%",
+				display: "block",
+				overflow: "visible",
 				pb: 2,
 			}}
 		>
@@ -816,14 +815,7 @@ export default function Info({ accountId, onStartGame }) {
 			{/* Decks Grid */}
 			<Box
 				sx={{
-					flex: 1,
-					overflow: "auto",
-
-					"&::-webkit-scrollbar": { width: 8 },
-					"&::-webkit-scrollbar-thumb": {
-						bgcolor: "rgba(255, 255, 255, 0.1)",
-						borderRadius: 4,
-					},
+					overflow: "visible",
 				}}
 			>
 				{loading ? (
@@ -941,11 +933,39 @@ export default function Info({ accountId, onStartGame }) {
 							});
 						}
 						if (res.status === 200 || res.status === 201) {
+							const savedDeck = res.data?.deck;
+							if (savedDeck) {
+								setDecks((prevDecks) => {
+									const safePrevDecks = Array.isArray(prevDecks)
+										? prevDecks
+										: [];
+
+									if (editDeck) {
+										return safePrevDecks.map((deck) =>
+											deck.id === editDeck.id
+												? {
+														...deck,
+														...savedDeck,
+														flashcard_count:
+															deck.flashcard_count ??
+															savedDeck.flashcard_count ??
+															0,
+													}
+												: deck,
+										);
+									}
+
+									return [
+										...safePrevDecks,
+										{
+											...savedDeck,
+											flashcard_count: savedDeck.flashcard_count ?? 0,
+										},
+									];
+								});
+							}
 							setModalOpen(false);
 							setModalError("");
-							setLoading(true);
-							const decksRes = await getDecks();
-							setDecks(decksRes.data.decks || []);
 							// Refresh limit status after deck creation
 							if (!editDeck) {
 								await fetchLimitStatus();
@@ -964,7 +984,6 @@ export default function Info({ accountId, onStartGame }) {
 						setModalError(t("network_error") || "Network error");
 					} finally {
 						setModalLoading(false);
-						setLoading(false);
 					}
 				}}
 				initialTitle={editDeck ? editDeck.title : ""}

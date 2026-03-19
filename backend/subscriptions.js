@@ -61,7 +61,9 @@ module.exports = (pool) => {
 
 			const subNotif = decoded.subscriptionNotification;
 			if (!subNotif?.purchaseToken || !subNotif?.subscriptionId) {
-				return res.status(202).json({ ignored: true, reason: "No subscription" });
+				return res
+					.status(202)
+					.json({ ignored: true, reason: "No subscription" });
 			}
 
 			const accountLookup = await pool.query(
@@ -108,6 +110,7 @@ module.exports = (pool) => {
 			const targetPlanCode = resolveTargetPlanCode(
 				verification.productId,
 				normalizedState,
+				verification.currentPeriodEnd,
 			);
 
 			if (!targetPlanCode) {

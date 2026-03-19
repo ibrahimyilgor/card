@@ -295,20 +295,26 @@ module.exports = (pool) => {
 			} = req.body || {};
 
 			if (platform !== "google_play") {
-				return res.status(400).json({ error: "Unsupported platform" });
+				return res
+					.status(400)
+					.json({
+						error: "Unsupported platform",
+						code: "UNSUPPORTED_PLATFORM",
+					});
 			}
 
 			if (!productId || !purchaseToken) {
-				return res
-					.status(400)
-					.json({ error: "productId and purchaseToken are required" });
+				return res.status(400).json({
+					error: "productId and purchaseToken are required",
+					code: "MISSING_PURCHASE_FIELDS",
+				});
 			}
 
 			const verifyDisabled = process.env.GOOGLE_PLAY_VERIFY_DISABLED === "true";
 			const isProduction = process.env.NODE_ENV === "production";
 			const googleVerifyConfigured = Boolean(
 				process.env.GOOGLE_PLAY_PACKAGE_NAME &&
-					process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON,
+				process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON,
 			);
 			const shouldUseFallbackVerify = verifyDisabled || !googleVerifyConfigured;
 			let verification;
@@ -317,6 +323,7 @@ module.exports = (pool) => {
 				return res.status(500).json({
 					error:
 						"Google Play verification is not configured. Set GOOGLE_PLAY_PACKAGE_NAME and GOOGLE_PLAY_SERVICE_ACCOUNT_JSON.",
+					code: "GOOGLE_VERIFY_NOT_CONFIGURED",
 				});
 			}
 
@@ -357,7 +364,12 @@ module.exports = (pool) => {
 				? new Date(verification.currentPeriodEnd)
 				: null;
 			if (parsedPeriodEnd && Number.isNaN(parsedPeriodEnd.getTime())) {
-				return res.status(400).json({ error: "Invalid currentPeriodEnd" });
+				return res
+					.status(400)
+					.json({
+						error: "Invalid currentPeriodEnd",
+						code: "INVALID_PERIOD_END",
+					});
 			}
 
 			const effectivePeriodEnd = parsedPeriodEnd
@@ -367,9 +379,12 @@ module.exports = (pool) => {
 			const targetPlanCode = resolveTargetPlanCode(
 				verification.productId,
 				normalizedState,
+				effectivePeriodEnd,
 			);
 			if (!targetPlanCode) {
-				return res.status(400).json({ error: "Unknown productId" });
+				return res
+					.status(400)
+					.json({ error: "Unknown productId", code: "UNKNOWN_PRODUCT_ID" });
 			}
 
 			await client.query("BEGIN");
@@ -408,7 +423,10 @@ module.exports = (pool) => {
 		} catch (err) {
 			await client.query("ROLLBACK");
 			console.error("Error verifying subscription:", err);
-			res.status(500).json({ error: "Failed to verify subscription" });
+			res.status(500).json({
+				error: "Failed to verify subscription",
+				code: "SUBSCRIPTION_VERIFY_FAILED",
+			});
 		} finally {
 			client.release();
 		}

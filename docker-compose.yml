@@ -7,6 +7,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+      TZ: UTC
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -20,6 +21,7 @@ services:
       - ./backend/.env.prod
     environment:
       NPM_CONFIG_CACHE: /tmp/.npm
+      TZ: UTC
     command: sh -c "npm start"
 
   frontend:

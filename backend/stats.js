@@ -3,6 +3,7 @@ const authenticateToken = require("./middleware/authenticateToken");
 
 module.exports = (pool) => {
 	const router = express.Router();
+	const DEFAULT_TIMEZONE = "UTC";
 
 	// Logging helpers
 	const logInfo = (ctx, info) => console.info(`[stats] ${ctx}`, info);
@@ -10,20 +11,90 @@ module.exports = (pool) => {
 		console.error(`[stats] ${ctx} - ${err && err.message ? err.message : err}`);
 		if (err && err.stack) console.error(err.stack);
 	};
+
+	const resolveClientTimezone = (req) => {
+		const headerTimezone =
+			typeof req?.headers?.["x-client-timezone"] === "string"
+				? req.headers["x-client-timezone"]
+				: "";
+		const queryTimezone =
+			typeof req?.query?.timezone === "string" ? req.query.timezone : "";
+		const headerOffsetRaw =
+			typeof req?.headers?.["x-client-timezone-offset-minutes"] === "string"
+				? req.headers["x-client-timezone-offset-minutes"]
+				: "";
+		const queryOffsetRaw =
+			typeof req?.query?.timezoneOffsetMinutes === "string"
+				? req.query.timezoneOffsetMinutes
+				: "";
+
+		const rawTimezone = (headerTimezone || queryTimezone).trim();
+
+		const rawOffset = (headerOffsetRaw || queryOffsetRaw).trim();
+		const parsedOffset = Number.parseInt(rawOffset, 10);
+		const offsetMinutes = Number.isFinite(parsedOffset) ? parsedOffset : null;
+
+		const toOffsetTimezone = (minutes) => {
+			if (!Number.isFinite(minutes)) return null;
+			if (minutes < -840 || minutes > 840) return null;
+			// PostgreSQL uses POSIX timezone format where + is West of UTC and - is East of UTC.
+			const sign = minutes >= 0 ? "-" : "+";
+			const absoluteMinutes = Math.abs(minutes);
+			const hours = String(Math.floor(absoluteMinutes / 60)).padStart(2, "0");
+			const mins = String(absoluteMinutes % 60).padStart(2, "0");
+			return `${sign}${hours}:${mins}`;
+		};
+
+		const parseUtcGmtOffset = (timezone) => {
+			const match = timezone.match(
+				/^(?:UTC|GMT)\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/i,
+			);
+			if (!match) return null;
+			const [, sign, hoursText, minsText] = match;
+			const hours = Number.parseInt(hoursText, 10);
+			const mins = Number.parseInt(minsText || "0", 10);
+			if (!Number.isFinite(hours) || !Number.isFinite(mins)) return null;
+			if (hours > 14 || mins > 59) return null;
+			const totalMinutes = hours * 60 + mins;
+			const signedMinutes = sign === "+" ? totalMinutes : -totalMinutes;
+			return toOffsetTimezone(signedMinutes);
+		};
+
+		if (rawTimezone) {
+			try {
+				new Intl.DateTimeFormat("en-US", { timeZone: rawTimezone });
+				if (rawTimezone === "UTC" && offsetMinutes && offsetMinutes !== 0) {
+					return toOffsetTimezone(offsetMinutes) || DEFAULT_TIMEZONE;
+				}
+				return rawTimezone;
+			} catch {
+				const utcGmtOffsetTimezone = parseUtcGmtOffset(rawTimezone);
+				if (utcGmtOffsetTimezone) return utcGmtOffsetTimezone;
+			}
+		}
+
+		return toOffsetTimezone(offsetMinutes) || DEFAULT_TIMEZONE;
+	};
+
+	const localSessionDateExpr = "DATE(timezone($2, session_date))";
+	const localNowDateExpr = "DATE(timezone($2, NOW()))";
+	const localSessionDateKeyExpr =
+		"TO_CHAR(DATE(timezone($2, session_date)), 'YYYY-MM-DD')";
 	// Lightweight endpoint: current streak only (used by Topbar)
 	// Returns playedToday flag so the UI can show gray (pending) vs active streak
 	router.get("/streak", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
+		const clientTimezone = resolveClientTimezone(req);
 		try {
 			const result = await pool.query(
 				`WITH dates AS (
-					SELECT DISTINCT DATE(session_date) as study_date
+					SELECT DISTINCT ${localSessionDateExpr} as study_date
 					FROM study_session
 					WHERE account_id = $1
 					ORDER BY study_date DESC
 				),
 				played_today AS (
-					SELECT EXISTS(SELECT 1 FROM dates WHERE study_date = CURRENT_DATE) as val
+					SELECT EXISTS(SELECT 1 FROM dates WHERE study_date = ${localNowDateExpr}) as val
 				),
 				streak AS (
 					SELECT study_date,
@@ -33,15 +104,15 @@ module.exports = (pool) => {
 				anchor AS (
 					SELECT CASE
 						WHEN (SELECT val FROM played_today) THEN
-							(SELECT grp FROM streak WHERE study_date = CURRENT_DATE)
+							(SELECT grp FROM streak WHERE study_date = ${localNowDateExpr})
 						ELSE
-							(SELECT grp FROM streak WHERE study_date = CURRENT_DATE - 1)
+							(SELECT grp FROM streak WHERE study_date = ${localNowDateExpr} - 1)
 					END as grp_value
 				)
 				SELECT
 					COALESCE((SELECT COUNT(*) FROM streak WHERE grp = (SELECT grp_value FROM anchor)), 0) as streak_days,
 					(SELECT val FROM played_today) as played_today`,
-				[accountId],
+				[accountId, clientTimezone],
 			);
 			const row = result.rows[0];
 			res.json({
@@ -57,6 +128,7 @@ module.exports = (pool) => {
 	// Get comprehensive overview stats
 	router.get("/overview", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
+		const clientTimezone = resolveClientTimezone(req);
 		try {
 			// Total decks and cards
 			const deckStats = await pool.query(
@@ -103,7 +175,7 @@ module.exports = (pool) => {
 			const streakResult = await pool.query(
 				`
                 WITH dates AS (
-                    SELECT DISTINCT DATE(session_date) as study_date
+					SELECT DISTINCT ${localSessionDateExpr} as study_date
                     FROM study_session
                     WHERE account_id = $1
                     ORDER BY study_date DESC
@@ -115,16 +187,16 @@ module.exports = (pool) => {
                 )
                 SELECT COUNT(*) as streak_days
                 FROM streak
-                WHERE grp = (SELECT grp FROM streak WHERE study_date = CURRENT_DATE)
+				WHERE grp = (SELECT grp FROM streak WHERE study_date = ${localNowDateExpr})
             `,
-				[accountId],
+				[accountId, clientTimezone],
 			);
 
 			// Longest streak
 			const longestStreakResult = await pool.query(
 				`
                 WITH dates AS (
-                    SELECT DISTINCT DATE(session_date) as study_date
+					SELECT DISTINCT ${localSessionDateExpr} as study_date
                     FROM study_session
                     WHERE account_id = $1
                     ORDER BY study_date
@@ -141,7 +213,7 @@ module.exports = (pool) => {
                     GROUP BY grp
                 ) s
             `,
-				[accountId],
+				[accountId, clientTimezone],
 			);
 
 			// Best deck (highest accuracy with at least 10 answers)
@@ -207,14 +279,15 @@ module.exports = (pool) => {
 	// Get daily activity for date range (for charts)
 	router.get("/daily", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
+		const clientTimezone = resolveClientTimezone(req);
 		const { startDate, endDate, period } = req.query;
 
 		try {
 			let dateFilter = "";
-			let params = [accountId];
+			let params = [accountId, clientTimezone];
 
 			if (startDate && endDate) {
-				dateFilter = "AND session_date >= $2 AND session_date <= $3";
+				dateFilter = `AND ${localSessionDateExpr} >= $3::date AND ${localSessionDateExpr} <= $4::date`;
 				params.push(startDate, endDate);
 			} else if (period) {
 				// period: 7d, 30d, 90d, 365d, all
@@ -225,14 +298,14 @@ module.exports = (pool) => {
 					"365d": 365,
 				};
 				if (periodDays[period]) {
-					dateFilter = `AND session_date >= CURRENT_DATE - INTERVAL '${periodDays[period]} days'`;
+					dateFilter = `AND ${localSessionDateExpr} >= ${localNowDateExpr} - INTERVAL '${periodDays[period]} days'`;
 				}
 			}
 
 			const dailyStats = await pool.query(
 				`
                 SELECT 
-                    DATE(session_date) as date,
+					${localSessionDateKeyExpr} as date,
                     SUM(cards_studied) as cards_studied,
                     SUM(correct_answers) as correct,
                     SUM(wrong_answers) as wrong,
@@ -240,7 +313,7 @@ module.exports = (pool) => {
                     COUNT(*) as sessions
                 FROM study_session
                 WHERE account_id = $1 ${dateFilter}
-                GROUP BY DATE(session_date)
+				GROUP BY ${localSessionDateExpr}, ${localSessionDateKeyExpr}
                 ORDER BY date ASC
             `,
 				params,
@@ -291,6 +364,7 @@ module.exports = (pool) => {
 	// Get specific deck detailed stats
 	router.get("/deck/:deckId", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
+		const clientTimezone = resolveClientTimezone(req);
 		const { deckId } = req.params;
 		const { period } = req.query;
 
@@ -334,17 +408,18 @@ module.exports = (pool) => {
 
 			// Session history
 			let periodFilter = "";
+			const sessionParams = [deckId, clientTimezone];
 			if (period) {
 				const periodDays = { "7d": 7, "30d": 30, "90d": 90, "365d": 365 };
 				if (periodDays[period]) {
-					periodFilter = `AND session_date >= CURRENT_DATE - INTERVAL '${periodDays[period]} days'`;
+					periodFilter = `AND ${localSessionDateExpr} >= ${localNowDateExpr} - INTERVAL '${periodDays[period]} days'`;
 				}
 			}
 
 			const sessions = await pool.query(
 				`
                 SELECT 
-                    DATE(session_date) as date,
+					${localSessionDateKeyExpr} as date,
                     SUM(cards_studied) as cards_studied,
                     SUM(correct_answers) as correct,
                     SUM(wrong_answers) as wrong,
@@ -352,10 +427,10 @@ module.exports = (pool) => {
                     game_mode
                 FROM study_session
                 WHERE deck_id = $1 ${periodFilter}
-                GROUP BY DATE(session_date), game_mode
+				GROUP BY ${localSessionDateExpr}, ${localSessionDateKeyExpr}, game_mode
                 ORDER BY date DESC
             `,
-				[deckId],
+				sessionParams,
 			);
 
 			// Mode breakdown
@@ -498,7 +573,14 @@ module.exports = (pool) => {
 			correctAnswers,
 			wrongAnswers,
 			durationSeconds,
+			endedAt,
 		} = req.body;
+
+		const parsedEndedAt = endedAt ? new Date(endedAt) : null;
+		const endedAtUtcIso =
+			parsedEndedAt && !Number.isNaN(parsedEndedAt.getTime())
+				? parsedEndedAt.toISOString()
+				: null;
 
 		// Log incoming session data for debugging (avoid sensitive data)
 		logInfo("record-session-request", {
@@ -509,6 +591,7 @@ module.exports = (pool) => {
 			correctAnswers,
 			wrongAnswers,
 			durationSeconds,
+			endedAtUtcIso,
 		});
 
 		try {
@@ -524,8 +607,8 @@ module.exports = (pool) => {
 
 			const result = await pool.query(
 				`
-                INSERT INTO study_session (account_id, deck_id, game_mode, challenge_type, cards_studied, correct_answers, wrong_answers, duration_seconds)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+				INSERT INTO study_session (account_id, deck_id, game_mode, challenge_type, cards_studied, correct_answers, wrong_answers, duration_seconds, session_date)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9::timestamptz, CURRENT_TIMESTAMP))
                 RETURNING *
             `,
 				[
@@ -537,6 +620,7 @@ module.exports = (pool) => {
 					correctAnswers,
 					wrongAnswers,
 					durationSeconds,
+					endedAtUtcIso,
 				],
 			);
 
@@ -550,19 +634,20 @@ module.exports = (pool) => {
 	// Get activity heatmap data (last 365 days)
 	router.get("/heatmap", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
+		const clientTimezone = resolveClientTimezone(req);
 		try {
 			const heatmap = await pool.query(
 				`
                 SELECT 
-                    DATE(session_date) as date,
+					${localSessionDateKeyExpr} as date,
                     SUM(cards_studied) as cards_studied,
                     COUNT(*) as sessions
                 FROM study_session
-                WHERE account_id = $1 AND session_date >= CURRENT_DATE - INTERVAL '365 days'
-                GROUP BY DATE(session_date)
+				WHERE account_id = $1 AND ${localSessionDateExpr} >= ${localNowDateExpr} - INTERVAL '365 days'
+				GROUP BY ${localSessionDateExpr}, ${localSessionDateKeyExpr}
                 ORDER BY date ASC
             `,
-				[accountId],
+				[accountId, clientTimezone],
 			);
 
 			res.json({ heatmap: heatmap.rows });
@@ -575,58 +660,60 @@ module.exports = (pool) => {
 	// Get time-based insights
 	router.get("/insights", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
+		const clientTimezone = resolveClientTimezone(req);
 		try {
+			const localSessionTimestampExpr = "timezone($2, session_date)";
 			// Best study hour
 			const bestHour = await pool.query(
 				`
                 SELECT 
-                    EXTRACT(HOUR FROM session_date) as hour,
+					EXTRACT(HOUR FROM ${localSessionTimestampExpr}) as hour,
                     AVG(CASE WHEN cards_studied > 0 
                         THEN correct_answers::numeric / cards_studied * 100 
                         ELSE 0 END) as avg_accuracy,
                     SUM(cards_studied) as total_cards
                 FROM study_session
                 WHERE account_id = $1
-                GROUP BY EXTRACT(HOUR FROM session_date)
+				GROUP BY EXTRACT(HOUR FROM ${localSessionTimestampExpr})
                 HAVING SUM(cards_studied) >= 10
                 ORDER BY avg_accuracy DESC
                 LIMIT 1
             `,
-				[accountId],
+				[accountId, clientTimezone],
 			);
 
 			// Best study day
 			const bestDay = await pool.query(
 				`
                 SELECT 
-                    EXTRACT(DOW FROM session_date) as day_of_week,
+					EXTRACT(DOW FROM ${localSessionTimestampExpr}) as day_of_week,
                     AVG(CASE WHEN cards_studied > 0 
                         THEN correct_answers::numeric / cards_studied * 100 
                         ELSE 0 END) as avg_accuracy,
                     SUM(cards_studied) as total_cards
                 FROM study_session
                 WHERE account_id = $1
-                GROUP BY EXTRACT(DOW FROM session_date)
+				GROUP BY EXTRACT(DOW FROM ${localSessionTimestampExpr})
                 HAVING SUM(cards_studied) >= 10
                 ORDER BY avg_accuracy DESC
                 LIMIT 1
             `,
-				[accountId],
+				[accountId, clientTimezone],
 			);
 
 			// Weekly comparison
 			const weeklyComparison = await pool.query(
 				`
                 SELECT 
-                    CASE WHEN session_date >= CURRENT_DATE - INTERVAL '7 days' THEN 'current' ELSE 'previous' END as week,
+					CASE WHEN ${localSessionDateExpr} >= ${localNowDateExpr} - INTERVAL '7 days' THEN 'current' ELSE 'previous' END as week,
                     SUM(cards_studied) as cards,
                     SUM(correct_answers) as correct,
                     SUM(wrong_answers) as wrong
                 FROM study_session
-                WHERE account_id = $1 AND session_date >= CURRENT_DATE - INTERVAL '14 days'
-                GROUP BY CASE WHEN session_date >= CURRENT_DATE - INTERVAL '7 days' THEN 'current' ELSE 'previous' END
+				WHERE account_id = $1 AND ${localSessionDateExpr} >= ${localNowDateExpr} - INTERVAL '14 days'
+				GROUP BY CASE WHEN ${localSessionDateExpr} >= ${localNowDateExpr} - INTERVAL '7 days' THEN 'current' ELSE 'previous' END
             `,
-				[accountId],
+				[accountId, clientTimezone],
 			);
 
 			// Most active mode
@@ -690,6 +777,7 @@ module.exports = (pool) => {
 	// NEW: Get filtered stats summary (for overview cards)
 	router.get("/filtered", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
+		const clientTimezone = resolveClientTimezone(req);
 		const { deckId, startDate, endDate } = req.query;
 
 		try {
@@ -707,9 +795,9 @@ module.exports = (pool) => {
 			// Date filter
 			let dateFilter = "";
 			if (startDate && endDate) {
-				dateFilter = `AND DATE(session_date) >= $${paramIndex} AND DATE(session_date) <= $${
-					paramIndex + 1
-				}`;
+				params.splice(1, 0, clientTimezone);
+				paramIndex++;
+				dateFilter = `AND ${localSessionDateExpr} >= $${paramIndex}::date AND ${localSessionDateExpr} <= $${paramIndex + 1}::date`;
 				params.push(startDate, endDate);
 			}
 
@@ -743,12 +831,13 @@ module.exports = (pool) => {
 	// NEW: Get daily/monthly stats for charts with auto-grouping
 	router.get("/chart-data", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
+		const clientTimezone = resolveClientTimezone(req);
 		const { deckId, startDate, endDate } = req.query;
 
 		try {
 			let deckFilter = "";
-			let params = [accountId];
-			let paramIndex = 2;
+			let params = [accountId, clientTimezone];
+			let paramIndex = 3;
 
 			// Deck filter
 			if (deckId && deckId !== "all") {
@@ -760,7 +849,7 @@ module.exports = (pool) => {
 			// Date filter
 			let dateFilter = "";
 			if (startDate && endDate) {
-				dateFilter = `AND DATE(session_date) >= $${paramIndex} AND DATE(session_date) <= $${
+				dateFilter = `AND ${localSessionDateExpr} >= $${paramIndex}::date AND ${localSessionDateExpr} <= $${
 					paramIndex + 1
 				}`;
 				params.push(startDate, endDate);
@@ -777,12 +866,14 @@ module.exports = (pool) => {
 			let groupBy, dateFormat;
 			if (daysDiff <= 30) {
 				// Daily grouping
-				groupBy = "DATE(session_date)";
-				dateFormat = "DATE(session_date) as date";
+				groupBy = `${localSessionDateExpr}`;
+				dateFormat = `${localSessionDateKeyExpr} as date`;
 			} else {
 				// Monthly grouping
-				groupBy = "DATE_TRUNC('month', session_date)";
-				dateFormat = "DATE_TRUNC('month', session_date) as date";
+				groupBy =
+					"TO_CHAR(DATE_TRUNC('month', timezone($2, session_date)), 'YYYY-MM')";
+				dateFormat =
+					"TO_CHAR(DATE_TRUNC('month', timezone($2, session_date)), 'YYYY-MM') as date";
 			}
 
 			const result = await pool.query(

@@ -151,7 +151,7 @@ module.exports = (pool) => {
 
 			// Then fetch flashcards
 			const result = await pool.query(
-				"SELECT * FROM flashcard WHERE deck_id = $1 ORDER BY id ASC",
+				"SELECT * FROM flashcard WHERE deck_id = $1 AND enabled = TRUE ORDER BY id ASC",
 				[deckId],
 			);
 			res.json({ flashcards: result.rows });
@@ -204,6 +204,7 @@ module.exports = (pool) => {
 			const result = await pool.query(
 				`SELECT * FROM flashcard 
 				 WHERE deck_id = $1 
+				 AND enabled = TRUE
 				 AND (correct_count + wrong_count) > 0 
 				 AND (correct_count::float / (correct_count + wrong_count)::float) < 0.5 
 				 ORDER BY (correct_count::float / (correct_count + wrong_count)::float) ASC`,
@@ -258,7 +259,7 @@ module.exports = (pool) => {
 
 			// Fetch all flashcards for this deck
 			const result = await pool.query(
-				"SELECT * FROM flashcard WHERE deck_id = $1 ORDER BY id ASC",
+				"SELECT * FROM flashcard WHERE deck_id = $1 AND enabled = TRUE ORDER BY id ASC",
 				[deckId],
 			);
 			const flashcards = result.rows;

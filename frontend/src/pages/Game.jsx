@@ -231,6 +231,7 @@ export default function Game({ onBackToDecks }) {
 	// Record session when game ends
 	useEffect(() => {
 		if (gameEnded && gameStartTime) {
+			const endedAt = new Date().toISOString();
 			const durationSeconds = Math.round((Date.now() - gameStartTime) / 1000);
 			// Match mode: track pairs matched, not correct/wrong (it's a memory game)
 			const isMatchMode = gameMode === "match";
@@ -250,6 +251,7 @@ export default function Game({ onBackToDecks }) {
 				gameMode,
 				challengeType,
 				cardsStudied,
+				endedAt,
 				// Match mode: don't track correct/wrong (memory game, not knowledge test)
 				correctAnswers: isMatchMode ? 0 : scores.correct,
 				wrongAnswers: isMatchMode ? 0 : scores.incorrect,
