@@ -15,6 +15,9 @@ import {
 	InputAdornment,
 	Snackbar,
 	Alert,
+	FormControl,
+	Select,
+	MenuItem,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import EditIcon from "@mui/icons-material/Edit";
@@ -24,6 +27,7 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import StyleIcon from "@mui/icons-material/Style";
+import SortIcon from "@mui/icons-material/Sort";
 import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -41,6 +45,7 @@ import { usePlan } from "../../context/PlanContext";
 
 const MotionBox = motion.create(Box);
 const MAX_TEXT_LENGTH = 512;
+const ALLOWED_FLASHCARD_SORTS = ["newest", "oldest", "name_asc", "name_desc"];
 
 // Inline Add Form Component
 function InlineAddForm({ onSubmit, onCancel, loading, t }) {
@@ -591,6 +596,7 @@ export default function FlashcardModal({
 	const [isInlineAdding, setIsInlineAdding] = useState(false);
 	const [editingFlashcardId, setEditingFlashcardId] = useState(null);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [sortBy, setSortBy] = useState("newest");
 	const [showLimitModal, setShowLimitModal] = useState(false);
 	const [snackbar, setSnackbar] = useState({
 		open: false,
@@ -608,6 +614,20 @@ export default function FlashcardModal({
 			flashcard.front_text.toLowerCase().includes(query) ||
 			flashcard.back_text.toLowerCase().includes(query)
 		);
+	});
+
+	const sortedFlashcards = [...filteredFlashcards].sort((a, b) => {
+		switch (sortBy) {
+			case "oldest":
+				return new Date(a.created_at) - new Date(b.created_at);
+			case "name_asc":
+				return (a.front_text || "").localeCompare(b.front_text || "");
+			case "name_desc":
+				return (b.front_text || "").localeCompare(a.front_text || "");
+			case "newest":
+			default:
+				return new Date(b.created_at) - new Date(a.created_at);
+		}
 	});
 
 	const enabledCount = flashcards.filter(
@@ -856,12 +876,30 @@ export default function FlashcardModal({
 		fetchFlashcardsList();
 	}, [deckId, open]);
 
+	useEffect(() => {
+		if (!open || !deckId) return;
+		const sortStorageKey = `flashcardSortPreference_${deckId}`;
+		const savedSort = localStorage.getItem(sortStorageKey);
+		if (savedSort && ALLOWED_FLASHCARD_SORTS.includes(savedSort)) {
+			setSortBy(savedSort);
+			return;
+		}
+		setSortBy("newest");
+	}, [deckId, open]);
+
+	useEffect(() => {
+		if (!deckId || !ALLOWED_FLASHCARD_SORTS.includes(sortBy)) return;
+		const sortStorageKey = `flashcardSortPreference_${deckId}`;
+		localStorage.setItem(sortStorageKey, sortBy);
+	}, [deckId, sortBy]);
+
 	// Reset search query and inline states when modal closes
 	useEffect(() => {
 		if (!open) {
 			setSearchQuery("");
 			setIsInlineAdding(false);
 			setEditingFlashcardId(null);
+			setSortBy("newest");
 		}
 	}, [open]);
 
@@ -907,34 +945,93 @@ export default function FlashcardModal({
 				{!loading && flashcards.length > 0 && (
 					<Box sx={{ mb: 2 }}>
 						{/* Search Input */}
-						<StyledTextField
-							fullWidth
-							size="small"
-							placeholder={t("search_flashcards") || "Search flashcards..."}
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							InputProps={{
-								startAdornment: (
-									<InputAdornment position="start">
-										<SearchIcon
-											sx={{ color: "text.cardSubtitle", fontSize: 20 }}
-										/>
-									</InputAdornment>
-								),
-								endAdornment: searchQuery && (
-									<InputAdornment position="end">
-										<IconButton
-											size="small"
-											onClick={() => setSearchQuery("")}
-											sx={{ color: "text.cardSubtitle" }}
-										>
-											<ClearIcon fontSize="small" />
-										</IconButton>
-									</InputAdornment>
-								),
+						<Box
+							sx={{
+								display: "flex",
+								gap: 1,
+								alignItems: "center",
+								mb: 1.5,
 							}}
-							sx={{ mb: 1.5 }}
-						/>
+						>
+							<StyledTextField
+								fullWidth
+								size="small"
+								placeholder={t("search_flashcards") || "Search flashcards..."}
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								InputProps={{
+									startAdornment: (
+										<InputAdornment position="start">
+											<SearchIcon
+												sx={{ color: "text.cardSubtitle", fontSize: 20 }}
+											/>
+										</InputAdornment>
+									),
+									endAdornment: searchQuery && (
+										<InputAdornment position="end">
+											<IconButton
+												size="small"
+												onClick={() => setSearchQuery("")}
+												sx={{ color: "text.cardSubtitle" }}
+											>
+												<ClearIcon fontSize="small" />
+											</IconButton>
+										</InputAdornment>
+									),
+								}}
+							/>
+
+							<FormControl size="small" sx={{ minWidth: 140, height: 40 }}>
+								<Select
+									value={sortBy}
+									onChange={(e) => setSortBy(e.target.value)}
+									displayEmpty
+									startAdornment={
+										<SortIcon
+											sx={{ color: "text.cardSubtitle", mr: 1, fontSize: 18 }}
+										/>
+									}
+									sx={{
+										borderRadius: "12px",
+										fontFamily: "Inter, sans-serif",
+										fontSize: "0.875rem",
+										height: "40px",
+										"& .MuiSelect-select": {
+											display: "flex",
+											alignItems: "center",
+											py: 0,
+											px: 1,
+										},
+										"& .MuiSelect-icon": {
+											top: "50%",
+											transform: "translateY(-50%)",
+										},
+										"& .MuiOutlinedInput-notchedOutline": {
+											borderColor: (theme) =>
+												theme.palette.mode === "dark"
+													? "rgba(255, 255, 255, 0.1)"
+													: "rgba(0, 0, 0, 0.1)",
+										},
+										"&:hover .MuiOutlinedInput-notchedOutline": {
+											borderColor: "primary.main",
+										},
+									}}
+								>
+									<MenuItem value="newest">
+										{t("sort_newest") || "Newest"}
+									</MenuItem>
+									<MenuItem value="oldest">
+										{t("sort_oldest") || "Oldest"}
+									</MenuItem>
+									<MenuItem value="name_asc">
+										{t("sort_name") || "Name (A-Z)"}
+									</MenuItem>
+									<MenuItem value="name_desc">
+										{t("sort_name_desc") || "Name (Z-A)"}
+									</MenuItem>
+								</Select>
+							</FormControl>
+						</Box>
 
 						<Box
 							sx={{
@@ -1147,7 +1244,7 @@ export default function FlashcardModal({
 									t={t}
 								/>
 							)}
-							{filteredFlashcards.map((flashcard, index) =>
+							{sortedFlashcards.map((flashcard, index) =>
 								editingFlashcardId === flashcard.id ? (
 									<InlineEditForm
 										key={`edit-${flashcard.id}`}

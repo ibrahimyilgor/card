@@ -347,6 +347,16 @@ const DeckCard = forwardRef(
 );
 
 export default function Info({ accountId, onStartGame }) {
+	const DECK_SORT_STORAGE_KEY = "deckSortPreference";
+	const ALLOWED_DECK_SORTS = [
+		"newest",
+		"oldest",
+		"name",
+		"name_desc",
+		"cards",
+		"cards_desc",
+	];
+
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 
@@ -395,6 +405,19 @@ export default function Info({ accountId, onStartGame }) {
 	// Search and filter state
 	const [searchQuery, setSearchQuery] = useState("");
 	const [sortBy, setSortBy] = useState("newest");
+
+	useEffect(() => {
+		const savedSort = localStorage.getItem(DECK_SORT_STORAGE_KEY);
+		if (savedSort && ALLOWED_DECK_SORTS.includes(savedSort)) {
+			setSortBy(savedSort);
+		}
+	}, []);
+
+	useEffect(() => {
+		if (ALLOWED_DECK_SORTS.includes(sortBy)) {
+			localStorage.setItem(DECK_SORT_STORAGE_KEY, sortBy);
+		}
+	}, [sortBy]);
 
 	// Snackbar state
 	const [snackbar, setSnackbar] = useState({
