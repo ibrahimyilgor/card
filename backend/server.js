@@ -7,6 +7,9 @@ require("dotenv").config();
 const app = express();
 const port = 5000;
 
+// Render runs behind a reverse proxy/load balancer
+app.set("trust proxy", 1);
+
 const pool = new Pool(
 	process.env.DATABASE_URL
 		? {

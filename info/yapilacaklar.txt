@@ -3,4 +3,3 @@
 
 -refactor
 -test
--keylerin değişmesi
