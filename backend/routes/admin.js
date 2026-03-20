@@ -1,6 +1,6 @@
 const express = require("express");
-const authenticateToken = require("./middleware/authenticateToken");
-const isAdmin = require("./middleware/isAdmin");
+const authenticateToken = require("../middleware/authenticateToken");
+const isAdmin = require("../middleware/isAdmin");
 
 module.exports = function (pool) {
 	const router = express.Router();

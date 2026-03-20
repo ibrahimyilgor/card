@@ -1,12 +1,12 @@
 const express = require("express");
-const authenticateToken = require("./middleware/authenticateToken");
-const googlePlayService = require("./services/googlePlayService");
+const authenticateToken = require("../middleware/authenticateToken");
+const googlePlayService = require("../services/googlePlayService");
 const {
 	resolveTargetPlanCode,
 	applyPlanTransition,
 	upsertPlanSubscription,
 	normalizeSubscriptionState,
-} = require("./services/subscriptionSyncService");
+} = require("../services/subscriptionSyncService");
 
 module.exports = (pool) => {
 	const router = express.Router();

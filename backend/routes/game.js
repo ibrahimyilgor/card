@@ -1,5 +1,5 @@
 const express = require("express");
-const authenticateToken = require("./middleware/authenticateToken");
+const authenticateToken = require("../middleware/authenticateToken");
 
 // Fisher-Yates shuffle - proper random distribution
 function shuffleArray(array) {

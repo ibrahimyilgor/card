@@ -243,6 +243,14 @@ export default function GameSettingsModal({
 						flashcardCount = Number(deck?.flashcard_count) || 0;
 					}
 					const maxSelectable = Math.max(1, flashcardCount);
+					const initialStandardCardCount = Number(
+						initialSettings?.standardCardCount,
+					);
+					const resolvedStandardCardCount = Number.isFinite(
+						initialStandardCardCount,
+					)
+						? initialStandardCardCount
+						: maxSelectable;
 					setDeckFlashcardCount(flashcardCount);
 					setSettings((prev) => ({
 						...prev,
@@ -253,7 +261,7 @@ export default function GameSettingsModal({
 						timeLimit: res.data.settings.time_limit || 60,
 						lives: res.data.settings.starting_lives || 3,
 						standardCardCount: Math.min(
-							Math.max(prev.standardCardCount || 1, 1),
+							Math.max(resolvedStandardCardCount, 1),
 							maxSelectable,
 						),
 					}));
