@@ -1,12 +1,13 @@
 const express = require("express");
 const crypto = require("crypto");
-const googlePlayService = require("./services/googlePlayService");
+const { webhookLimiter } = require("../middleware/rateLimiter");
+const googlePlayService = require("../services/googlePlayService");
 const {
 	resolveTargetPlanCode,
 	applyPlanTransition,
 	upsertPlanSubscription,
 	normalizeSubscriptionState,
-} = require("./services/subscriptionSyncService");
+} = require("../services/subscriptionSyncService");
 
 const mapRtdnTypeToState = (notificationType) => {
 	const numericType = Number(notificationType);
@@ -35,7 +36,7 @@ const mapRtdnTypeToState = (notificationType) => {
 module.exports = (pool) => {
 	const router = express.Router();
 
-	router.post("/google-play", async (req, res) => {
+	router.post("/google-play", webhookLimiter, async (req, res) => {
 		const verificationToken = process.env.GOOGLE_RTDN_VERIFICATION_TOKEN;
 		if (verificationToken) {
 			const providedToken = req.headers["x-rtdn-token"];

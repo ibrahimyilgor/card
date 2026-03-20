@@ -1,5 +1,6 @@
 const express = require("express");
-const authenticateToken = require("./middleware/authenticateToken");
+const authenticateToken = require("../middleware/authenticateToken");
+const { authLimiter } = require("../middleware/rateLimiter");
 
 /**
  * Firebase Authentication Routes
@@ -9,6 +10,7 @@ const authenticateToken = require("./middleware/authenticateToken");
  */
 module.exports = (pool) => {
 	const router = express.Router();
+	router.use(authLimiter);
 
 	/**
 	 * Sync Firebase user with database

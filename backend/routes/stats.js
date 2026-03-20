@@ -1,8 +1,10 @@
 const express = require("express");
-const authenticateToken = require("./middleware/authenticateToken");
+const authenticateToken = require("../middleware/authenticateToken");
+const { statsLimiter } = require("../middleware/rateLimiter");
 
 module.exports = (pool) => {
 	const router = express.Router();
+	router.use(statsLimiter);
 	const DEFAULT_TIMEZONE = "UTC";
 
 	// Logging helpers

@@ -2,6 +2,7 @@ const express = require("express");
 const { Pool } = require("pg");
 const cors = require("cors");
 const cron = require("node-cron");
+const { globalLimiter } = require("./middleware/rateLimiter");
 require("dotenv").config();
 const app = express();
 const port = 5000;
@@ -27,19 +28,20 @@ app.use(
 		credentials: true,
 	}),
 );
+app.use(globalLimiter);
 
 // Make pool available to middleware
 app.set("pool", pool);
 
-const authRouter = require("./auth")(pool);
-const accountRouter = require("./account")(pool);
-const decksRouter = require("./decks")(pool);
-const flashcardsRouter = require("./flashcards")(pool);
-const gameRouter = require("./game")(pool);
-const statsRouter = require("./stats")(pool);
-const achievementsRouter = require("./achievements")(pool);
-const adminRouter = require("./admin")(pool);
-const subscriptionsRouter = require("./subscriptions")(pool);
+const authRouter = require("./routes/auth")(pool);
+const accountRouter = require("./routes/account")(pool);
+const decksRouter = require("./routes/decks")(pool);
+const flashcardsRouter = require("./routes/flashcards")(pool);
+const gameRouter = require("./routes/game")(pool);
+const statsRouter = require("./routes/stats")(pool);
+const achievementsRouter = require("./routes/achievements")(pool);
+const adminRouter = require("./routes/admin")(pool);
+const subscriptionsRouter = require("./routes/subscriptions")(pool);
 const {
 	createSubscriptionReconciliationWorker,
 } = require("./workers/subscriptionReconciliationWorker");
@@ -67,7 +69,8 @@ app.get("/health", async (req, res) => {
 app.listen(port, () => {
 	console.log(`Backend listening at port: ${port}`);
 
-	const reconciliationEnabled = true;
+	const reconciliationEnabled =
+		process.env.ENABLE_SUBSCRIPTION_RECONCILIATION === "true";
 	if (!reconciliationEnabled) {
 		console.log(
 			"Subscription reconciliation is disabled (ENABLE_SUBSCRIPTION_RECONCILIATION=false)",

@@ -1,6 +1,6 @@
 const express = require("express");
 const validator = require("validator");
-const authenticateToken = require("./middleware/authenticateToken");
+const authenticateToken = require("../middleware/authenticateToken");
 
 // Sanitize text to prevent XSS
 const sanitizeText = (text) => {

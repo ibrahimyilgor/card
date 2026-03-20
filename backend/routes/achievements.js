@@ -1,5 +1,5 @@
 const express = require("express");
-const authenticateToken = require("./middleware/authenticateToken");
+const authenticateToken = require("../middleware/authenticateToken");
 
 module.exports = (pool) => {
 	const router = express.Router();
@@ -72,6 +72,10 @@ module.exports = (pool) => {
 	// One-time cleanup: remove duplicate achievement rows (keep the one with the lowest id)
 	(async () => {
 		try {
+			if (process.env.ENABLE_ACHIEVEMENT_RECONCILIATION === "false") {
+				console.log("[Achievements] Skipping duplicate cleanup in production");
+				return;
+			}
 			// Re-point account_achievements to the canonical (min id) achievement before deleting duplicates
 			await pool.query(`
 				UPDATE account_achievements aa
