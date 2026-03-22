@@ -436,6 +436,11 @@ function FlashcardItem({
 				sx={{
 					p: 0,
 					overflow: "hidden",
+					opacity: flashcard.enabled ? 1 : 0.62,
+					filter: flashcard.enabled ? "none" : "grayscale(18%)",
+					borderColor: flashcard.enabled
+						? undefined
+						: (theme) => alpha(theme.palette.grey[500], 0.28),
 				}}
 			>
 				<Box sx={{ display: "flex", alignItems: "stretch" }}>
@@ -458,6 +463,9 @@ function FlashcardItem({
 							alignItems: "center",
 							gap: 2,
 							overflow: "hidden",
+							backgroundColor: flashcard.enabled
+								? "transparent"
+								: (theme) => alpha(theme.palette.grey[500], 0.08),
 						}}
 					>
 						<Box sx={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
@@ -959,6 +967,11 @@ export default function FlashcardModal({
 								placeholder={t("search_flashcards") || "Search flashcards..."}
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
+								sx={{
+									"& .MuiOutlinedInput-root": {
+										height: 40,
+									},
+								}}
 								InputProps={{
 									startAdornment: (
 										<InputAdornment position="start">
@@ -981,7 +994,10 @@ export default function FlashcardModal({
 								}}
 							/>
 
-							<FormControl size="small" sx={{ minWidth: 140, height: 40 }}>
+							<FormControl
+								size="small"
+								sx={{ minWidth: 170, height: 40, flexShrink: 0 }}
+							>
 								<Select
 									value={sortBy}
 									onChange={(e) => setSortBy(e.target.value)}

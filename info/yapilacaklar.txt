@@ -1,5 +1,2 @@
--plana ekleme, plandan çıkarma vs
-    +google play bağlantısı ile planı ayarlama
-
 -refactor
 -test
