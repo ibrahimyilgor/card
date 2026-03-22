@@ -620,10 +620,18 @@ export default function GameSettingsModal({
 									},
 								}}
 							>
-								<ToggleButton value={60}>1 {t("min") || "min"}</ToggleButton>
-								<ToggleButton value={180}>3 {t("min") || "min"}</ToggleButton>
-								<ToggleButton value={300}>5 {t("min") || "min"}</ToggleButton>
-								<ToggleButton value={600}>10 {t("min") || "min"}</ToggleButton>
+								<ToggleButton value={60}>
+									1 {t("minutes_short") || "min"}
+								</ToggleButton>
+								<ToggleButton value={180}>
+									3 {t("minutes_short") || "min"}
+								</ToggleButton>
+								<ToggleButton value={300}>
+									5 {t("minutes_short") || "min"}
+								</ToggleButton>
+								<ToggleButton value={600}>
+									10 {t("minutes_short") || "min"}
+								</ToggleButton>
 							</ToggleButtonGroup>
 						</SettingOption>
 					</MotionBox>

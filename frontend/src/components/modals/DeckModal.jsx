@@ -94,6 +94,7 @@ export default function DeckModal({
 					value={title}
 					onChange={(e) => setTitle(e.target.value)}
 					error={titleTooLong}
+					FormHelperTextProps={{ sx: { textAlign: "right", mr: 0 } }}
 					helperText={
 						titleTooLong
 							? t("max_characters_error", { max: MAX_DECK_TITLE_LENGTH })
@@ -102,9 +103,7 @@ export default function DeckModal({
 					inputProps={{ maxLength: MAX_DECK_TITLE_LENGTH + 1 }}
 					fullWidth
 					autoFocus
-					placeholder={
-						t("deck_title_placeholder") || "e.g., Spanish Vocabulary"
-					}
+					placeholder={t("deck_title") || "Deck title"}
 				/>
 
 				<StyledTextField
@@ -112,6 +111,7 @@ export default function DeckModal({
 					value={desc}
 					onChange={(e) => setDesc(e.target.value)}
 					error={descTooLong}
+					FormHelperTextProps={{ sx: { textAlign: "right", mr: 0 } }}
 					helperText={
 						descTooLong
 							? t("max_characters_error", { max: MAX_DECK_DESCRIPTION_LENGTH })
@@ -121,10 +121,7 @@ export default function DeckModal({
 					fullWidth
 					multiline
 					minRows={3}
-					placeholder={
-						t("deck_description_placeholder") ||
-						"Optional description for your deck..."
-					}
+					placeholder={t("deck_description") || "Deck description"}
 				/>
 
 				{/* Game options removed from modal UI per request */}

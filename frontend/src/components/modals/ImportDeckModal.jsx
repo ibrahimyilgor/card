@@ -429,6 +429,7 @@ JSON:
 							value={deckTitle}
 							onChange={(e) => setDeckTitle(e.target.value)}
 							error={titleTooLong}
+							FormHelperTextProps={{ sx: { textAlign: "right", mr: 0 } }}
 							helperText={
 								titleTooLong
 									? t("max_characters_error", { max: MAX_DECK_TITLE_LENGTH })
@@ -436,15 +437,14 @@ JSON:
 							}
 							inputProps={{ maxLength: MAX_DECK_TITLE_LENGTH + 1 }}
 							fullWidth
-							placeholder={
-								t("deck_title_placeholder") || "e.g., Spanish Vocabulary"
-							}
+							placeholder={t("deck_title") || "Deck title"}
 						/>
 						<StyledTextField
 							label={t("deck_description") || "Deck Description"}
 							value={deckDescription}
 							onChange={(e) => setDeckDescription(e.target.value)}
 							error={descriptionTooLong}
+							FormHelperTextProps={{ sx: { textAlign: "right", mr: 0 } }}
 							helperText={
 								descriptionTooLong
 									? t("max_characters_error", {
@@ -456,10 +456,7 @@ JSON:
 							fullWidth
 							multiline
 							minRows={2}
-							placeholder={
-								t("deck_description_placeholder") ||
-								"Optional description for your deck..."
-							}
+							placeholder={t("deck_description") || "Deck description"}
 						/>
 					</MotionBox>
 				)}
