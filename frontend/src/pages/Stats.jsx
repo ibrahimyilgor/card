@@ -568,6 +568,22 @@ export default function Stats() {
 		const key = sortBy;
 		const order = sortOrder === "asc" ? 1 : -1;
 		arr.sort((a, b) => {
+			// Special handling for accuracy so cards with 0/0 (no plays)
+			// always render at the bottom of the table regardless of sort order.
+			if (key === "accuracy") {
+				const totalA = (a.correct || 0) + (a.wrong || 0);
+				const totalB = (b.correct || 0) + (b.wrong || 0);
+				if (totalA === 0 && totalB !== 0) return 1; // A after B
+				if (totalB === 0 && totalA !== 0) return -1; // B after A
+				let na = Number(a.accuracy || 0);
+				let nb = Number(b.accuracy || 0);
+				if (isNaN(na)) na = 0;
+				if (isNaN(nb)) nb = 0;
+				if (na < nb) return -1 * order;
+				if (na > nb) return 1 * order;
+				return 0;
+			}
+
 			let va = a[key];
 			let vb = b[key];
 			// fallback for undefined/null
