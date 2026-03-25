@@ -309,6 +309,22 @@ export default function Stats() {
 	const effectiveChartData = isLocked ? MOCK_CHART_DATA : chartData;
 	const effectiveCardsTable = isLocked ? MOCK_CARDS_TABLE : cardsTable;
 
+	// Normalize cards table: ensure accuracy is a numeric percent and
+	// treat cards with 0 plays (0/0) as accuracy 0.
+	const normalizedCardsTable = useMemo(() => {
+		if (!Array.isArray(effectiveCardsTable)) return [];
+		return effectiveCardsTable.map((card) => {
+			const correct = Number(card.correct || 0);
+			const wrong = Number(card.wrong || 0);
+			const total = correct + wrong;
+			let acc = Number(card.accuracy);
+			if (!isFinite(acc)) acc = NaN;
+			if (total === 0) acc = 0;
+			else if (isNaN(acc)) acc = Math.round((correct / total) * 100);
+			return { ...card, accuracy: acc };
+		});
+	}, [effectiveCardsTable]);
+
 	// Chart colors from theme
 	const chartColors = useMemo(
 		() =>
@@ -563,11 +579,28 @@ export default function Stats() {
 
 	// Sort cardsTable in frontend when sortBy or sortOrder changes
 	const sortedCardsTable = useMemo(() => {
-		if (!Array.isArray(effectiveCardsTable)) return [];
-		const arr = [...effectiveCardsTable];
+		if (!Array.isArray(normalizedCardsTable)) return [];
+		const arr = [...normalizedCardsTable];
 		const key = sortBy;
 		const order = sortOrder === "asc" ? 1 : -1;
 		arr.sort((a, b) => {
+			// Special handling for accuracy so cards with 0/0 (no plays)
+			// always render at the bottom of the table regardless of sort order.
+			if (key === "accuracy") {
+				const totalA = (a.correct || 0) + (a.wrong || 0);
+				const totalB = (b.correct || 0) + (b.wrong || 0);
+				// For ascending sort, treat 0/0 as smallest; for descending, as largest.
+				if (totalA === 0 && totalB !== 0) return -1 * order;
+				if (totalB === 0 && totalA !== 0) return 1 * order;
+				let na = Number(a.accuracy || 0);
+				let nb = Number(b.accuracy || 0);
+				if (isNaN(na)) na = 0;
+				if (isNaN(nb)) nb = 0;
+				if (na < nb) return -1 * order;
+				if (na > nb) return 1 * order;
+				return 0;
+			}
+
 			let va = a[key];
 			let vb = b[key];
 			// fallback for undefined/null
@@ -580,7 +613,7 @@ export default function Stats() {
 			return 0;
 		});
 		return arr;
-	}, [effectiveCardsTable, sortBy, sortOrder]);
+	}, [normalizedCardsTable, sortBy, sortOrder]);
 
 	// Download report as PDF file
 	const handleDownloadReport = useCallback(async () => {
@@ -867,7 +900,7 @@ export default function Stats() {
 			doc.text(t("card_performance") || "Card Performance", 15, yPos);
 			yPos += 2;
 
-			const tableData = effectiveCardsTable.map((card) => [
+			const tableData = normalizedCardsTable.map((card) => [
 				(card.front || "").substring(0, 35) +
 					(card.front?.length > 35 ? "..." : ""),
 				String(card.times_played || 0),
