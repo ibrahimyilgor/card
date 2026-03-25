@@ -86,7 +86,7 @@ export default function MultipleChoice({
 							onClick={() => handleSelect(index)}
 							sx={{
 								p: 2.5,
-								borderRadius: 3,
+								borderRadius: 2,
 								border: `2px solid`,
 								borderColor: style.borderColor,
 								background: style.background,

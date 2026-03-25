@@ -507,7 +507,7 @@ export default function Stats() {
 		handlePresetClick("30d");
 	}, [handlePresetClick]);
 
-	// Fetch filtered data when filters change
+	// Fetch filtered data when filters change (but NOT on sort change)
 	useEffect(() => {
 		if (isLocked) {
 			setLoading(false);
@@ -525,11 +525,10 @@ export default function Stats() {
 				const [statsRes, chartRes, cardsRes] = await Promise.all([
 					getFilteredStats(selectedDeck, startStr, endStr),
 					getChartData(selectedDeck, startStr, endStr),
-					getCardsTable(selectedDeck, sortBy, sortOrder),
+					getCardsTable(selectedDeck, "times_played", "desc"), // always fetch default sort
 				]);
 
 				setFilteredStats(statsRes);
-				console.log("ibrahim", chartRes);
 				setChartData(chartRes);
 				setCardsTable(cardsRes.cards || []);
 			} catch (err) {
@@ -547,9 +546,9 @@ export default function Stats() {
 		) {
 			fetchData();
 		}
-	}, [selectedDeck, dateRange, sortBy, sortOrder, activePreset, isLocked]);
+	}, [selectedDeck, dateRange, activePreset, isLocked]);
 
-	// Handle sort change
+	// Handle sort change (frontend only)
 	const handleSort = useCallback(
 		(column) => {
 			if (sortBy === column) {
@@ -561,6 +560,27 @@ export default function Stats() {
 		},
 		[sortBy],
 	);
+
+	// Sort cardsTable in frontend when sortBy or sortOrder changes
+	const sortedCardsTable = useMemo(() => {
+		if (!Array.isArray(effectiveCardsTable)) return [];
+		const arr = [...effectiveCardsTable];
+		const key = sortBy;
+		const order = sortOrder === "asc" ? 1 : -1;
+		arr.sort((a, b) => {
+			let va = a[key];
+			let vb = b[key];
+			// fallback for undefined/null
+			if (va == null) va = 0;
+			if (vb == null) vb = 0;
+			if (typeof va === "string") va = va.toLowerCase();
+			if (typeof vb === "string") vb = vb.toLowerCase();
+			if (va < vb) return -1 * order;
+			if (va > vb) return 1 * order;
+			return 0;
+		});
+		return arr;
+	}, [effectiveCardsTable, sortBy, sortOrder]);
 
 	// Download report as PDF file
 	const handleDownloadReport = useCallback(async () => {
@@ -1776,7 +1796,7 @@ export default function Stats() {
 									{t("card_performance") || "Card Performance"}
 								</Typography>
 
-								{effectiveCardsTable.length > 0 ? (
+								{sortedCardsTable.length > 0 ? (
 									<TableContainer sx={{ maxHeight: 400, pr: 2 }}>
 										<Table stickyHeader size="small">
 											<TableHead>
@@ -1869,7 +1889,7 @@ export default function Stats() {
 												</TableRow>
 											</TableHead>
 											<TableBody>
-												{effectiveCardsTable.map((card) => (
+												{sortedCardsTable.map((card) => (
 													<TableRow key={card.id} hover>
 														<TableCell
 															sx={{

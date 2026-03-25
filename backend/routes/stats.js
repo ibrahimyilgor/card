@@ -782,27 +782,45 @@ module.exports = (pool) => {
 		const clientTimezone = resolveClientTimezone(req);
 		const { deckId, startDate, endDate } = req.query;
 
+		console.debug("[stats:/filtered] req.query:", req.query);
+
 		try {
-			let deckFilter = "";
-			let params = [accountId];
-			let paramIndex = 2;
+			// Build WHERE clauses and params in a deterministic order to avoid
+			// parameter index mismatches when combining deck and date filters.
+			const whereClauses = ["account_id = $1"];
+			const params = [accountId];
+			let nextIndex = 2;
 
-			// Deck filter
-			if (deckId && deckId !== "all") {
-				deckFilter = `AND deck_id = $${paramIndex}`;
-				params.push(deckId);
-				paramIndex++;
-			}
-
-			// Date filter
-			let dateFilter = "";
+			// If date range is provided, we need to pass the client's timezone
+			// as a parameter for the timezone(...) calls. Reserve that slot first.
+			let timezoneParamIndex = null;
 			if (startDate && endDate) {
-				params.splice(1, 0, clientTimezone);
-				paramIndex++;
-				dateFilter = `AND ${localSessionDateExpr} >= $${paramIndex}::date AND ${localSessionDateExpr} <= $${paramIndex + 1}::date`;
-				params.push(startDate, endDate);
+				timezoneParamIndex = nextIndex;
+				params.push(clientTimezone);
+				nextIndex++;
 			}
 
+			// Deck filter (after timezone param if present)
+			if (deckId && deckId !== "all") {
+				whereClauses.push(`deck_id = $${nextIndex}`);
+				params.push(deckId);
+				nextIndex++;
+			}
+
+			// Date filter (uses the previously reserved timezone param index)
+			if (startDate && endDate) {
+				whereClauses.push(
+					`DATE(timezone($${timezoneParamIndex}, session_date)) >= $${nextIndex}::date AND DATE(timezone($${timezoneParamIndex}, session_date)) <= $${nextIndex + 1}::date`,
+				);
+				params.push(startDate, endDate);
+				nextIndex += 2;
+			}
+
+			const whereSql = whereClauses.length
+				? `WHERE ${whereClauses.join(" AND ")}`
+				: "";
+
+			console.debug("[stats:/filtered] params:", params);
 			const result = await pool.query(
 				`
 				SELECT 
@@ -812,7 +830,7 @@ module.exports = (pool) => {
 					COALESCE(SUM(duration_seconds), 0) as study_time_seconds,
 					COUNT(*) as sessions
 				FROM study_session
-				WHERE account_id = $1 ${deckFilter} ${dateFilter}
+				${whereSql}
 			`,
 				params,
 			);

@@ -47,6 +47,8 @@ import {
 import { playSound, preloadSounds, SOUNDS } from "../utils/sounds";
 
 const MotionBox = motion.create(Box);
+const WRITE_WRONG_DELAY_MS = 1200;
+const WRITE_CORRECT_DELAY_MS = WRITE_WRONG_DELAY_MS / 10;
 
 export default function Game({ onBackToDecks }) {
 	const { deckId } = useParams();
@@ -289,13 +291,13 @@ export default function Game({ onBackToDecks }) {
 
 	// Handle answer
 	const handleAnswer = useCallback(
-		async (isCorrect) => {
+		async (isCorrect, playSoundNow = true) => {
 			if (gameEnded) return;
 			if (answerProcessingRef.current) return;
 			answerProcessingRef.current = true;
 
 			setDirection(isCorrect ? 1 : -1);
-			playSound(isCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
+			if (playSoundNow) playSound(isCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
 
 			if (flashcards[currentCardIndex]?.id) {
 				try {
@@ -404,9 +406,15 @@ export default function Game({ onBackToDecks }) {
 		try {
 			const res = await validateAnswer(flashcard.id, userAnswer, cardDirection);
 			setWriteResult(res.data);
+			const isWriteAnswerCorrect = Boolean(res.data?.isClose);
+			const writeAdvanceDelay = isWriteAnswerCorrect
+				? WRITE_CORRECT_DELAY_MS
+				: WRITE_WRONG_DELAY_MS;
+			// Play feedback immediately, advance UI after a short delay
+			playSound(isWriteAnswerCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
 			setTimeout(() => {
-				handleAnswer(res.data.isClose);
-			}, 2000);
+				handleAnswer(isWriteAnswerCorrect, false);
+			}, writeAdvanceDelay);
 		} catch (err) {
 			console.error("Error validating answer:", err);
 		}
@@ -627,7 +635,7 @@ export default function Game({ onBackToDecks }) {
 				onRestart={handleRestart}
 				onMatchComplete={handleMatchComplete}
 				onMatch={(isCorrect) => {
-					playSound(isCorrect ? SOUNDS.CORRECT : SOUNDS.WRONG);
+					if (isCorrect) playSound(SOUNDS.CORRECT);
 				}}
 				onCardClick={() => playSound(SOUNDS.FLIP)}
 				challengeType={challengeType}

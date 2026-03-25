@@ -33,7 +33,7 @@ const MatchView = ({
 			<MotionBox
 				initial={{ y: -20 }}
 				animate={{ y: 0 }}
-				sx={{ width: "100%", maxWidth: 800, mb: 4 }}
+				sx={{ width: "100%", maxWidth: 800, mb: 3 }}
 			>
 				<Box
 					sx={{

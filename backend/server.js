@@ -58,7 +58,18 @@ app.use("/flashcards", flashcardsRouter);
 app.use("/stats", statsRouter);
 app.use("/achievements", achievementsRouter);
 app.use("/admin", adminRouter);
+
 app.use("/subscriptions", subscriptionsRouter);
+
+// Global error logger and handler
+app.use((err, req, res, next) => {
+	console.error("[GLOBAL ERROR]", err && err.stack ? err.stack : err);
+	if (!res.headersSent) {
+		res.status(500).json({ error: "Internal server error" });
+	} else {
+		next(err);
+	}
+});
 
 app.get("/health", async (req, res) => {
 	res.status(200).json({
