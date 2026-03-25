@@ -78,7 +78,7 @@ const GameProgress = ({ scores, progress, gameMode, t, challengeType }) => {
 							fontFamily: "Inter, sans-serif",
 						}}
 					>
-						{scores.incorrect} {t("Incorrect") || "incorrect"}
+						{scores.incorrect} {t("incorrect") || "incorrect"}
 					</Typography>
 				</Box>
 			</Box>

@@ -8,16 +8,27 @@ const SOUND_FILES = {
 	success: "/sounds/success.mp3",
 };
 
-// Cache for Audio objects
+// Cache for Audio objects (fallback) and decoded AudioBuffer for low-latency playback
 const audioCache = {};
+const bufferCache = {};
+let audioContext = null;
+let masterGain = null;
 
 // Get or create Audio object
 const getAudio = (soundName) => {
 	if (!audioCache[soundName]) {
 		const path = SOUND_FILES[soundName];
 		if (!path) return null;
-		audioCache[soundName] = new Audio(path);
-		audioCache[soundName].volume = 0.5;
+		const a = new Audio(path);
+		a.preload = "auto";
+		a.volume = 0.5;
+		// try to prime loading
+		try {
+			a.load();
+		} catch (e) {
+			// ignore
+		}
+		audioCache[soundName] = a;
 	}
 	return audioCache[soundName];
 };
@@ -31,12 +42,29 @@ export const isSoundEnabled = () => {
 export const playSound = (soundName) => {
 	if (!isSoundEnabled()) return;
 
+	// Prefer decoded AudioBuffer playback if available (lower latency)
+	try {
+		if (audioContext && bufferCache[soundName]) {
+			if (audioContext.state === "suspended") {
+				// try to resume the context so playback isn't blocked
+				audioContext.resume().catch(() => {});
+			}
+			const src = audioContext.createBufferSource();
+			src.buffer = bufferCache[soundName];
+			const gain = audioContext.createGain();
+			gain.gain.value = 0.5;
+			src.connect(gain).connect(masterGain || audioContext.destination);
+			src.start(0);
+			return;
+		}
+	} catch (e) {
+		// fall through to HTMLAudio fallback
+	}
+
 	const audio = getAudio(soundName);
 	if (audio) {
 		audio.currentTime = 0;
-		audio.play().catch(() => {
-			// Silently catch autoplay errors (browser restrictions)
-		});
+		audio.play().catch(() => {});
 	}
 };
 
@@ -48,13 +76,45 @@ export const setSoundVolume = (volume) => {
 };
 
 // Preload all sounds
-export const preloadSounds = () => {
-	Object.keys(SOUND_FILES).forEach((soundName) => {
-		const audio = getAudio(soundName);
-		if (audio) {
-			audio.load();
+export const preloadSounds = async () => {
+	// Initialize AudioContext lazily on user gesture-supported environments
+	try {
+		if (!audioContext) {
+			audioContext = new (window.AudioContext || window.webkitAudioContext)();
+			masterGain = audioContext.createGain();
+			masterGain.gain.value = 1;
+			masterGain.connect(audioContext.destination);
 		}
-	});
+
+		// Fetch and decode each sound file into bufferCache
+		await Promise.all(
+			Object.entries(SOUND_FILES).map(async ([key, path]) => {
+				try {
+					const resp = await fetch(path, { cache: "force-cache" });
+					if (!resp.ok) return;
+					const arr = await resp.arrayBuffer();
+					const decoded = await audioContext.decodeAudioData(arr.slice(0));
+					bufferCache[key] = decoded;
+				} catch (e) {
+					// if decode fails, ensure HTMLAudio is created to at least preload
+					const a = getAudio(key);
+					try {
+						a.load();
+					} catch (err) {}
+				}
+			}),
+		);
+	} catch (e) {
+		// Fallback: create HTMLAudio objects and load them
+		Object.keys(SOUND_FILES).forEach((soundName) => {
+			const audio = getAudio(soundName);
+			if (audio) {
+				try {
+					audio.load();
+				} catch (err) {}
+			}
+		});
+	}
 };
 
 // Sound effect names for easy access

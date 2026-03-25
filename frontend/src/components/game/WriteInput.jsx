@@ -115,34 +115,46 @@ export default function WriteInput({
 						</Box>
 					)}
 
-					{/* Hint display */}
-					<AnimatePresence initial={false}>
-						{showHint && !showResult && (
-							<MotionBox
-								initial={{ height: 0 }}
-								animate={{ height: "auto" }}
-								exit={{ height: 0 }}
-								sx={{
-									p: 2,
-									borderRadius: 2,
-									background: alpha(theme.palette.warning.main, 0.1),
-									border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-								}}
-							>
-								<Typography
-									variant="body2"
+					{/* Hint display - reserve fixed space to avoid layout shift */}
+					<Box sx={{ position: "relative", height: 56, width: "100%" }}>
+						<AnimatePresence initial={false}>
+							{showHint && !showResult && (
+								<MotionBox
+									initial={{ opacity: 0, scaleY: 0 }}
+									animate={{ opacity: 1, scaleY: 1 }}
+									exit={{ opacity: 0, scaleY: 0 }}
+									transition={{ duration: 0.18 }}
 									sx={{
-										color: "warning.main",
-										fontFamily: "monospace",
-										letterSpacing: 2,
-										textAlign: "center",
+										position: "absolute",
+										left: 0,
+										right: 0,
+										top: 0,
+										p: 2,
+										borderRadius: 2,
+										background: alpha(theme.palette.warning.main, 0.1),
+										border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+										overflow: "hidden",
+										transformOrigin: "top",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
 									}}
 								>
-									{getHint()}
-								</Typography>
-							</MotionBox>
-						)}
-					</AnimatePresence>
+									<Typography
+										variant="body2"
+										sx={{
+											color: "warning.main",
+											fontFamily: "monospace",
+											letterSpacing: 2,
+											textAlign: "center",
+										}}
+									>
+										{getHint()}
+									</Typography>
+								</MotionBox>
+							)}
+						</AnimatePresence>
+					</Box>
 
 					{/* Result display */}
 					<AnimatePresence initial={false}>
@@ -153,7 +165,7 @@ export default function WriteInput({
 								exit={{ y: -20 }}
 								sx={{
 									p: 3,
-									borderRadius: 3,
+									borderRadius: 2,
 									background: isCorrect
 										? alpha("#22c55e", 0.1)
 										: isClose

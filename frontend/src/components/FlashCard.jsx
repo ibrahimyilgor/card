@@ -1,21 +1,68 @@
-import React, { useContext, useEffect, useRef, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Box, Typography, useTheme } from "@mui/material";
+import {
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+	useCallback,
+} from "react";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { Box, Typography, IconButton } from "@mui/material";
 import TouchAppIcon from "@mui/icons-material/TouchApp";
+import VolumeUpIcon from "@mui/icons-material/VolumeUp";
+import StopIcon from "@mui/icons-material/Stop";
 import { playSound, SOUNDS } from "../utils/sounds";
 import { I18nContext } from "../utils/i18n";
+import { usePlan } from "../context/PlanContext";
+import tts from "../utils/tts";
 
 const MotionBox = motion.create(Box);
+const MotionIconButton = motion.create(IconButton);
 
 export default function FlashCard({ front, back, isFlipped, onFlip }) {
-	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 	const frontScrollRef = useRef(null);
 	const backScrollRef = useRef(null);
 	const frontRafRef = useRef(null);
 	const backRafRef = useRef(null);
+	const ttsPlayingRef = useRef(false);
+	const [ttsPlaying, setTtsPlaying] = useState(false);
+	const { planCode } = usePlan();
 	const [frontHasOverflow, setFrontHasOverflow] = useState(false);
 	const [backHasOverflow, setBackHasOverflow] = useState(false);
+
+	const cardControls = useAnimation();
+	const btnControls = useAnimation();
+
+	const EASE = [0.23, 1, 0.32, 1];
+	const DURATION = 0.6;
+
+	// Animate card and button together; button only gets scale/y (no rotateY).
+	const animateBoth = useCallback(
+		(anim) => {
+			const { rotateY, ...btnAnim } = anim || {};
+			cardControls.start(anim);
+			btnControls.start(btnAnim);
+		},
+		[cardControls, btnControls],
+	);
+
+	useEffect(() => {
+		const rotateY = isFlipped ? 180 : 0;
+		animateBoth({
+			rotateY,
+			scale: 1,
+			y: 0,
+			transition: { duration: DURATION, ease: EASE },
+		});
+	}, [isFlipped, animateBoth]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	const handleHoverStart = () => {
+		animateBoth({ scale: 1.02, y: -2, transition: { duration: 0.2, ease: EASE } });
+	};
+
+	const handleHoverEnd = () => {
+		animateBoth({ scale: 1, y: 0, transition: { duration: 0.2, ease: EASE } });
+	};
 
 	const stopAutoScroll = useCallback((rafRef) => {
 		if (rafRef.current) {
@@ -24,65 +71,69 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 		}
 	}, []);
 
-	const startAutoScroll = useCallback((containerRef, rafRef) => {
-		const node = containerRef.current;
-		if (!node) return;
-
-		const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
-		if (maxScroll <= 1) return;
-
-		let y = node.scrollTop || 0;
-		let lastTs = 0;
-
-		const speedPxPerSec = 20;
-
-		const tick = (ts) => {
-			const currentNode = containerRef.current;
-			if (!currentNode) return;
-
-			const currentMax = Math.max(
-				0,
-				currentNode.scrollHeight - currentNode.clientHeight,
-			);
-			if (currentMax <= 1) {
-				currentNode.scrollTop = 0;
-				return;
-			}
-
-			if (!lastTs) lastTs = ts;
-			const dt = Math.min(64, ts - lastTs);
-			lastTs = ts;
-
-			y += (speedPxPerSec * dt) / 1000;
-
-			if (y >= currentMax) {
-				y = 0;
-			}
-
-			currentNode.scrollTop = y;
+	const startAutoScroll = useCallback(
+		(containerRef, rafRef) => {
+			const node = containerRef.current;
+			if (!node) return;
+			const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
+			if (maxScroll <= 1) return;
+			let y = node.scrollTop || 0;
+			let lastTs = 0;
+			const speedPxPerSec = 20;
+			const tick = (ts) => {
+				const currentNode = containerRef.current;
+				if (!currentNode) return;
+				const currentMax = Math.max(0, currentNode.scrollHeight - currentNode.clientHeight);
+				if (currentMax <= 1) { currentNode.scrollTop = 0; return; }
+				if (!lastTs) lastTs = ts;
+				const dt = Math.min(64, ts - lastTs);
+				lastTs = ts;
+				y += (speedPxPerSec * dt) / 1000;
+				if (y >= currentMax) y = 0;
+				currentNode.scrollTop = y;
+				rafRef.current = requestAnimationFrame(tick);
+			};
+			stopAutoScroll(rafRef);
 			rafRef.current = requestAnimationFrame(tick);
-		};
-
-		stopAutoScroll(rafRef);
-		rafRef.current = requestAnimationFrame(tick);
-	}, [stopAutoScroll]);
+		},
+		[stopAutoScroll],
+	);
 
 	const evaluateOverflow = useCallback(() => {
 		const frontNode = frontScrollRef.current;
 		const backNode = backScrollRef.current;
-
-		setFrontHasOverflow(
-			!!frontNode && frontNode.scrollHeight > frontNode.clientHeight + 1,
-		);
-		setBackHasOverflow(
-			!!backNode && backNode.scrollHeight > backNode.clientHeight + 1,
-		);
+		setFrontHasOverflow(!!frontNode && frontNode.scrollHeight > frontNode.clientHeight + 1);
+		setBackHasOverflow(!!backNode && backNode.scrollHeight > backNode.clientHeight + 1);
 	}, []);
 
 	const handleFlip = () => {
+		tts.stop();
+		setTtsPlaying(false);
 		playSound(SOUNDS.FLIP);
 		onFlip();
 	};
+
+	const handleTtsToggle = async () => {
+		if (ttsPlayingRef.current) {
+			tts.stop();
+			ttsPlayingRef.current = false;
+			setTtsPlaying(false);
+			return;
+		}
+		const text = isFlipped ? back : front;
+		try {
+			ttsPlayingRef.current = true;
+			setTtsPlaying(true);
+			await tts.speak(text, { lang: "en-US" });
+		} catch (e) {
+			// ignore
+		} finally {
+			ttsPlayingRef.current = false;
+			setTtsPlaying(false);
+		}
+	};
+
+	useEffect(() => { return () => { tts.stop(); }; }, []);
 
 	useEffect(() => {
 		const onKeyDown = (e) => {
@@ -99,7 +150,6 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 				onFlip();
 			}
 		};
-
 		window.addEventListener("keydown", onKeyDown);
 		return () => window.removeEventListener("keydown", onKeyDown);
 	}, [onFlip]);
@@ -113,52 +163,17 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 	useEffect(() => {
 		stopAutoScroll(frontRafRef);
 		stopAutoScroll(backRafRef);
-
-		if (!isFlipped && frontHasOverflow) {
-			startAutoScroll(frontScrollRef, frontRafRef);
-		}
-		if (isFlipped && backHasOverflow) {
-			startAutoScroll(backScrollRef, backRafRef);
-		}
-
+		if (!isFlipped && frontHasOverflow) startAutoScroll(frontScrollRef, frontRafRef);
+		if (isFlipped && backHasOverflow) startAutoScroll(backScrollRef, backRafRef);
 		return () => {
 			stopAutoScroll(frontRafRef);
 			stopAutoScroll(backRafRef);
 		};
-	}, [
-		isFlipped,
-		frontHasOverflow,
-		backHasOverflow,
-		startAutoScroll,
-		stopAutoScroll,
-	]);
-
-	const cardVariants = {
-		front: {
-			rotateY: 0,
-			transition: {
-				duration: 0.6,
-				ease: [0.23, 1, 0.32, 1],
-			},
-		},
-		back: {
-			rotateY: 180,
-			transition: {
-				duration: 0.6,
-				ease: [0.23, 1, 0.32, 1],
-			},
-		},
-	};
+	}, [isFlipped, frontHasOverflow, backHasOverflow, startAutoScroll, stopAutoScroll]);
 
 	const contentVariants = {
 		hidden: { opacity: 0 },
-		visible: {
-			opacity: 1,
-			transition: {
-				delay: 0.3,
-				duration: 0.3,
-			},
-		},
+		visible: { opacity: 1, transition: { delay: 0.3, duration: 0.3 } },
 	};
 
 	return (
@@ -167,24 +182,27 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 				perspective: "1200px",
 				width: { xs: "320px", sm: "420px", md: "480px" },
 				height: { xs: "220px", sm: "280px", md: "320px" },
+				position: "relative",
 			}}
+			onMouseEnter={handleHoverStart}
+			onMouseLeave={handleHoverEnd}
 		>
+			{/* Card — driven by cardControls (rotateY + scale + y) */}
 			<MotionBox
 				onClick={handleFlip}
-				variants={cardVariants}
-				animate={isFlipped ? "back" : "front"}
-				initial="front"
-				whileHover={{ scale: 1.02 }}
+				animate={cardControls}
+				initial={{ rotateY: 0, scale: 1, y: 0 }}
 				whileTap={{ scale: 0.98 }}
+				style={{ transformStyle: "preserve-3d" }}
 				sx={{
 					width: "100%",
 					height: "100%",
 					cursor: "pointer",
 					position: "relative",
-					transformStyle: "preserve-3d",
 					borderRadius: "20px",
 				}}
 			>
+
 				{/* Front side */}
 				<Box
 					sx={{
@@ -198,11 +216,7 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 								? "linear-gradient(145deg, #1a1f2e 0%, #111827 100%)"
 								: "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)",
 						border: (theme) =>
-							`1px solid ${
-								theme.palette.mode === "dark"
-									? "rgba(59, 130, 246, 0.2)"
-									: "rgba(59, 130, 246, 0.15)"
-							}`,
+							`1px solid ${theme.palette.mode === "dark" ? "rgba(59, 130, 246, 0.2)" : "rgba(59, 130, 246, 0.15)"}`,
 						boxShadow: (theme) =>
 							theme.palette.mode === "dark"
 								? "0 20px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
@@ -215,7 +229,6 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 						overflow: "hidden",
 					}}
 				>
-					{/* Gradient accent line */}
 					<Box
 						sx={{
 							position: "absolute",
@@ -226,7 +239,6 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 							background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
 						}}
 					/>
-
 					<AnimatePresence mode="wait" initial={false}>
 						{!isFlipped && (
 							<Box
@@ -252,10 +264,7 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 									initial="hidden"
 									animate="visible"
 									exit="hidden"
-									sx={{
-										textAlign: "center",
-										width: "100%",
-									}}
+									sx={{ textAlign: "center", width: "100%" }}
 								>
 									<Typography
 										variant="h5"
@@ -276,8 +285,6 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 							</Box>
 						)}
 					</AnimatePresence>
-
-					{/* Tap hint */}
 					<Box
 						sx={{
 							position: "absolute",
@@ -290,10 +297,7 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 						}}
 					>
 						<TouchAppIcon sx={{ fontSize: 16 }} />
-						<Typography
-							variant="caption"
-							sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}
-						>
+						<Typography variant="caption" sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}>
 							{t("tap_to_flip")}
 						</Typography>
 					</Box>
@@ -313,11 +317,7 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 								? "linear-gradient(145deg, #1e293b 0%, #0f172a 100%)"
 								: "linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 100%)",
 						border: (theme) =>
-							`1px solid ${
-								theme.palette.mode === "dark"
-									? "rgba(34, 197, 94, 0.2)"
-									: "rgba(34, 197, 94, 0.15)"
-							}`,
+							`1px solid ${theme.palette.mode === "dark" ? "rgba(34, 197, 94, 0.2)" : "rgba(34, 197, 94, 0.15)"}`,
 						boxShadow: (theme) =>
 							theme.palette.mode === "dark"
 								? "0 20px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
@@ -330,7 +330,6 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 						overflow: "hidden",
 					}}
 				>
-					{/* Gradient accent line */}
 					<Box
 						sx={{
 							position: "absolute",
@@ -341,7 +340,6 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 							background: "linear-gradient(90deg, #22c55e 0%, #10b981 100%)",
 						}}
 					/>
-
 					<AnimatePresence mode="wait" initial={false}>
 						{isFlipped && (
 							<Box
@@ -367,10 +365,7 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 									initial="hidden"
 									animate="visible"
 									exit="hidden"
-									sx={{
-										textAlign: "center",
-										width: "100%",
-									}}
+									sx={{ textAlign: "center", width: "100%" }}
 								>
 									<Typography
 										variant="body2"
@@ -405,8 +400,6 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 							</Box>
 						)}
 					</AnimatePresence>
-
-					{/* Tap hint */}
 					<Box
 						sx={{
 							position: "absolute",
@@ -419,14 +412,36 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 						}}
 					>
 						<TouchAppIcon sx={{ fontSize: 16 }} />
-						<Typography
-							variant="caption"
-							sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}
-						>
+						<Typography variant="caption" sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}>
 							{t("tap_to_flip_back")}
 						</Typography>
 					</Box>
 				</Box>
+				{/* TTS button — inside the rotating card so it flips with it.
+				    A CSS counter-rotation keeps it visually upright on both faces. */}
+				{planCode === "premium" && (
+					<Box
+						sx={{
+							position: "absolute",
+							top: 12,
+							right: 12,
+							zIndex: 120,
+						}}
+					>
+						<IconButton
+							onClick={(e) => { e.stopPropagation(); handleTtsToggle(); }}
+							size="small"
+							aria-label="Play card audio"
+							sx={{
+								display: "block",
+								transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+								transition: "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)",
+							}}
+						>
+							{ttsPlaying ? <StopIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
+						</IconButton>
+					</Box>
+				)}
 			</MotionBox>
 		</Box>
 	);

@@ -1,5 +1,9 @@
-import React from "react";
-import { Box, Typography } from "@mui/material";
+import React, { useRef, useState, useEffect } from "react";
+import { Box, Typography, IconButton } from "@mui/material";
+import VolumeUpIcon from "@mui/icons-material/VolumeUp";
+import StopIcon from "@mui/icons-material/Stop";
+import { usePlan } from "../../context/PlanContext";
+import tts from "../../utils/tts";
 import { motion, AnimatePresence } from "framer-motion";
 import MultipleChoice from "./MultipleChoice";
 
@@ -13,6 +17,30 @@ const MultipleChoiceView = ({
 	showChoiceResult,
 	onChoiceSelect,
 }) => {
+	const { planCode } = usePlan();
+	const ttsPlayingRef = useRef(false);
+	const [ttsPlaying, setTtsPlaying] = useState(false);
+
+	useEffect(() => {
+		return () => tts.stop();
+	}, []);
+
+	const handleTtsToggle = async () => {
+		if (ttsPlayingRef.current) {
+			tts.stop();
+			ttsPlayingRef.current = false;
+			setTtsPlaying(false);
+			return;
+		}
+		const text = questionText || flashcard?.front_text || "";
+		try {
+			ttsPlayingRef.current = true;
+			setTtsPlaying(true);
+			await tts.speak(text, { lang: "en-US" });
+		} catch (e) {}
+		ttsPlayingRef.current = false;
+		setTtsPlaying(false);
+	};
 	return (
 		<AnimatePresence mode="wait" initial={false}>
 			<MotionBox
@@ -32,7 +60,7 @@ const MultipleChoiceView = ({
 				<Box
 					sx={{
 						p: 4,
-						borderRadius: 4,
+						borderRadius: 2,
 						background: (theme) =>
 							theme.palette.mode === "dark"
 								? "linear-gradient(145deg, #1a1f2e 0%, #111827 100%)"
@@ -45,6 +73,7 @@ const MultipleChoiceView = ({
 							}`,
 						textAlign: "center",
 						width: "100%",
+						position: "relative",
 					}}
 				>
 					<Typography
@@ -57,6 +86,23 @@ const MultipleChoiceView = ({
 					>
 						{questionText || flashcard?.front_text}
 					</Typography>
+					{planCode === "premium" && (
+						<IconButton
+							onClick={(e) => {
+								e.stopPropagation();
+								handleTtsToggle();
+							}}
+							sx={{ position: "absolute", right: 8, top: 8 }}
+							size="small"
+							aria-label="Play question audio"
+						>
+							{ttsPlaying ? (
+								<StopIcon fontSize="small" />
+							) : (
+								<VolumeUpIcon fontSize="small" />
+							)}
+						</IconButton>
+					)}
 				</Box>
 
 				{/* Options */}

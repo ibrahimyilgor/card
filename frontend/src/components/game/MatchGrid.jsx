@@ -275,7 +275,7 @@ export default function MatchGrid({
 											fontFamily: "Inter, sans-serif",
 											fontWeight: 500,
 											textAlign: "center",
-											fontSize: { xs: "0.7rem", sm: "0.85rem" },
+											fontSize: { xs: "0.9rem", sm: "1rem" },
 											wordBreak: "break-word",
 											overflow: "hidden",
 											display: "-webkit-box",

@@ -1,2 +1,6 @@
+-kartı dinle
+
+-offline kullanabilme(araştır)
+
 -refactor
 -test

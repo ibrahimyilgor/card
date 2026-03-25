@@ -67,7 +67,7 @@ function SettingOption({
 			transition={{ delay, duration: 0.3 }}
 			sx={{
 				p: 2.5,
-				borderRadius: 3,
+				borderRadius: 2,
 				background: (theme) =>
 					theme.palette.mode === "dark"
 						? alpha(theme.palette.background.default, 0.5)
@@ -85,7 +85,7 @@ function SettingOption({
 					sx={{
 						width: 40,
 						height: 40,
-						borderRadius: "10px",
+						borderRadius: 1,
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
@@ -150,7 +150,7 @@ function ModeCard({ mode, selected, onClick, t }) {
 			onClick={onClick}
 			sx={{
 				p: 2,
-				borderRadius: 3,
+				borderRadius: 2,
 				cursor: "pointer",
 				display: "flex",
 				flexDirection: "column",
@@ -173,7 +173,7 @@ function ModeCard({ mode, selected, onClick, t }) {
 				sx={{
 					width: 44,
 					height: 44,
-					borderRadius: "12px",
+					borderRadius: 1,
 					display: "flex",
 					alignItems: "center",
 					justifyContent: "center",
@@ -419,12 +419,12 @@ export default function GameSettingsModal({
 						sx={{
 							mt: 2,
 							p: 2,
-							borderRadius: 2,
 							background: alpha(selectedMode?.color || "#3b82f6", 0.08),
 							border: `1px solid ${alpha(
 								selectedMode?.color || "#3b82f6",
 								0.2,
 							)}`,
+							borderRadius: 1,
 						}}
 					>
 						<Typography
