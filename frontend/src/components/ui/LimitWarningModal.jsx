@@ -1,11 +1,12 @@
 import React, { useContext } from "react";
-import { Box, Typography, Button, Divider, alpha } from "@mui/material";
+import { Box, Typography, Divider, alpha } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import UpgradeIcon from "@mui/icons-material/Upgrade";
 import LayersIcon from "@mui/icons-material/Layers";
 import StyleIcon from "@mui/icons-material/Style";
 import StyledModal from "./StyledModal";
+import StyledButton from "./StyledButton";
 import { I18nContext } from "../../utils/i18n";
 
 const LimitWarningModal = ({
@@ -32,15 +33,9 @@ const LimitWarningModal = ({
 
 	// Determine what limits are hit
 	const isDeckLimitReached = maxDecks !== null && currentDecks >= maxDecks;
-	const isFlashcardLimitReached =
-		maxFlashcards !== null && currentFlashcards >= maxFlashcards;
+	const isFlashcardLimitReached = maxFlashcards !== null && currentFlashcards >= maxFlashcards;
 	const hasDeckOverage = deckOverage > 0;
 	const hasFlashcardOverage = flashcardOverage > 0;
-
-	// Show deck info based on warningType
-	const showDeckInfo = warningType === "deck" || warningType === "both";
-	const showFlashcardInfo =
-		warningType === "flashcard" || warningType === "both";
 
 	// Determine the description based on the situation
 	const getDescription = () => {
@@ -130,168 +125,92 @@ const LimitWarningModal = ({
 					}}
 				>
 					{/* Deck Limit */}
-					{showDeckInfo && maxDecks !== null && (
-						<Box
-							sx={{ mb: showFlashcardInfo && maxFlashcards !== null ? 2 : 0 }}
-						>
-							<Box
-								sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
-							>
-								<LayersIcon
-									sx={{
-										fontSize: 20,
-										color:
-											isDeckLimitReached || hasDeckOverage
-												? "error.main"
-												: "primary.main",
-									}}
-								/>
-								<Typography
-									variant="subtitle2"
-									sx={{
-										fontWeight: 600,
-										color:
-											isDeckLimitReached || hasDeckOverage
-												? "error.main"
-												: "text.primary",
-									}}
-								>
-									{t("limitWarningDeckLimit", "Deck Limit")}
-								</Typography>
-							</Box>
-							<Box
+					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+							<LayersIcon
 								sx={{
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "center",
-									px: 1,
+									fontSize: 20,
+									color: isDeckLimitReached || hasDeckOverage ? "error.main" : "primary.main",
+								}}
+							/>
+							<Typography
+								variant="subtitle2"
+								sx={{
+									fontWeight: 600,
+									color: isDeckLimitReached || hasDeckOverage ? "error.main" : "text.primary",
 								}}
 							>
-								<Typography variant="body2" color="text.secondary">
-									{t("current", "Current")}: <strong>{currentDecks}</strong>
-								</Typography>
-								<Typography variant="body2" color="text.secondary">
-									{t("maximum", "Maximum")}: <strong>{maxDecks}</strong>
-								</Typography>
-							</Box>
-							{hasDeckOverage && (
-								<Typography
-									variant="body2"
-									sx={{
-										color: "error.main",
-										mt: 1,
-										px: 1,
-										fontWeight: 500,
-									}}
-								>
-									⚠️ {t("deckOverageMessage", { count: deckOverage })}
-								</Typography>
-							)}
+								{t("limitWarningDeckLimit", "Deck Limit")}
+							</Typography>
 						</Box>
-					)}
+						<Typography
+							variant="subtitle2"
+							sx={{
+								fontWeight: 700,
+								color: isDeckLimitReached || hasDeckOverage ? "error.main" : "text.primary",
+							}}
+						>
+							{currentDecks ?? "—"}/{maxDecks ?? "—"}
+						</Typography>
+					</Box>
 
-					{/* Divider */}
-					{showDeckInfo &&
-						showFlashcardInfo &&
-						maxDecks !== null &&
-						maxFlashcards !== null && <Divider sx={{ my: 1.5 }} />}
+					<Divider sx={{ my: 1.5 }} />
 
 					{/* Flashcard Limit */}
-					{showFlashcardInfo && maxFlashcards !== null && (
-						<Box>
-							<Box
-								sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
-							>
-								<StyleIcon
-									sx={{
-										fontSize: 20,
-										color:
-											isFlashcardLimitReached || hasFlashcardOverage
-												? "error.main"
-												: "primary.main",
-									}}
-								/>
-								<Typography
-									variant="subtitle2"
-									sx={{
-										fontWeight: 600,
-										color:
-											isFlashcardLimitReached || hasFlashcardOverage
-												? "error.main"
-												: "text.primary",
-									}}
-								>
-									{t("limitWarningFlashcardLimit", "Flashcard Limit")}
-								</Typography>
-							</Box>
-							<Box
+					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+							<StyleIcon
 								sx={{
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "center",
-									px: 1,
+									fontSize: 20,
+									color: isFlashcardLimitReached || hasFlashcardOverage ? "error.main" : "primary.main",
+								}}
+							/>
+							<Typography
+								variant="subtitle2"
+								sx={{
+									fontWeight: 600,
+									color: isFlashcardLimitReached || hasFlashcardOverage ? "error.main" : "text.primary",
 								}}
 							>
-								<Typography variant="body2" color="text.secondary">
-									{t("current", "Current")}:{" "}
-									<strong>{currentFlashcards}</strong>
-								</Typography>
-								<Typography variant="body2" color="text.secondary">
-									{t("maximum", "Maximum")}: <strong>{maxFlashcards}</strong>
-								</Typography>
-							</Box>
-							{hasFlashcardOverage && (
-								<Typography
-									variant="body2"
-									sx={{
-										color: "error.main",
-										mt: 1,
-										px: 1,
-										fontWeight: 500,
-									}}
-								>
-									{t("flashcardOverageMessage", { count: flashcardOverage })}
-								</Typography>
-							)}
+								{t("limitWarningFlashcardLimit", "Flashcard Limit")}
+							</Typography>
 						</Box>
-					)}
+						<Typography
+							variant="subtitle2"
+							sx={{
+								fontWeight: 700,
+								color: isFlashcardLimitReached || hasFlashcardOverage ? "error.main" : "text.primary",
+							}}
+						>
+							{currentFlashcards ?? "—"}/{maxFlashcards ?? "—"}
+						</Typography>
+					</Box>
 				</Box>
 
 				{/* Action Buttons */}
 				<Box
 					sx={{
 						display: "flex",
-						flexDirection: "column",
+						flexDirection: "row",
 						gap: 1.5,
 					}}
 				>
-					{showUpgradeButton && planCode !== "premium" && (
-						<Button
-							variant="contained"
-							color="primary"
-							startIcon={<UpgradeIcon />}
-							onClick={handleUpgrade}
-							fullWidth
-							sx={{
-								py: 1.2,
-								fontWeight: 600,
-								borderRadius: 2,
-							}}
-						>
-							{t("limitWarningUpgradePlan", "Upgrade Plan")}
-						</Button>
-					)}
-					<Button
-						variant="outlined"
+					<StyledButton
+						variant="ghost"
 						onClick={onClose}
-						fullWidth
-						sx={{
-							py: 1,
-							borderRadius: 2,
-						}}
+						sx={{ flex: 1 }}
 					>
 						{t("close", "Close")}
-					</Button>
+					</StyledButton>
+					{showUpgradeButton && planCode !== "premium" && (
+						<StyledButton
+							variant="primary"
+							onClick={handleUpgrade}
+							sx={{ flex: 1 }}
+						>
+							{t("limitWarningUpgradePlan", "Upgrade Plan")}
+						</StyledButton>
+					)}
 				</Box>
 			</Box>
 		</StyledModal>

@@ -33,7 +33,6 @@ import { I18nProvider } from "./utils/i18n";
 import { AchievementProvider } from "./context/AchievementContext";
 import { PlanProvider } from "./context/PlanContext";
 import Topbar from "./components/Topbar";
-import AchievementModal from "./components/modals/AchievementModal";
 import { Box, CircularProgress } from "@mui/material";
 
 import "@fontsource/inter/400.css";
@@ -324,7 +323,6 @@ const AppContent = () => {
 				<PlanProvider user={user}>
 					<ThemeProvider theme={activeTheme}>
 						<CssBaseline />
-						<AchievementModal />
 						{isAuthPage ? (
 							<Box
 								sx={{
@@ -368,9 +366,9 @@ const AppContent = () => {
 												<AnimatedPage>
 													<Info
 														accountId={accountId}
-														onStartGame={(deckId, settings) =>
+														onStartGame={(deckId, settings, deckTitle) =>
 															navigate(`/game/${deckId}`, {
-																state: { settings },
+																state: { settings, deckTitle },
 															})
 														}
 													/>

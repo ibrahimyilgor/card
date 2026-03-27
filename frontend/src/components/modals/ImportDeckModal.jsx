@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import LayersIcon from "@mui/icons-material/Layers";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
@@ -215,7 +216,7 @@ export default function ImportDeckModal({
 			open={open}
 			onClose={handleClose}
 			title={t("import_deck") || "Import Deck"}
-			icon={<UploadFileIcon sx={{ fontSize: 24, color: "white" }} />}
+			icon={<LayersIcon sx={{ fontSize: 24, color: "white" }} />}
 			maxWidth="md"
 			actions={
 				<>

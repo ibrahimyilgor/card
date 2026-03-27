@@ -70,6 +70,9 @@ INSERT INTO achievement (name, description, icon, category, threshold) VALUES
 ('streak_7', '7 Day Streak', '🔥', 'streak', 7),
 ('streak_14', '14 Day Streak', '🔥', 'streak', 14),
 ('streak_30', '30 Day Streak', '🔥', 'streak', 30),
+('streak_90', '90 Day Streak', '🔥', 'streak', 90),
+('streak_180', '180 Day Streak', '🔥', 'streak', 180),
+('streak_365', '365 Day Streak', '🔥', 'streak', 365),
 -- Accuracy achievements (complete a deck with X% accuracy)
 ('accuracy_80', '80% Accuracy', '🎯', 'accuracy', 80),
 ('accuracy_90', '90% Accuracy', '🎯', 'accuracy', 90),
@@ -79,6 +82,10 @@ INSERT INTO achievement (name, description, icon, category, threshold) VALUES
 ('volume_100', '100 Cards Studied', '📚', 'volume', 100),
 ('volume_500', '500 Cards Studied', '📚', 'volume', 500),
 ('volume_1000', '1000 Cards Studied', '📚', 'volume', 1000)
+('volume_5000', '5000 Cards Studied', '📚', 'volume', 5000),
+('volume_20000', '20000 Cards Studied', '📚', 'volume', 20000),
+('volume_100000', '100000 Cards Studied', '📚', 'volume', 100000),
+('volume_1000000', '1000000 Cards Studied', '📚', 'volume', 1000000)
 ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS study_session (

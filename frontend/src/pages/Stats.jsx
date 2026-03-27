@@ -1372,8 +1372,7 @@ export default function Stats() {
 						variant="contained"
 						color="warning"
 						size="small"
-						startIcon={<UpgradeIcon />}
-						onClick={() => navigate("/plans")}
+							onClick={() => navigate("/plans")}
 						sx={{
 							fontWeight: 600,
 							borderRadius: 2,

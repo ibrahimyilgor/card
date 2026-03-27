@@ -419,6 +419,11 @@ function FlashcardItem({
 }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
+	const [isExpanded, setIsExpanded] = useState(false);
+
+	const frontLong = flashcard.front_text.length > 50;
+	const backLong = flashcard.back_text.length > 50;
+	const hasLongContent = frontLong || backLong;
 
 	return (
 		<MotionBox
@@ -468,48 +473,39 @@ function FlashcardItem({
 								: (theme) => alpha(theme.palette.grey[500], 0.08),
 						}}
 					>
-						<Box sx={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-							<Tooltip
-								title={
-									flashcard.front_text.length > 50 ? flashcard.front_text : ""
-								}
-								arrow
+						<Box
+							sx={{ flex: 1, minWidth: 0, overflow: "hidden", cursor: hasLongContent ? "pointer" : "default" }}
+							onClick={() => hasLongContent && setIsExpanded((p) => !p)}
+						>
+							<Typography
+								variant="subtitle2"
+								sx={{
+									fontWeight: 600,
+									color: "text.cardTitle",
+									fontFamily: "Inter, sans-serif",
+									overflow: isExpanded ? "visible" : "hidden",
+									textOverflow: isExpanded ? "unset" : "ellipsis",
+									whiteSpace: isExpanded ? "normal" : "nowrap",
+									wordBreak: isExpanded ? "break-word" : "normal",
+								}}
 							>
-								<Typography
-									variant="subtitle2"
-									sx={{
-										fontWeight: 600,
-										color: "text.cardTitle",
-										fontFamily: "Inter, sans-serif",
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-										whiteSpace: "nowrap",
-									}}
-								>
-									{flashcard.front_text}
-								</Typography>
-							</Tooltip>
-							<Tooltip
-								title={
-									flashcard.back_text.length > 50 ? flashcard.back_text : ""
-								}
-								arrow
+								{flashcard.front_text}
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{
+									color: "text.cardSubtitle",
+									fontFamily: "Inter, sans-serif",
+									fontSize: "0.85rem",
+									overflow: isExpanded ? "visible" : "hidden",
+									textOverflow: isExpanded ? "unset" : "ellipsis",
+									whiteSpace: isExpanded ? "normal" : "nowrap",
+									wordBreak: isExpanded ? "break-word" : "normal",
+									mt: 0.5,
+								}}
 							>
-								<Typography
-									variant="body2"
-									sx={{
-										color: "text.cardSubtitle",
-										fontFamily: "Inter, sans-serif",
-										fontSize: "0.85rem",
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-										whiteSpace: "nowrap",
-										mt: 0.5,
-									}}
-								>
-									{flashcard.back_text}
-								</Typography>
-							</Tooltip>
+								{flashcard.back_text}
+							</Typography>
 						</Box>
 
 						{/* Actions */}
@@ -931,7 +927,7 @@ export default function FlashcardModal({
 			<StyledModal
 				open={open}
 				onClose={onClose}
-				title={t("flashcards") || "Flashcards"}
+				title={deckTitle || t("flashcards") || "Flashcards"}
 				icon={<StyleIcon sx={{ fontSize: 24, color: "white" }} />}
 				maxWidth={760}
 				actions={

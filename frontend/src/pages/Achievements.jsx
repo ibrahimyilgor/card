@@ -12,6 +12,7 @@ import {
 	StyledCard,
 	AchievementsSkeleton,
 } from "../components/ui";
+import AchievementBadge from "../components/AchievementBadge";
 import { useSEO } from "../utils/seo";
 
 const MotionBox = motion.create(Box);
@@ -71,24 +72,9 @@ function AchievementCard({ achievement, index }) {
 					position: "relative",
 					width: "200px",
 					opacity: isEarned ? 1 : 0.5,
-					border: isEarned
-						? `2px solid ${categoryColor}`
-						: `2px solid ${
-								isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-							}`,
-					background: isEarned
-						? `linear-gradient(135deg, ${alpha(categoryColor, 0.1)} 0%, ${alpha(
-								categoryColor,
-								0.05,
-							)} 100%)`
-						: undefined,
-					filter: isEarned ? "none" : "grayscale(100%)",
 					transition: "all 0.3s ease",
 					"&:hover": {
 						transform: isEarned ? "translateY(-4px)" : "none",
-						boxShadow: isEarned
-							? `0 8px 24px ${alpha(categoryColor, 0.3)}`
-							: undefined,
 					},
 				}}
 			>
@@ -116,22 +102,6 @@ function AchievementCard({ achievement, index }) {
 				{/* Icon */}
 				<Box
 					sx={{
-						width: 64,
-						height: 64,
-						borderRadius: "50%",
-						background: isEarned
-							? `linear-gradient(135deg, ${alpha(
-									categoryColor,
-									0.2,
-								)} 0%, ${alpha(categoryColor, 0.1)} 100%)`
-							: isDark
-								? "rgba(255, 255, 255, 0.05)"
-								: "rgba(0, 0, 0, 0.05)",
-						border: isEarned
-							? `2px solid ${categoryColor}`
-							: `2px solid ${
-									isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-								}`,
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
@@ -139,10 +109,15 @@ function AchievementCard({ achievement, index }) {
 						mb: 2,
 					}}
 				>
-					<CategoryIconComponent
-						category={achievement.category}
-						size={32}
-						color={isEarned ? categoryColor : undefined}
+					<AchievementBadge
+						type={achievement.category}
+						size={125}
+						earned={isEarned}
+						animate={isEarned}
+						interactive={isEarned}
+						streakDays={achievement.category === "streak" ? achievement.threshold : undefined}
+						accuracyDays={achievement.category === "accuracy" ? achievement.threshold : undefined}
+						volumeDays={achievement.category === "volume" ? achievement.threshold : undefined}
 					/>
 				</Box>
 
@@ -350,7 +325,7 @@ export default function Achievements() {
 										mb: 2,
 									}}
 								>
-									<CategoryIconComponent category={category} size={28} />
+								<AchievementBadge type={category} size={32} earned interactive={false} />
 									<Typography
 										variant="h6"
 										sx={{

@@ -52,65 +52,34 @@ export default function ConfirmModal({
 		<StyledModal
 			open={open}
 			onClose={onClose}
+			title={title}
+			icon={<Icon sx={{ fontSize: 24, color: "white" }} />}
 			maxWidth={420}
-			showCloseButton={false}
+			actions={
+				<>
+					<StyledButton variant="ghost" onClick={onClose} disabled={loading}>
+						{cancelText}
+					</StyledButton>
+					<StyledButton
+						variant={variant}
+						onClick={onConfirm}
+						disabled={loading}
+					>
+						{loading ? "..." : confirmText}
+					</StyledButton>
+				</>
+			}
 		>
-			<Box
-				sx={{
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					textAlign: "center",
-					py: 2,
-					px: 1,
-					maxWidth: "100%",
-					overflow: "hidden",
-				}}
-			>
-				{/* Icon */}
-				<Box
-					sx={{
-						width: 64,
-						height: 64,
-						borderRadius: "16px",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						background: alpha(iconColor, 0.15),
-						border: `1px solid ${alpha(iconColor, 0.3)}`,
-						mb: 3,
-						flexShrink: 0,
-					}}
-				>
-					<Icon sx={{ fontSize: 32, color: iconColor }} />
-				</Box>
-
-				{/* Title */}
-				<Typography
-					variant="h6"
-					sx={{
-						fontWeight: 700,
-						color: "text.cardTitle",
-						fontFamily: "Inter, sans-serif",
-						mb: itemName ? 1 : 1.5,
-						wordBreak: "break-word",
-						maxWidth: "100%",
-					}}
-				>
-					{title}
-				</Typography>
-
+			<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
 				{/* Item Name (if provided) */}
 				{itemName && (
 					<Box
 						sx={{
-							mb: 2,
 							px: 2,
 							py: 1,
 							borderRadius: 2,
 							background: alpha(iconColor, 0.1),
 							border: `1px solid ${alpha(iconColor, 0.2)}`,
-							maxWidth: "100%",
 						}}
 					>
 						<Typography
@@ -133,47 +102,19 @@ export default function ConfirmModal({
 				)}
 
 				{/* Message */}
-				<Typography
-					variant="body2"
-					sx={{
-						color: "text.cardSubtitle",
-						fontFamily: "Inter, sans-serif",
-						lineHeight: 1.7,
-						mb: 4,
-						px: 1,
-						wordBreak: "break-word",
-						maxWidth: "100%",
-					}}
-				>
-					{message}
-				</Typography>
-
-				{/* Actions */}
-				<Box
-					sx={{
-						display: "flex",
-						gap: 2,
-						width: "100%",
-						flexWrap: "wrap",
-					}}
-				>
-					<StyledButton
-						variant="ghost"
-						onClick={onClose}
-						disabled={loading}
-						sx={{ flex: 1 }}
+				{message && (
+					<Typography
+						variant="body2"
+						sx={{
+							color: "text.cardSubtitle",
+							fontFamily: "Inter, sans-serif",
+							lineHeight: 1.7,
+							wordBreak: "break-word",
+						}}
 					>
-						{cancelText}
-					</StyledButton>
-					<StyledButton
-						variant={variant}
-						onClick={onConfirm}
-						disabled={loading}
-						sx={{ flex: 1 }}
-					>
-						{loading ? "..." : confirmText}
-					</StyledButton>
-				</Box>
+						{message}
+					</Typography>
+				)}
 			</Box>
 		</StyledModal>
 	);

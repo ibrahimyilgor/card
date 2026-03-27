@@ -33,7 +33,10 @@
 		"react-confetti": "^6.4.0",
 		"react-dom": "^18.0.0",
 		"react-router-dom": "^7.11.0",
-		"react-window": "^1.8.11"
+		"react-window": "^1.8.11",
+		"three": "^0.158.0",
+		"@react-three/fiber": "^8.13.2",
+		"@react-three/drei": "^9.48.0"
 	},
 	"devDependencies": {
 		"@vitejs/plugin-react": "^4.0.0",
