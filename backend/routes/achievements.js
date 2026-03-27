@@ -205,7 +205,7 @@ module.exports = (pool) => {
 			console.log("[Achievements] Current streak:", currentStreak);
 
 			// Check streak achievements — only award when streak exactly hits a threshold
-			const streakThresholds = [3, 7, 14, 30];
+			const streakThresholds = [3, 7, 14, 30, 90, 180, 365];
 			for (const threshold of streakThresholds) {
 				if (currentStreak === threshold) {
 					const earned = await awardAchievement(
@@ -257,7 +257,9 @@ module.exports = (pool) => {
 			);
 
 			const totalCards = parseInt(volumeResult.rows[0]?.total_cards || 0);
-			const volumeThresholds = [50, 100, 500, 1000];
+			const volumeThresholds = [
+				50, 100, 500, 1000, 5000, 20000, 100000, 1000000,
+			];
 			for (const threshold of volumeThresholds) {
 				if (totalCards >= threshold) {
 					const earned = await awardAchievement(

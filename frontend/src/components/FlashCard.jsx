@@ -29,6 +29,7 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 	const { planCode } = usePlan();
 	const [frontHasOverflow, setFrontHasOverflow] = useState(false);
 	const [backHasOverflow, setBackHasOverflow] = useState(false);
+	const [isExpanded, setIsExpanded] = useState(false);
 
 	const cardControls = useAnimation();
 	const btnControls = useAnimation();
@@ -109,6 +110,7 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 	const handleFlip = () => {
 		tts.stop();
 		setTtsPlaying(false);
+		setIsExpanded(false);
 		playSound(SOUNDS.FLIP);
 		onFlip();
 	};
@@ -181,8 +183,10 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 			sx={{
 				perspective: "1200px",
 				width: { xs: "320px", sm: "420px", md: "480px" },
-				height: { xs: "220px", sm: "280px", md: "320px" },
+				height: isExpanded ? "auto" : { xs: "220px", sm: "280px", md: "320px" },
+				minHeight: { xs: "220px", sm: "280px", md: "320px" },
 				position: "relative",
+				transition: "height 0.3s ease",
 			}}
 			onMouseEnter={handleHoverStart}
 			onMouseLeave={handleHoverEnd}

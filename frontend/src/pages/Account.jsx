@@ -21,6 +21,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 // password-related icons removed
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import DeleteIcon from "@mui/icons-material/Delete";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
@@ -566,7 +567,7 @@ export default function Account() {
 													border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
 												}}
 											>
-												<DeleteForeverIcon
+												<DeleteIcon
 													sx={{ fontSize: 24, color: "error.main" }}
 												/>
 											</Box>
@@ -596,7 +597,7 @@ export default function Account() {
 											<StyledButton
 												variant="danger"
 												onClick={() => setDeleteModalOpen(true)}
-												startIcon={<DeleteForeverIcon sx={{ fontSize: 20 }} />}
+												startIcon={<DeleteIcon sx={{ fontSize: 20 }} />}
 											>
 												{t("delete_account")}
 											</StyledButton>
@@ -623,7 +624,7 @@ export default function Account() {
 				}
 				cancelText={t("cancel")}
 				variant="danger"
-				icon={DeleteForeverIcon}
+				icon={DeleteIcon}
 				loading={deleteLoading}
 			/>
 

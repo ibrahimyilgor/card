@@ -392,6 +392,7 @@ export default function Info({ accountId, onStartGame }) {
 	const [selectedDeck, setSelectedDeck] = useState(null);
 	const [gameSettingsModalOpen, setGameSettingsModalOpen] = useState(false);
 	const [selectedDeckForGame, setSelectedDeckForGame] = useState(null);
+	const [selectedDeckForGameTitle, setSelectedDeckForGameTitle] = useState(null);
 
 	// Import modal state
 	const [importModalOpen, setImportModalOpen] = useState(false);
@@ -910,6 +911,7 @@ export default function Info({ accountId, onStartGame }) {
 									}}
 									onPlay={(d) => {
 										setSelectedDeckForGame(d.id);
+										setSelectedDeckForGameTitle(d.title);
 										setGameSettingsModalOpen(true);
 									}}
 									onDelete={handleDeleteClick}
@@ -1036,12 +1038,14 @@ export default function Info({ accountId, onStartGame }) {
 				onClose={() => {
 					setGameSettingsModalOpen(false);
 					setSelectedDeckForGame(null);
+					setSelectedDeckForGameTitle(null);
 				}}
 				onStart={(settings) => {
 					setGameSettingsModalOpen(false);
-					onStartGame(selectedDeckForGame, settings);
+					onStartGame(selectedDeckForGame, settings, selectedDeckForGameTitle);
 				}}
 				deckId={selectedDeckForGame}
+				deckTitle={selectedDeckForGameTitle}
 			/>
 
 			{/* Import Deck Modal */}
@@ -1069,6 +1073,7 @@ export default function Info({ accountId, onStartGame }) {
 				confirmText={t("delete") || "Delete"}
 				cancelText={t("cancel") || "Cancel"}
 				variant="danger"
+				icon={DeleteIcon}
 				loading={deleteLoading}
 			/>
 

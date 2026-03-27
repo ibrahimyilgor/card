@@ -211,6 +211,7 @@ export default function GameSettingsModal({
 	onClose,
 	onStart,
 	deckId,
+	deckTitle,
 	initialSettings = null,
 }) {
 	const theme = useTheme();
@@ -353,7 +354,7 @@ export default function GameSettingsModal({
 		<StyledModal
 			open={open}
 			onClose={onClose}
-			title={t("game_settings") || "Game Settings"}
+			title={deckTitle || t("game_settings") || "Game Settings"}
 			icon={<SportsEsportsIcon sx={{ fontSize: 24, color: "white" }} />}
 			maxWidth={700}
 			actions={

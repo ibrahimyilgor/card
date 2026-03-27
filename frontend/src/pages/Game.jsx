@@ -55,6 +55,7 @@ export default function Game({ onBackToDecks }) {
 	const location = useLocation();
 	const { t } = useContext(I18nContext);
 	const { processNewAchievements } = useContext(AchievementContext);
+	const [earnedAchievements, setEarnedAchievements] = useState([]);
 
 	// Plan context for ads and limit checks
 	const {
@@ -94,6 +95,7 @@ export default function Game({ onBackToDecks }) {
 		cardDirection: "normal",
 		hardModeEnabled: false,
 	};
+	const deckTitle = location.state?.deckTitle || null;
 	const [settings, setSettings] = useState(initialSettings);
 	const [showSettingsModal, setShowSettingsModal] = useState(false);
 	const gameMode = settings.mode || "standard";
@@ -115,6 +117,7 @@ export default function Game({ onBackToDecks }) {
 	const [loading, setLoading] = useState(true);
 	const [currentCardIndex, setCurrentCardIndex] = useState(0);
 	const [scores, setScores] = useState({ correct: 0, incorrect: 0 });
+	const [cardResults, setCardResults] = useState([]);
 	const [gameEnded, setGameEnded] = useState(false);
 	const [isCardFlipped, setIsCardFlipped] = useState(false);
 	const [direction, setDirection] = useState(0);
@@ -272,6 +275,7 @@ export default function Game({ onBackToDecks }) {
 				.then((result) => {
 					if (result?.newlyEarned && result.newlyEarned.length > 0) {
 						processNewAchievements(result.newlyEarned);
+						setEarnedAchievements(result.newlyEarned);
 					}
 				})
 				.catch((err) =>
@@ -309,6 +313,12 @@ export default function Game({ onBackToDecks }) {
 					console.error("Error updating stats:", err);
 				}
 			}
+
+			setCardResults((prev) => [...prev, {
+				front: flashcards[currentCardIndex]?.front_text || "",
+				back: flashcards[currentCardIndex]?.back_text || "",
+				isCorrect,
+			}]);
 
 			if (isCorrect) {
 				setScores((prev) => ({ ...prev, correct: prev.correct + 1 }));
@@ -375,6 +385,8 @@ export default function Game({ onBackToDecks }) {
 		setShowChoiceResult(false);
 		setGameStats({ timeSpent: 0, matchAttempts: 0 });
 		setGameStartTime(Date.now());
+		setEarnedAchievements([]);
+		setCardResults([]);
 		lives.reset(settings.lives || 3);
 		timer.reset(settings.timeLimit || 10);
 		fetchFlashcards();
@@ -391,6 +403,8 @@ export default function Game({ onBackToDecks }) {
 			setIsCardFlipped(false);
 			setDirection(0);
 			setWriteResult(null);
+			setEarnedAchievements([]);
+			setCardResults([]);
 			setSelectedChoice(null);
 			setShowChoiceResult(false);
 			setGameStats({ timeSpent: 0, matchAttempts: 0 });
@@ -407,7 +421,8 @@ export default function Game({ onBackToDecks }) {
 			const res = await validateAnswer(flashcard.id, userAnswer, cardDirection);
 			setWriteResult(res.data);
 			const isWriteAnswerCorrect = Boolean(res.data?.isClose);
-			const writeAdvanceDelay = isWriteAnswerCorrect
+			const isExactlyCorrect = Boolean(res.data?.correct);
+			const writeAdvanceDelay = isExactlyCorrect
 				? WRITE_CORRECT_DELAY_MS
 				: WRITE_WRONG_DELAY_MS;
 			// Play feedback immediately, advance UI after a short delay
@@ -615,11 +630,14 @@ export default function Game({ onBackToDecks }) {
 					maxLives={lives.maxLives}
 					matchAttempts={gameStats.matchAttempts}
 					matchPairs={gameStats.matchPairs || Math.min(flashcards.length, 6)}
+					newAchievements={earnedAchievements}
+					cardResults={cardResults}
 				/>
 				<GameSettingsModal
 					open={showSettingsModal}
 					onClose={() => setShowSettingsModal(false)}
 					deckId={deckId}
+					deckTitle={deckTitle}
 					onStart={handleStartWithNewSettings}
 				/>
 			</PageContainer>

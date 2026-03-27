@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { Box, Typography, alpha, useTheme } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
-import StyleIcon from "@mui/icons-material/Style";
+import LayersIcon from "@mui/icons-material/Layers";
 // Game option UI removed
 import { I18nContext } from "../../utils/i18n";
 import {
@@ -66,8 +66,8 @@ export default function DeckModal({
 		<StyledModal
 			open={open}
 			onClose={onClose}
-			title={editDeck ? t("edit_deck") : t("new_deck")}
-			icon={<StyleIcon sx={{ fontSize: 24, color: "white" }} />}
+			title={editDeck ? initialTitle : t("new_deck")}
+			icon={<LayersIcon sx={{ fontSize: 24, color: "white" }} />}
 			maxWidth="sm"
 			actions={
 				<>
