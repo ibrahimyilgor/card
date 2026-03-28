@@ -33,7 +33,8 @@ const LimitWarningModal = ({
 
 	// Determine what limits are hit
 	const isDeckLimitReached = maxDecks !== null && currentDecks >= maxDecks;
-	const isFlashcardLimitReached = maxFlashcards !== null && currentFlashcards >= maxFlashcards;
+	const isFlashcardLimitReached =
+		maxFlashcards !== null && currentFlashcards >= maxFlashcards;
 	const hasDeckOverage = deckOverage > 0;
 	const hasFlashcardOverage = flashcardOverage > 0;
 
@@ -69,7 +70,7 @@ const LimitWarningModal = ({
 		<StyledModal
 			open={open}
 			onClose={onClose}
-			title={title || t("limitWarningTitle", "Plan Limit Reached")}
+			title={t("limitWarningTitle")}
 			icon={<WarningAmberIcon sx={{ color: "theme.palette.primary.main" }} />}
 			maxWidth={450}
 		>
@@ -125,19 +126,31 @@ const LimitWarningModal = ({
 					}}
 				>
 					{/* Deck Limit */}
-					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "space-between",
+						}}
+					>
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<LayersIcon
 								sx={{
 									fontSize: 20,
-									color: isDeckLimitReached || hasDeckOverage ? "error.main" : "primary.main",
+									color:
+										isDeckLimitReached || hasDeckOverage
+											? "error.main"
+											: "primary.main",
 								}}
 							/>
 							<Typography
 								variant="subtitle2"
 								sx={{
 									fontWeight: 600,
-									color: isDeckLimitReached || hasDeckOverage ? "error.main" : "text.primary",
+									color:
+										isDeckLimitReached || hasDeckOverage
+											? "error.main"
+											: "text.primary",
 								}}
 							>
 								{t("limitWarningDeckLimit", "Deck Limit")}
@@ -147,7 +160,10 @@ const LimitWarningModal = ({
 							variant="subtitle2"
 							sx={{
 								fontWeight: 700,
-								color: isDeckLimitReached || hasDeckOverage ? "error.main" : "text.primary",
+								color:
+									isDeckLimitReached || hasDeckOverage
+										? "error.main"
+										: "text.primary",
 							}}
 						>
 							{currentDecks ?? "—"}/{maxDecks ?? "—"}
@@ -157,19 +173,31 @@ const LimitWarningModal = ({
 					<Divider sx={{ my: 1.5 }} />
 
 					{/* Flashcard Limit */}
-					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "space-between",
+						}}
+					>
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<StyleIcon
 								sx={{
 									fontSize: 20,
-									color: isFlashcardLimitReached || hasFlashcardOverage ? "error.main" : "primary.main",
+									color:
+										isFlashcardLimitReached || hasFlashcardOverage
+											? "error.main"
+											: "primary.main",
 								}}
 							/>
 							<Typography
 								variant="subtitle2"
 								sx={{
 									fontWeight: 600,
-									color: isFlashcardLimitReached || hasFlashcardOverage ? "error.main" : "text.primary",
+									color:
+										isFlashcardLimitReached || hasFlashcardOverage
+											? "error.main"
+											: "text.primary",
 								}}
 							>
 								{t("limitWarningFlashcardLimit", "Flashcard Limit")}
@@ -179,7 +207,10 @@ const LimitWarningModal = ({
 							variant="subtitle2"
 							sx={{
 								fontWeight: 700,
-								color: isFlashcardLimitReached || hasFlashcardOverage ? "error.main" : "text.primary",
+								color:
+									isFlashcardLimitReached || hasFlashcardOverage
+										? "error.main"
+										: "text.primary",
 							}}
 						>
 							{currentFlashcards ?? "—"}/{maxFlashcards ?? "—"}
@@ -192,23 +223,30 @@ const LimitWarningModal = ({
 					sx={{
 						display: "flex",
 						flexDirection: "row",
+						alignItems: "center",
 						gap: 1.5,
 					}}
 				>
-					<StyledButton
-						variant="ghost"
-						onClick={onClose}
-						sx={{ flex: 1 }}
-					>
-						{t("close", "Close")}
-					</StyledButton>
-					{showUpgradeButton && planCode !== "premium" && (
-						<StyledButton
-							variant="primary"
-							onClick={handleUpgrade}
-							sx={{ flex: 1 }}
-						>
-							{t("limitWarningUpgradePlan", "Upgrade Plan")}
+					{showUpgradeButton && planCode !== "premium" ? (
+						<>
+							<StyledButton
+								variant="ghost"
+								onClick={onClose}
+								sx={{ flex: "0 0 50%" }}
+							>
+								{t("close", "Close")}
+							</StyledButton>
+							<StyledButton
+								variant="primary"
+								onClick={handleUpgrade}
+								sx={{ flex: "0 0 50%" }}
+							>
+								{t("limitWarningUpgradePlan", "Upgrade Plan")}
+							</StyledButton>
+						</>
+					) : (
+						<StyledButton variant="ghost" onClick={onClose} sx={{ flex: 1 }}>
+							{t("close", "Close")}
 						</StyledButton>
 					)}
 				</Box>

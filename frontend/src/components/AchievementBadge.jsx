@@ -435,7 +435,6 @@ function VolumeSVG({ size, volumeDays, tiltRy }) {
 		>
 			<defs>
 				<linearGradient id="voGoldBevel" x1="0%" y1="0%" x2="100%" y2="100%">
-					<stop offset="12%" stopColor="#fffbda" />
 					<stop offset="30%" stopColor="#e1b84a" />
 					<stop offset="55%" stopColor="#8a6d3b" />
 					<stop offset="85%" stopColor="#c08f2a" />
@@ -452,17 +451,6 @@ function VolumeSVG({ size, volumeDays, tiltRy }) {
 					<rect x={X + 6} y={Y + 6} width={W - 12} height={H - 12} rx={RX - 2} />
 				</clipPath>
 			</defs>
-
-			{/* 0. 3D edge faces */}
-			{edgeFaces.map(({ ax, ay, bx, by }, i) => (
-				<polygon
-					key={i}
-					points={`${ax},${ay} ${bx},${by} ${bx + xShift},${by} ${ax + xShift},${ay}`}
-					fill="rgba(90,60,10,0.85)"
-					stroke="#c08f2a"
-					strokeWidth="0.5"
-				/>
-			))}
 
 			{/* 1. Main Gold Body — rounded rect */}
 			<rect x={X} y={Y} width={W} height={H} rx={RX} fill="url(#voGoldBevel)" />
