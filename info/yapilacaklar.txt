@@ -1,10 +1,3 @@
--mobilde modalları daha güzel ve benzer hale getir.
--mobilde flashcard modalın ve game settings modalına isim koy
--mobilde write modunda yakınsa da biraz uzun beklesin
--mobilde aynı anda çoklu flashcardı büyütebilelim
--mobile yeni achievementları ekleme
--mobile yeni game summary'yi ekleme
-
 -offline kullanabilme(araştır)
 
 -refactor

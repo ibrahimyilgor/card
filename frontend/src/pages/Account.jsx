@@ -403,6 +403,25 @@ export default function Account() {
 												>
 													{plan?.name || t("free_plan")}
 												</Typography>
+
+												{/* Plan end time and auto-renew info */}
+												<Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mt: 1 }}>
+													<Typography
+														variant="body2"
+														sx={{ color: "text.cardSubtitle", fontFamily: "Inter, sans-serif" }}
+													>
+														{t("plan_end_time", "Plan End Time")}: {plan?.currentPeriodEnd ? formatDate(plan.currentPeriodEnd) : t("no_expiration", "No expiration")}
+													</Typography>
+													<Typography
+														variant="body2"
+														sx={{
+															color: plan?.autoRenewing ? "text.cardSubtitle" : "error.main",
+															fontFamily: "Inter, sans-serif",
+														}}
+													>
+														{t("auto_renewal", "Auto Renewal")}: {plan?.autoRenewing ? t("will_renew", "Will renew") : t("will_not_renew", "Will not renew")}
+													</Typography>
+												</Box>
 											</Box>
 										</Box>
 										<StyledButton

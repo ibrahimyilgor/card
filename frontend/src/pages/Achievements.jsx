@@ -136,20 +136,6 @@ function AchievementCard({ achievement, index }) {
 					{getAchievementTitle()}
 				</Typography>
 
-				{/* Category */}
-				<Typography
-					variant="body2"
-					sx={{
-						fontFamily: "Inter, sans-serif",
-						color: "text.secondary",
-						textAlign: "center",
-						textTransform: "capitalize",
-					}}
-				>
-					{t(`achievement_category_${achievement.category}`) ||
-						achievement.category}
-				</Typography>
-
 				{/* Earned date */}
 				{isEarned && achievement.earned_at && (
 					<Typography

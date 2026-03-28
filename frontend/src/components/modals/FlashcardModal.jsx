@@ -474,7 +474,12 @@ function FlashcardItem({
 						}}
 					>
 						<Box
-							sx={{ flex: 1, minWidth: 0, overflow: "hidden", cursor: hasLongContent ? "pointer" : "default" }}
+							sx={{
+								flex: 1,
+								minWidth: 0,
+								overflow: "hidden",
+								cursor: hasLongContent ? "pointer" : "default",
+							}}
 							onClick={() => hasLongContent && setIsExpanded((p) => !p)}
 						>
 							<Typography
@@ -1197,8 +1202,8 @@ export default function FlashcardModal({
 					<EmptyState
 						icon={StyleIcon}
 						title={t("no_flashcards") || "No flashcards yet"}
-						description="Add your first flashcard to get started learning!"
-						actionLabel={t("add_flashcard") || "Add Flashcard"}
+						description={t("add_flashcard_desc")}
+						// actionLabel={t("add_flashcard") || "Add Flashcard"}
 						onAction={handleAddFlashcardClick}
 					/>
 				) : flashcards.length === 0 && isInlineAdding ? (
