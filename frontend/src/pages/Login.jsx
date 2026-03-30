@@ -504,13 +504,14 @@ export default function Login({ onLogin }) {
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 							<Box
 								component="img"
-								src="/images/logo/memodeck.png"
+								src="/images/logo/memodeck.svg"
 								alt="MemoDeck"
 								sx={{
 									width: 36,
 									height: 36,
 									borderRadius: "9px",
 									objectFit: "cover",
+									backgroundColor: "white",
 									boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
 								}}
 							/>
@@ -581,13 +582,14 @@ export default function Login({ onLogin }) {
 							>
 								<Box
 									component="img"
-									src="/images/logo/memodeck.png"
+									src="/images/logo/memodeck.svg"
 									alt="MemoDeck"
 									sx={{
 										width: 48,
 										height: 48,
 										borderRadius: "14px",
 										objectFit: "cover",
+										backgroundColor: "white",
 									}}
 								/>
 								<Typography

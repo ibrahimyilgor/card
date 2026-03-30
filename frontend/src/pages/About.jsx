@@ -308,7 +308,7 @@ export default function About() {
 					>
 						<Box
 							component="img"
-							src="/images/logo/memodeck.png"
+							src="/images/logo/memodeck.svg"
 							alt="MemoDeck"
 							sx={{
 								width: 36,

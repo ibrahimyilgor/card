@@ -673,7 +673,7 @@ export default function Stats() {
 					resolve(canvas.toDataURL("image/png"));
 				};
 				img.onerror = () => resolve(null);
-				img.src = "/images/logo/memodeck.png";
+				img.src = "/images/logo/memodeck.svg";
 			});
 		};
 
