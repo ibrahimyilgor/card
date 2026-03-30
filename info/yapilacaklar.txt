@@ -1,4 +1,8 @@
 -offline kullanabilme(araştır)
 
+-google play sayfası fotolarını baştan
+-web fotoları baştan
+-fiyatın hesaba göre gelmesi
+
 -refactor
 -test

@@ -240,13 +240,14 @@ export default function Topbar({ onLogout, currentPath, user }) {
 				>
 					<Box
 						component="img"
-						src="/images/logo/memodeck.png"
+						src="/images/logo/memodeck.svg"
 						alt="MemoDeck"
 						sx={{
 							width: 40,
 							height: 40,
 							borderRadius: "10px",
 							objectFit: "cover",
+							backgroundColor: "white",
 							boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
 						}}
 					/>
