@@ -118,29 +118,19 @@ function PlanCard({
 				</Typography>
 
 				<Box sx={{ display: "flex", alignItems: "baseline", mb: 2 }}>
-					{plan.code === "free" ? (
-						<Typography
-							variant="h4"
-							sx={{
-								fontWeight: 800,
-								color: planColor,
-								fontFamily: "Inter, sans-serif",
-							}}
-						>
-							{t("free_price") || "Free"}
-						</Typography>
-					) : (
-						<Typography
-							variant="body1"
-							sx={{
-								color: "text.cardSubtitle",
-								fontFamily: "Inter, sans-serif",
-								fontStyle: "italic",
-							}}
-						>
-							{t("view_price_mobile") || "See pricing in mobile app"}
-						</Typography>
-					)}
+					<Typography
+						variant="h4"
+						sx={{
+							fontWeight: 800,
+							color: planColor,
+							fontFamily: "Inter, sans-serif",
+						}}
+					>
+						{plan.price_monthly === "0.00" || plan.price_monthly === 0
+							? t("free_price") || "Free"
+							: t("view_prices_mobile") ||
+								"Fiyatları görmek için mobil uygulamayı ziyaret ediniz"}
+					</Typography>
 				</Box>
 
 				{/* Description */}
@@ -282,9 +272,25 @@ export default function Plans() {
 		fetchData();
 	}, []);
 
-	const handleButtonClick = () => {
-		// Open Google Play Store for app installation/upgrade
-		window.location.href = "https://play.google.com/store/apps/details?id=com.yilgor.memodeck";
+	const handlePlanButtonClick = () => {
+		// Mobile app deeplink
+		const appDeeplink = "memodeck://plans";
+		// Fallback to Google Play Store
+		const playStoreUrl = "https://play.google.com/store/apps/details?id=com.yilgor.memodeck";
+
+		// Try to open the app via deeplink
+		window.location.href = appDeeplink;
+
+		// Fallback to Play Store after 1.5 seconds (if app is not installed)
+		const fallbackTimeout = setTimeout(() => {
+			window.location.href = playStoreUrl;
+		}, 1500);
+
+		// Clear fallback timeout if user navigates (app was opened)
+		const handleBeforeUnload = () => {
+			clearTimeout(fallbackTimeout);
+		};
+		window.addEventListener("beforeunload", handleBeforeUnload, { once: true });
 	};
 
 	return (
@@ -362,7 +368,7 @@ export default function Plans() {
 								plan={plan}
 								isCurrentPlan={myPlan?.code === plan.code}
 								delay={0.1 + index * 0.1}
-								onButtonClick={handleButtonClick}
+								onButtonClick={handlePlanButtonClick}
 								currentPlanCode={myPlan?.code}
 							/>
 						))}

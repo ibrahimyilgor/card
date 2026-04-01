@@ -1329,7 +1329,7 @@ export default function Stats() {
 					sx={{
 						mb: 3,
 						p: 2.5,
-						borderRadius: 3,
+						borderRadius: 1,
 						background:
 							"linear-gradient(135deg, rgba(251,191,36,0.15) 0%, rgba(245,158,11,0.08) 100%)",
 						border: "1px solid",
@@ -1372,7 +1372,7 @@ export default function Stats() {
 						variant="contained"
 						color="warning"
 						size="small"
-							onClick={() => navigate("/plans")}
+						onClick={() => navigate("/plans")}
 						sx={{
 							fontWeight: 600,
 							borderRadius: 2,

@@ -150,6 +150,7 @@
 	"submit": "Submit",
 	"show_hint": "Show Hint",
 	"hide_hint": "Hide Hint",
+	"show_more_letter": "Show more letter",
 	"correct_answer": "Correct!",
 	"almost_correct": "Almost!",
 	"wrong_answer": "Incorrect",
@@ -266,6 +267,8 @@
 	"plans_fetch_error": "Failed to load plans",
 	"current_plan": "Current Plan",
 	"free_price": "Free",
+	"view_prices_mobile": "View prices in mobile app",
+	"view_price_mobile": "View price in mobile app",
 	"month": "month",
 	"unlimited_decks": "Unlimited decks",
 	"unlimited_flashcards": "Unlimited flashcards",
@@ -473,10 +476,11 @@
 	"enabled": "enabled",
 	"disabled": "disabled",
 	"cards_flashcard_count": "card(s)",
-	"add_flashcard_desc": "Add cards to start studying"
-	,"plan_end_time": "Plan End Time"
-	,"no_expiration": "No expiration"
-	,"auto_renewal": "Auto Renewal"
-	,"will_renew": "Will renew"
-	,"will_not_renew": "Will not renew"
+	"add_flashcard_desc": "Add cards to start studying",
+	"plan_end_time": "Plan End Time",
+	"no_expiration": "No expiration",
+	"auto_renewal": "Auto Renewal",
+	"will_renew": "Will renew",
+	"will_not_renew": "Will not renew",
+	"view_price_mobile": "Use mobile app to view pricing"
 }

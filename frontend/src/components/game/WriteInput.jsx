@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Box, Typography, alpha, useTheme } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -21,6 +21,11 @@ export default function WriteInput({
 	const { t } = useContext(I18nContext);
 	const [answer, setAnswer] = useState("");
 	const [showHint, setShowHint] = useState(false);
+	const [revealedHintIndices, setRevealedHintIndices] = useState([]);
+
+	useEffect(() => {
+		setRevealedHintIndices([]);
+	}, [correctAnswer]);
 
 	const handleSubmit = (e) => {
 		e?.preventDefault();
@@ -36,21 +41,66 @@ export default function WriteInput({
 		}
 	};
 
+	const isMaskableHintChar = (char) => /[\p{L}\p{N}]/u.test(char);
+
+	const getBaseHintIndices = (text) => {
+		const indices = [];
+		let shouldRevealNextMaskable = true;
+
+		for (let i = 0; i < text.length; i += 1) {
+			const char = text[i];
+			if (!isMaskableHintChar(char)) {
+				if (char === " ") {
+					shouldRevealNextMaskable = true;
+				}
+				continue;
+			}
+
+			if (shouldRevealNextMaskable) {
+				indices.push(i);
+				shouldRevealNextMaskable = false;
+			}
+		}
+
+		return indices;
+	};
+
+	const getHintRevealCandidates = (text) => {
+		if (!text) return [];
+		const baseIndices = getBaseHintIndices(text);
+		const revealedSet = new Set([...baseIndices, ...revealedHintIndices]);
+		const candidates = [];
+
+		for (let i = 0; i < text.length; i += 1) {
+			if (isMaskableHintChar(text[i]) && !revealedSet.has(i)) {
+				candidates.push(i);
+			}
+		}
+
+		return candidates;
+	};
+
+	const handleRevealOneMoreLetter = () => {
+		const candidates = getHintRevealCandidates(correctAnswer || "");
+		if (candidates.length === 0) return;
+
+		const randomIndex =
+			candidates[Math.floor(Math.random() * candidates.length)];
+		setRevealedHintIndices((prev) => [...prev, randomIndex]);
+	};
+
 	const getHint = () => {
 		if (!correctAnswer) return "";
-		const words = correctAnswer.split(" ");
-		if (words.length > 1) {
-			return words
-				.map((word) => {
-					if (!word) return "";
-					return word.charAt(0) + "_".repeat(Math.max(0, word.length - 1));
-				})
-				.join(" ");
-		}
-		return (
-			correctAnswer.charAt(0) +
-			"_".repeat(Math.max(0, correctAnswer.length - 1))
-		);
+		const baseIndices = getBaseHintIndices(correctAnswer);
+		const revealedSet = new Set([...baseIndices, ...revealedHintIndices]);
+
+		return correctAnswer
+			.split("")
+			.map((char, index) => {
+				if (!isMaskableHintChar(char)) return char;
+				return revealedSet.has(index) ? char : "_";
+			})
+			.join("");
 	};
 
 	return (
@@ -93,25 +143,53 @@ export default function WriteInput({
 
 					{/* Hint button */}
 					{!showResult && (
-						<Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-							<StyledButton
-								variant="ghost"
-								onClick={() => setShowHint(!showHint)}
-								startIcon={<LightbulbIcon />}
-								size="small"
-							>
-								{showHint
-									? t("hide_hint") || "Hide Hint"
-									: t("show_hint") || "Show Hint"}
-							</StyledButton>
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+							<Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+								<StyledButton
+									variant="ghost"
+									onClick={() => setShowHint(!showHint)}
+									startIcon={<LightbulbIcon />}
+									size="small"
+								>
+									{showHint
+										? t("hide_hint") || "Hide Hint"
+										: t("show_hint") || "Show Hint"}
+								</StyledButton>
 
-							<StyledButton
-								variant="primary"
-								onClick={handleSubmit}
-								disabled={!answer.trim() || disabled}
-							>
-								{t("submit") || "Submit"}
-							</StyledButton>
+								<StyledButton
+									variant="primary"
+									onClick={handleSubmit}
+									disabled={!answer.trim() || disabled}
+								>
+									{t("submit") || "Submit"}
+								</StyledButton>
+							</Box>
+
+							{showHint && (
+								<Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+									<StyledButton
+										variant="ghost"
+										onClick={handleRevealOneMoreLetter}
+										disabled={
+											getHintRevealCandidates(correctAnswer || "").length === 0
+										}
+										size="small"
+										sx={{
+											color: "warning.main",
+											borderColor: (theme) =>
+												alpha(theme.palette.warning.main, 0.45),
+											background: (theme) =>
+												alpha(theme.palette.warning.main, 0.1),
+											"&:hover": {
+												background: (theme) =>
+													alpha(theme.palette.warning.main, 0.16),
+											},
+										}}
+									>
+										{t("show_more_letter") || "Show more letter"}
+									</StyledButton>
+								</Box>
+							)}
 						</Box>
 					)}
 
