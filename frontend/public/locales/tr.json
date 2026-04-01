@@ -150,6 +150,7 @@
 	"submit": "Gönder",
 	"show_hint": "İpucu Göster",
 	"hide_hint": "İpucunu Gizle",
+	"show_more_letter": "Bir harf daha göster",
 	"correct_answer": "Doğru!",
 	"almost_correct": "Neredeyse!",
 	"wrong_answer": "Yanlış",
@@ -266,6 +267,8 @@
 	"plans_fetch_error": "Planlar yüklenemedi",
 	"current_plan": "Mevcut Plan",
 	"free_price": "Ücretsiz",
+	"view_prices_mobile": "Fiyatları mobil uygulamada görüntüleyin",
+	"view_price_mobile": "Fiyatı mobil uygulamada görüntüleyin",
 	"month": "ay",
 	"unlimited_decks": "Sınırsız deste",
 	"unlimited_flashcards": "Sınırsız kart",
@@ -472,5 +475,6 @@
 	"enabled": "etkin",
 	"disabled": "devre dışı",
 	"cards_flashcard_count": "kart",
-	"add_flashcard_desc": "Çalışmaya başlamak için kart ekleyin"
+	"add_flashcard_desc": "Çalışmaya başlamak için kart ekleyin",
+	"view_price_mobile": "Fiyatları görmek için mobil uygulamayı kullanın"
 }

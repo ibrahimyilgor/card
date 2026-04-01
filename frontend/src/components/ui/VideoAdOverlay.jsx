@@ -17,6 +17,7 @@ import AllInclusiveIcon from "@mui/icons-material/AllInclusive";
 import { motion, AnimatePresence } from "framer-motion";
 import { I18nContext } from "../../utils/i18n";
 import { getAllPlans, getMyPlan } from "../../services/accountServices";
+import { borderRadius } from "../../../../../card_rn/src/styles/theme";
 
 const MotionBox = motion.create(Box);
 
@@ -39,7 +40,7 @@ function OverlayPlanCard({ plan, isCurrentPlan, planColor, t }) {
 		<Box
 			sx={{
 				p: 2.5,
-				borderRadius: 3,
+				borderRadius: 2,
 				position: "relative",
 				border: isCurrentPlan
 					? `2px solid ${planColor}`
@@ -68,24 +69,6 @@ function OverlayPlanCard({ plan, isCurrentPlan, planColor, t }) {
 				/>
 			)}
 
-			{/* Icon */}
-			<Box
-				sx={{
-					width: 48,
-					height: 48,
-					borderRadius: "12px",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					background: `linear-gradient(135deg, ${alpha(planColor, 0.2)} 0%, ${alpha(planColor, 0.05)} 100%)`,
-					border: `1px solid ${alpha(planColor, 0.3)}`,
-					color: planColor,
-					mb: 1.5,
-				}}
-			>
-				{getPlanIcon(plan.code)}
-			</Box>
-
 			{/* Name & price */}
 			<Typography
 				variant="subtitle1"
@@ -108,16 +91,8 @@ function OverlayPlanCard({ plan, isCurrentPlan, planColor, t }) {
 				>
 					{plan.price_monthly === "0.00" || plan.price_monthly === 0
 						? t("free_price") || "Free"
-						: `$${plan.price_monthly}`}
+						: t("view_price_mobile")}
 				</Typography>
-				{plan.price_monthly !== "0.00" && plan.price_monthly !== 0 && (
-					<Typography
-						variant="caption"
-						sx={{ color: "rgba(255,255,255,0.5)", ml: 0.5 }}
-					>
-						/{t("month") || "month"}
-					</Typography>
-				)}
 			</Box>
 
 			{/* Features */}

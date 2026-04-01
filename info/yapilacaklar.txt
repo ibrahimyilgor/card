@@ -1,7 +1,7 @@
 -offline kullanabilme(araştır)
 -oyun ayarlarında disabled'ları disable'lamak(?)
 
--fiyatın hesaba göre gelmesi
+-skeletonları düzelt biraz
 
 -refactor
 -test

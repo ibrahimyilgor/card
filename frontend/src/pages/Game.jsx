@@ -155,7 +155,7 @@ export default function Game({ onBackToDecks }) {
 
 			if (res.data && Array.isArray(res.data.flashcards)) {
 				let cards = [...res.data.flashcards];
-				const shuffledCards = cards;
+				const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
 
 				if (gameMode === "match") {
 					cards =
