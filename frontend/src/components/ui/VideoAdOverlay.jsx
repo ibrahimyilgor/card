@@ -17,7 +17,6 @@ import AllInclusiveIcon from "@mui/icons-material/AllInclusive";
 import { motion, AnimatePresence } from "framer-motion";
 import { I18nContext } from "../../utils/i18n";
 import { getAllPlans, getMyPlan } from "../../services/accountServices";
-import { borderRadius } from "../../../../../card_rn/src/styles/theme";
 
 const MotionBox = motion.create(Box);
 
