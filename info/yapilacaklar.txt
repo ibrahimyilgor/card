@@ -1,7 +1,6 @@
 -offline kullanabilme(araştır)
+-oyun ayarlarında disabled'ları disable'lamak(?)
 
--google play sayfası fotolarını baştan
--web fotoları baştan
 -fiyatın hesaba göre gelmesi
 
 -refactor

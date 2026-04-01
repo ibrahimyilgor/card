@@ -9,8 +9,6 @@ import {
 	Chip,
 	alpha,
 	useTheme,
-	Snackbar,
-	Alert,
 } from "@mui/material";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -120,28 +118,27 @@ function PlanCard({
 				</Typography>
 
 				<Box sx={{ display: "flex", alignItems: "baseline", mb: 2 }}>
-					<Typography
-						variant="h4"
-						sx={{
-							fontWeight: 800,
-							color: planColor,
-							fontFamily: "Inter, sans-serif",
-						}}
-					>
-						{plan.price_monthly === "0.00" || plan.price_monthly === 0
-							? t("free_price") || "Free"
-							: `$${plan.price_monthly}`}
-					</Typography>
-					{plan.price_monthly !== "0.00" && plan.price_monthly !== 0 && (
+					{plan.code === "free" ? (
 						<Typography
-							variant="body2"
+							variant="h4"
 							sx={{
-								color: "text.cardSubtitle",
-								ml: 0.5,
+								fontWeight: 800,
+								color: planColor,
 								fontFamily: "Inter, sans-serif",
 							}}
 						>
-							/{t("month") || "month"}
+							{t("free_price") || "Free"}
+						</Typography>
+					) : (
+						<Typography
+							variant="body1"
+							sx={{
+								color: "text.cardSubtitle",
+								fontFamily: "Inter, sans-serif",
+								fontStyle: "italic",
+							}}
+						>
+							{t("view_price_mobile") || "See pricing in mobile app"}
 						</Typography>
 					)}
 				</Box>
@@ -260,7 +257,6 @@ export default function Plans() {
 	const [myPlan, setMyPlan] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
-	const [snackbarOpen, setSnackbarOpen] = useState(false);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -287,7 +283,8 @@ export default function Plans() {
 	}, []);
 
 	const handleButtonClick = () => {
-		setSnackbarOpen(true);
+		// Open Google Play Store for app installation/upgrade
+		window.location.href = "https://play.google.com/store/apps/details?id=com.yilgor.memodeck";
 	};
 
 	return (
@@ -370,20 +367,6 @@ export default function Plans() {
 							/>
 						))}
 			</Box>
-			<Snackbar
-				open={snackbarOpen}
-				autoHideDuration={6000}
-				onClose={() => setSnackbarOpen(false)}
-				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-			>
-				<Alert
-					onClose={() => setSnackbarOpen(false)}
-					severity="info"
-					sx={{ width: "100%" }}
-				>
-					{t("plans_mobile_only") || "This can be done only by mobile"}
-				</Alert>
-			</Snackbar>
 		</PageContainer>
 	);
 }
