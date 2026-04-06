@@ -154,7 +154,8 @@ module.exports = (pool) => {
 				"SELECT * FROM flashcard WHERE deck_id = $1 AND enabled = TRUE ORDER BY id ASC",
 				[deckId],
 			);
-			res.json({ flashcards: result.rows });
+			const shuffledFlashcards = shuffleArray(result.rows);
+			res.json({ flashcards: shuffledFlashcards });
 		} catch (err) {
 			console.error("Error:", err);
 			res.status(500).json({ error: "Failed to fetch deck data" });
@@ -210,7 +211,8 @@ module.exports = (pool) => {
 				 ORDER BY (correct_count::float / (correct_count + wrong_count)::float) ASC`,
 				[deckId],
 			);
-			res.json({ flashcards: result.rows });
+			const shuffledFlashcards = shuffleArray(result.rows);
+			res.json({ flashcards: shuffledFlashcards });
 		} catch (err) {
 			console.error("Error fetching hard cards:", err);
 			res.status(500).json({ error: "Failed to fetch hard cards" });
@@ -262,7 +264,7 @@ module.exports = (pool) => {
 				"SELECT * FROM flashcard WHERE deck_id = $1 AND enabled = TRUE ORDER BY id ASC",
 				[deckId],
 			);
-			const flashcards = result.rows;
+			const flashcards = shuffleArray(result.rows);
 
 			const correctField = direction === "reverse" ? "front_text" : "back_text";
 
