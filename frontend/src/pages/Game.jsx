@@ -471,13 +471,6 @@ export default function Game({ onBackToDecks }) {
 			}
 
 			switch (e.key) {
-				case " ":
-				case "Enter":
-					e.preventDefault();
-					if (["standard", "reverse"].includes(gameMode)) {
-						handleCardFlip();
-					}
-					break;
 				case "ArrowLeft":
 					e.preventDefault();
 					if (["standard", "reverse"].includes(gameMode)) {
@@ -505,7 +498,6 @@ export default function Game({ onBackToDecks }) {
 		writeResult,
 		showChoiceResult,
 		currentCardIndex,
-		handleCardFlip,
 		handleAnswer,
 	]);
 
