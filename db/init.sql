@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS account_preferences (
   language VARCHAR(10) DEFAULT 'en',
   theme_preference VARCHAR(10) DEFAULT 'light', 
   sound_effects_enabled BOOLEAN DEFAULT TRUE,
+  show_todays_finished_decks BOOLEAN DEFAULT TRUE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

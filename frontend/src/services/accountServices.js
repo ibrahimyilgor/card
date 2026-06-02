@@ -24,6 +24,15 @@ export const updateKeyboardShortcuts = (
 		accountId,
 	});
 
+export const updateShowTodaysFinishedDecks = (
+	show_todays_finished_decks,
+	accountId,
+) =>
+	api.put("/account/profile/show-todays-finished", {
+		show_todays_finished_decks,
+		accountId,
+	});
+
 // Plans
 export const getAllPlans = () => api.get("/account/plans");
 export const getMyPlan = () => api.get("/account/my-plan");

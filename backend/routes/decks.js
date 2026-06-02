@@ -76,9 +76,14 @@ module.exports = (pool) => {
 	router.get("/", authenticateToken, async (req, res) => {
 		const accountId = req.user.accountId;
 		try {
+			// Include finished_today flag per deck for this account
 			const result = await pool.query(
 				`
-				SELECT d.*, COUNT(f.id) as flashcard_count 
+				SELECT d.*, COUNT(f.id) as flashcard_count,
+				EXISTS(
+					SELECT 1 FROM study_session s
+					WHERE s.account_id = $1 AND s.deck_id = d.id AND DATE(s.session_date) = CURRENT_DATE
+				) AS finished_today
 				FROM deck d 
 				LEFT JOIN flashcard f ON d.id = f.deck_id 
 				WHERE d.account_id = $1 
@@ -89,6 +94,7 @@ module.exports = (pool) => {
 			);
 			res.json({ decks: result.rows });
 		} catch (err) {
+			console.error(err);
 			res.status(500).json({ error: "Failed to fetch decks" });
 		}
 	});
@@ -103,7 +109,11 @@ module.exports = (pool) => {
 		try {
 			const result = await pool.query(
 				`
-				SELECT d.*, COUNT(f.id) as flashcard_count 
+				SELECT d.*, COUNT(f.id) as flashcard_count,
+				EXISTS(
+					SELECT 1 FROM study_session s
+					WHERE s.account_id = $1 AND s.deck_id = d.id AND DATE(s.session_date) = CURRENT_DATE
+				) AS finished_today
 				FROM deck d 
 				LEFT JOIN flashcard f ON d.id = f.deck_id 
 				WHERE d.account_id = $1 
@@ -114,6 +124,7 @@ module.exports = (pool) => {
 			);
 			res.json({ decks: result.rows });
 		} catch (err) {
+			console.error(err);
 			res.status(500).json({ error: "Failed to fetch decks" });
 		}
 	});

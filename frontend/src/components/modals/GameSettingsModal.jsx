@@ -15,6 +15,7 @@ import {
 	Slider,
 	alpha,
 	useTheme,
+	Skeleton,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
@@ -90,15 +91,9 @@ function SettingOption({
 						alignItems: "center",
 						justifyContent: "center",
 						background: iconColor
-							? `linear-gradient(135deg, ${alpha(iconColor, 0.2)} 0%, ${alpha(
-									iconColor,
-									0.1,
-								)} 100%)`
+							? `linear-gradient(135deg, ${alpha(iconColor, 0.2)} 0%, ${alpha(iconColor, 0.1)} 100%)`
 							: (theme) =>
-									`linear-gradient(135deg, ${alpha(
-										theme.palette.primary.main,
-										0.15,
-									)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+									`linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.15)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
 						border: iconColor
 							? `1px solid ${alpha(iconColor, 0.3)}`
 							: (theme) =>
@@ -228,10 +223,12 @@ export default function GameSettingsModal({
 	});
 	const [deckFlashcardCount, setDeckFlashcardCount] = useState(0);
 	const [loading, setLoading] = useState(false);
+	const [fetching, setFetching] = useState(false);
 
 	useEffect(() => {
 		const fetchSettings = async () => {
 			if (!deckId || !open) return;
+			setFetching(true);
 			try {
 				const res = await getDeckSettings(deckId);
 				if (res.data && res.data.settings) {
@@ -269,6 +266,8 @@ export default function GameSettingsModal({
 				}
 			} catch (err) {
 				console.error("Error fetching deck settings:", err);
+			} finally {
+				setFetching(false);
 			}
 		};
 		fetchSettings();
@@ -374,21 +373,9 @@ export default function GameSettingsModal({
 				</>
 			}
 		>
-			<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-				{/* Game Mode Selection */}
-				<Box>
-					<Typography
-						variant="subtitle2"
-						sx={{
-							fontWeight: 600,
-							color: "text.cardTitle",
-							fontFamily: "Inter, sans-serif",
-							mb: 2,
-						}}
-					>
-						{t("select_game_mode") || "Select Game Mode"}
-					</Typography>
-
+			{fetching ? (
+				<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+					<Skeleton variant="text" width={220} height={28} />
 					<Box
 						sx={{
 							display: "grid",
@@ -399,298 +386,108 @@ export default function GameSettingsModal({
 							gap: 1.5,
 						}}
 					>
-						{GAME_MODES.map((mode) => (
-							<ModeCard
-								key={mode.value}
-								mode={mode}
-								selected={settings.mode === mode.value}
-								onClick={() =>
-									setSettings((prev) => ({ ...prev, mode: mode.value }))
-								}
-								t={t}
-							/>
+						{Array.from({ length: 4 }).map((_, i) => (
+							<Box key={i} sx={{ p: 2, borderRadius: 2 }}>
+								<Skeleton variant="rectangular" height={64} />
+								<Skeleton variant="text" width="60%" sx={{ mt: 1 }} />
+							</Box>
 						))}
 					</Box>
-
-					{/* Mode description */}
-					<MotionBox
-						key={settings.mode}
-						initial={{ y: 5 }}
-						animate={{ y: 0 }}
-						sx={{
-							mt: 2,
-							p: 2,
-							background: alpha(selectedMode?.color || "#3b82f6", 0.08),
-							border: `1px solid ${alpha(
-								selectedMode?.color || "#3b82f6",
-								0.2,
-							)}`,
-							borderRadius: 1,
-						}}
-					>
+					<Box sx={{ display: "grid", gap: 1, mt: 1 }}>
+						<Skeleton variant="text" width="40%" />
+						<Skeleton variant="rectangular" height={36} />
+						<Skeleton variant="text" width="40%" />
+						<Skeleton variant="rectangular" height={36} />
+					</Box>
+				</Box>
+			) : (
+				<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+					{/* Game Mode Selection */}
+					<Box>
 						<Typography
-							variant="body2"
+							variant="subtitle2"
 							sx={{
-								color: selectedMode?.color || "primary.main",
+								fontWeight: 600,
+								color: "text.cardTitle",
 								fontFamily: "Inter, sans-serif",
-								fontWeight: 500,
+								mb: 2,
 							}}
 						>
-							{getModeDescription()}
+							{t("select_game_mode") || "Select Game Mode"}
 						</Typography>
-					</MotionBox>
-				</Box>
 
-				{/* Challenge Type Selection */}
-				<Box>
-					<Typography
-						variant="subtitle2"
-						sx={{
-							fontWeight: 600,
-							color: "text.cardTitle",
-							fontFamily: "Inter, sans-serif",
-							mb: 2,
-						}}
-					>
-						{t("challenge_type") || "Challenge Type"}
-					</Typography>
-
-					<ToggleButtonGroup
-						value={settings.challengeType}
-						exclusive
-						onChange={(e, value) => {
-							if (value !== null) {
-								setSettings((prev) => ({ ...prev, challengeType: value }));
-							}
-						}}
-						size="small"
-						fullWidth
-						sx={{
-							width: "100%",
-							"& .MuiToggleButton-root": {
-								flex: 1,
-								px: 2,
-								py: 1.5,
-								fontFamily: "Inter, sans-serif",
-								fontSize: "0.875rem",
-								fontWeight: 500,
-								textTransform: "none",
-								display: "flex",
-								flexDirection: "column",
-								gap: 0.5,
-								border: (theme) => `1px solid ${theme.palette.border.main}`,
-								"&.Mui-selected": {
-									backgroundColor: (theme) => {
-										const challenge = CHALLENGE_TYPES.find(
-											(c) => c.value === settings.challengeType,
-										);
-										return alpha(challenge?.color || "#6b7280", 0.15);
-									},
-									color: (theme) => {
-										const challenge = CHALLENGE_TYPES.find(
-											(c) => c.value === settings.challengeType,
-										);
-										return challenge?.color || "#6b7280";
-									},
-									borderColor: (theme) => {
-										const challenge = CHALLENGE_TYPES.find(
-											(c) => c.value === settings.challengeType,
-										);
-										return challenge?.color || "#6b7280";
-									},
-									"&:hover": {
-										backgroundColor: (theme) => {
-											const challenge = CHALLENGE_TYPES.find(
-												(c) => c.value === settings.challengeType,
-											);
-											return alpha(challenge?.color || "#6b7280", 0.25);
-										},
-									},
+						<Box
+							sx={{
+								display: "grid",
+								gridTemplateColumns: {
+									xs: "repeat(2, 1fr)",
+									sm: "repeat(4, 1fr)",
 								},
-								"&.Mui-disabled": {
-									opacity: 0.4,
-								},
-							},
-						}}
-					>
-						<ToggleButton value="none">
-							<TuneIcon sx={{ fontSize: 20, mb: 0.5 }} />
-							{t("challenge_none") || "None"}
-						</ToggleButton>
-						<ToggleButton value="timed">
-							<TimerIcon
-								sx={{
-									fontSize: 20,
-									mb: 0.5,
-									color:
-										settings.challengeType === "timed" ? "#f59e0b" : "inherit",
-								}}
-							/>
-							{t("challenge_timed") || "Timed"}
-						</ToggleButton>
-						<ToggleButton value="survival" disabled={settings.mode === "match"}>
-							<FavoriteIcon
-								sx={{
-									fontSize: 20,
-									mb: 0.5,
-									color:
-										settings.challengeType === "survival"
-											? "#ef4444"
-											: "inherit",
-								}}
-							/>
-							{t("challenge_survival") || "Survival"}
-						</ToggleButton>
-					</ToggleButtonGroup>
+								gap: 1.5,
+							}}
+						>
+							{GAME_MODES.map((mode) => (
+								<ModeCard
+									key={mode.value}
+									mode={mode}
+									selected={settings.mode === mode.value}
+									onClick={() =>
+										setSettings((prev) => ({ ...prev, mode: mode.value }))
+									}
+									t={t}
+								/>
+							))}
+						</Box>
 
-					{/* Challenge description */}
-					{settings.challengeType !== "none" && (
+						{/* Mode description */}
 						<MotionBox
-							key={settings.challengeType}
+							key={settings.mode}
 							initial={{ y: 5 }}
 							animate={{ y: 0 }}
 							sx={{
 								mt: 2,
 								p: 2,
-								borderRadius: 2,
-								background: alpha(selectedChallenge?.color || "#6b7280", 0.08),
-								border: `1px solid ${alpha(selectedChallenge?.color || "#6b7280", 0.2)}`,
+								background: alpha(selectedMode?.color || "#3b82f6", 0.08),
+								border: `1px solid ${alpha(
+									selectedMode?.color || "#3b82f6",
+									0.2,
+								)}`,
+								borderRadius: 1,
 							}}
 						>
 							<Typography
 								variant="body2"
 								sx={{
-									color: selectedChallenge?.color || "text.secondary",
+									color: selectedMode?.color || "primary.main",
 									fontFamily: "Inter, sans-serif",
 									fontWeight: 500,
 								}}
 							>
-								{settings.challengeType === "timed"
-									? t("challenge_timed_desc") ||
-										"Race against the clock - answer as many cards as possible before time runs out!"
-									: t("challenge_survival_desc") ||
-										"Limited lives - one wrong answer costs a life. Survive as long as you can!"}
+								{getModeDescription()}
 							</Typography>
 						</MotionBox>
-					)}
-				</Box>
+					</Box>
 
-				{/* Challenge-specific settings */}
-				{settings.challengeType === "timed" && (
-					<MotionBox
-						initial={{ height: 0 }}
-						animate={{ height: "auto" }}
-						exit={{ height: 0 }}
-					>
-						<SettingOption
-							icon={TimerIcon}
-							title={t("game_duration") || "Game Duration"}
-							description={t("game_duration_desc") || "Total time for the game"}
-							iconColor="#f59e0b"
+					{/* Challenge Type Selection */}
+					<Box>
+						<Typography
+							variant="subtitle2"
+							sx={{
+								fontWeight: 600,
+								color: "text.cardTitle",
+								fontFamily: "Inter, sans-serif",
+								mb: 2,
+							}}
 						>
-							<ToggleButtonGroup
-								value={settings.timeLimit}
-								exclusive
-								onChange={(e, value) => {
-									if (value !== null) {
-										setSettings((prev) => ({ ...prev, timeLimit: value }));
-									}
-								}}
-								size="small"
-								fullWidth
-								sx={{
-									width: "100%",
-									"& .MuiToggleButton-root": {
-										flex: 1,
-										px: { xs: 1, sm: 2, md: 3 },
-										py: 0.5,
-										fontFamily: "Inter, sans-serif",
-										fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
-										fontWeight: 500,
-										textTransform: "none",
-										whiteSpace: "nowrap",
-										border: (theme) => `1px solid ${theme.palette.border.main}`,
-										"&.Mui-selected": {
-											backgroundColor: alpha("#f59e0b", 0.15),
-											color: "#f59e0b",
-											borderColor: "#f59e0b",
-											"&:hover": {
-												backgroundColor: alpha("#f59e0b", 0.25),
-											},
-										},
-									},
-								}}
-							>
-								<ToggleButton value={60}>
-									1 {t("minutes_short") || "min"}
-								</ToggleButton>
-								<ToggleButton value={180}>
-									3 {t("minutes_short") || "min"}
-								</ToggleButton>
-								<ToggleButton value={300}>
-									5 {t("minutes_short") || "min"}
-								</ToggleButton>
-								<ToggleButton value={600}>
-									10 {t("minutes_short") || "min"}
-								</ToggleButton>
-							</ToggleButtonGroup>
-						</SettingOption>
-					</MotionBox>
-				)}
+							{t("challenge_type") || "Challenge Type"}
+						</Typography>
 
-				{settings.challengeType === "survival" && (
-					<MotionBox
-						initial={{ height: 0 }}
-						animate={{ height: "auto" }}
-						exit={{ height: 0 }}
-					>
-						<SettingOption
-							icon={FavoriteIcon}
-							title={t("starting_lives") || "Starting Lives"}
-							description={`${settings.lives} ${t("lives") || "lives"}`}
-							iconColor="#ef4444"
-						>
-							<Box sx={{ width: 120 }}>
-								<Slider
-									value={settings.lives}
-									onChange={(e, value) =>
-										setSettings((prev) => ({ ...prev, lives: value }))
-									}
-									min={1}
-									max={5}
-									step={1}
-									marks
-									sx={{
-										color: "#ef4444",
-										"& .MuiSlider-thumb": {
-											"&:hover, &.Mui-focusVisible": {
-												boxShadow: `0 0 0 8px ${alpha("#ef4444", 0.16)}`,
-											},
-										},
-									}}
-								/>
-							</Box>
-						</SettingOption>
-					</MotionBox>
-				)}
-
-				{/* Card Direction Option */}
-				{settings.mode !== "match" && (
-					<SettingOption
-						icon={SwapHorizIcon}
-						title={t("card_direction") || "Card Direction"}
-						description={
-							t("card_direction_desc") || "Choose which side to show first"
-						}
-						iconColor="#06b6d4"
-						delay={0.1}
-					>
 						<ToggleButtonGroup
-							value={settings.cardDirection}
+							value={settings.challengeType}
 							exclusive
 							onChange={(e, value) => {
 								if (value !== null) {
-									setSettings((prev) => ({ ...prev, cardDirection: value }));
+									setSettings((prev) => ({ ...prev, challengeType: value }));
 								}
 							}}
 							size="small"
@@ -699,109 +496,353 @@ export default function GameSettingsModal({
 								width: "100%",
 								"& .MuiToggleButton-root": {
 									flex: 1,
-									width: "50%",
-									minWidth: 0,
 									px: 2,
-									py: 0.5,
+									py: 1.5,
 									fontFamily: "Inter, sans-serif",
-									fontSize: "0.75rem",
+									fontSize: "0.875rem",
 									fontWeight: 500,
 									textTransform: "none",
+									display: "flex",
+									flexDirection: "column",
+									gap: 0.5,
 									border: (theme) => `1px solid ${theme.palette.border.main}`,
 									"&.Mui-selected": {
-										backgroundColor: alpha("#06b6d4", 0.15),
-										color: "#06b6d4",
-										borderColor: "#06b6d4",
-										"&:hover": {
-											backgroundColor: alpha("#06b6d4", 0.25),
+										backgroundColor: (theme) => {
+											const challenge = CHALLENGE_TYPES.find(
+												(c) => c.value === settings.challengeType,
+											);
+											return alpha(challenge?.color || "#6b7280", 0.15);
 										},
+										color: (theme) => {
+											const challenge = CHALLENGE_TYPES.find(
+												(c) => c.value === settings.challengeType,
+											);
+											return challenge?.color || "#6b7280";
+										},
+										borderColor: (theme) => {
+											const challenge = CHALLENGE_TYPES.find(
+												(c) => c.value === settings.challengeType,
+											);
+											return challenge?.color || "#6b7280";
+										},
+										"&:hover": {
+											backgroundColor: (theme) => {
+												const challenge = CHALLENGE_TYPES.find(
+													(c) => c.value === settings.challengeType,
+												);
+												return alpha(challenge?.color || "#6b7280", 0.25);
+											},
+										},
+									},
+									"&.Mui-disabled": {
+										opacity: 0.4,
 									},
 								},
 							}}
 						>
-							<ToggleButton value="normal">
-								{t("direction_normal") || "Normal"}
+							<ToggleButton value="none">
+								<TuneIcon sx={{ fontSize: 20, mb: 0.5 }} />
+								{t("challenge_none") || "None"}
 							</ToggleButton>
-							<ToggleButton value="reverse">
-								{t("direction_reverse") || "Reverse"}
+							<ToggleButton value="timed">
+								<TimerIcon
+									sx={{
+										fontSize: 20,
+										mb: 0.5,
+										color:
+											settings.challengeType === "timed"
+												? "#f59e0b"
+												: "inherit",
+									}}
+								/>
+								{t("challenge_timed") || "Timed"}
+							</ToggleButton>
+							<ToggleButton
+								value="survival"
+								disabled={settings.mode === "match"}
+							>
+								<FavoriteIcon
+									sx={{
+										fontSize: 20,
+										mb: 0.5,
+										color:
+											settings.challengeType === "survival"
+												? "#ef4444"
+												: "inherit",
+									}}
+								/>
+								{t("challenge_survival") || "Survival"}
 							</ToggleButton>
 						</ToggleButtonGroup>
-					</SettingOption>
-				)}
 
-				{settings.challengeType === "none" && (
-					<SettingOption
-						icon={SpeedIcon}
-						title={t("card_count") || "Card Count"}
-						description={
-							t("card_count_desc") || "Choose how many random cards to study"
-						}
-						iconColor="#3b82f6"
-						delay={0.12}
-					>
-						<Box sx={{ minWidth: 170 }}>
-							<Slider
-								value={displaySelectedCardCount || 1}
-								onChange={(e, value) =>
-									setSettings((prev) => ({
-										...prev,
-										standardCardCount: value,
-									}))
-								}
-								min={1}
-								max={maxStandardCards}
-								step={1}
-								disabled={deckFlashcardCount === 0}
-								valueLabelDisplay="auto"
+						{/* Challenge description */}
+						{settings.challengeType !== "none" && (
+							<MotionBox
+								key={settings.challengeType}
+								initial={{ y: 5 }}
+								animate={{ y: 0 }}
 								sx={{
-									color: "#3b82f6",
-									"& .MuiSlider-thumb": {
-										"&:hover, &.Mui-focusVisible": {
-											boxShadow: `0 0 0 8px ${alpha("#3b82f6", 0.16)}`,
+									mt: 2,
+									p: 2,
+									borderRadius: 2,
+									background: alpha(
+										selectedChallenge?.color || "#6b7280",
+										0.08,
+									),
+									border: `1px solid ${alpha(selectedChallenge?.color || "#6b7280", 0.2)}`,
+								}}
+							>
+								<Typography
+									variant="body2"
+									sx={{
+										color: selectedChallenge?.color || "text.secondary",
+										fontFamily: "Inter, sans-serif",
+										fontWeight: 500,
+									}}
+								>
+									{settings.challengeType === "timed"
+										? t("challenge_timed_desc") ||
+											"Race against the clock - answer as many cards as possible before time runs out!"
+										: t("challenge_survival_desc") ||
+											"Limited lives - one wrong answer costs a life. Survive as long as you can!"}
+								</Typography>
+							</MotionBox>
+						)}
+					</Box>
+
+					{/* Challenge-specific settings */}
+					{settings.challengeType === "timed" && (
+						<MotionBox
+							initial={{ height: 0 }}
+							animate={{ height: "auto" }}
+							exit={{ height: 0 }}
+						>
+							<SettingOption
+								icon={TimerIcon}
+								title={t("game_duration") || "Game Duration"}
+								description={
+									t("game_duration_desc") || "Total time for the game"
+								}
+								iconColor="#f59e0b"
+							>
+								<ToggleButtonGroup
+									value={settings.timeLimit}
+									exclusive
+									onChange={(e, value) => {
+										if (value !== null) {
+											setSettings((prev) => ({ ...prev, timeLimit: value }));
+										}
+									}}
+									size="small"
+									fullWidth
+									sx={{
+										width: "100%",
+										"& .MuiToggleButton-root": {
+											flex: 1,
+											px: { xs: 1, sm: 2, md: 3 },
+											py: 0.5,
+											fontFamily: "Inter, sans-serif",
+											fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
+											fontWeight: 500,
+											textTransform: "none",
+											whiteSpace: "nowrap",
+											border: (theme) =>
+												`1px solid ${theme.palette.border.main}`,
+											"&.Mui-selected": {
+												backgroundColor: alpha("#f59e0b", 0.15),
+												color: "#f59e0b",
+												borderColor: "#f59e0b",
+												"&:hover": {
+													backgroundColor: alpha("#f59e0b", 0.25),
+												},
+											},
+										},
+									}}
+								>
+									<ToggleButton value={60}>
+										1 {t("minutes_short") || "min"}
+									</ToggleButton>
+									<ToggleButton value={180}>
+										3 {t("minutes_short") || "min"}
+									</ToggleButton>
+									<ToggleButton value={300}>
+										5 {t("minutes_short") || "min"}
+									</ToggleButton>
+									<ToggleButton value={600}>
+										10 {t("minutes_short") || "min"}
+									</ToggleButton>
+								</ToggleButtonGroup>
+							</SettingOption>
+						</MotionBox>
+					)}
+
+					{settings.challengeType === "survival" && (
+						<MotionBox
+							initial={{ height: 0 }}
+							animate={{ height: "auto" }}
+							exit={{ height: 0 }}
+						>
+							<SettingOption
+								icon={FavoriteIcon}
+								title={t("starting_lives") || "Starting Lives"}
+								description={`${settings.lives} ${t("lives") || "lives"}`}
+								iconColor="#ef4444"
+							>
+								<Box sx={{ width: 120 }}>
+									<Slider
+										value={settings.lives}
+										onChange={(e, value) =>
+											setSettings((prev) => ({ ...prev, lives: value }))
+										}
+										min={1}
+										max={5}
+										step={1}
+										marks
+										sx={{
+											color: "#ef4444",
+											"& .MuiSlider-thumb": {
+												"&:hover, &.Mui-focusVisible": {
+													boxShadow: `0 0 0 8px ${alpha("#ef4444", 0.16)}`,
+												},
+											},
+										}}
+									/>
+								</Box>
+							</SettingOption>
+						</MotionBox>
+					)}
+
+					{/* Card Direction Option */}
+					{settings.mode !== "match" && (
+						<SettingOption
+							icon={SwapHorizIcon}
+							title={t("card_direction") || "Card Direction"}
+							description={
+								t("card_direction_desc") || "Choose which side to show first"
+							}
+							iconColor="#06b6d4"
+							delay={0.1}
+						>
+							<ToggleButtonGroup
+								value={settings.cardDirection}
+								exclusive
+								onChange={(e, value) => {
+									if (value !== null) {
+										setSettings((prev) => ({ ...prev, cardDirection: value }));
+									}
+								}}
+								size="small"
+								fullWidth
+								sx={{
+									width: "100%",
+									"& .MuiToggleButton-root": {
+										flex: 1,
+										width: "50%",
+										minWidth: 0,
+										px: 2,
+										py: 0.5,
+										fontFamily: "Inter, sans-serif",
+										fontSize: "0.75rem",
+										fontWeight: 500,
+										textTransform: "none",
+										border: (theme) => `1px solid ${theme.palette.border.main}`,
+										"&.Mui-selected": {
+											backgroundColor: alpha("#06b6d4", 0.15),
+											color: "#06b6d4",
+											borderColor: "#06b6d4",
+											"&:hover": {
+												backgroundColor: alpha("#06b6d4", 0.25),
+											},
 										},
 									},
 								}}
-							/>
-							<Typography
-								variant="caption"
-								sx={{
-									display: "block",
-									textAlign: "center",
-									color: "text.cardSubtitle",
-									fontFamily: "Inter, sans-serif",
-								}}
 							>
-								{`${displaySelectedCardCount} / ${displayMaxStandardCards}`}
-							</Typography>
-						</Box>
-					</SettingOption>
-				)}
+								<ToggleButton value="normal">
+									{t("direction_normal") || "Normal"}
+								</ToggleButton>
+								<ToggleButton value="reverse">
+									{t("direction_reverse") || "Reverse"}
+								</ToggleButton>
+							</ToggleButtonGroup>
+						</SettingOption>
+					)}
 
-				{/* Hard Mode Option */}
-				<SettingOption
-					icon={WhatshotIcon}
-					title={t("hard_mode") || "Hard Mode"}
-					description={t("hard_mode_desc") || "Only study cards you got wrong"}
-					iconColor="#f97316"
-					delay={0.15}
-				>
-					<Checkbox
-						checked={settings.hardModeEnabled}
-						onChange={(e) =>
-							setSettings((prev) => ({
-								...prev,
-								hardModeEnabled: e.target.checked,
-							}))
+					{settings.challengeType === "none" && (
+						<SettingOption
+							icon={SpeedIcon}
+							title={t("card_count") || "Card Count"}
+							description={
+								t("card_count_desc") || "Choose how many random cards to study"
+							}
+							iconColor="#3b82f6"
+							delay={0.12}
+						>
+							<Box sx={{ minWidth: 170 }}>
+								<Slider
+									value={displaySelectedCardCount || 1}
+									onChange={(e, value) =>
+										setSettings((prev) => ({
+											...prev,
+											standardCardCount: value,
+										}))
+									}
+									min={1}
+									max={maxStandardCards}
+									step={1}
+									disabled={deckFlashcardCount === 0}
+									valueLabelDisplay="auto"
+									sx={{
+										color: "#3b82f6",
+										"& .MuiSlider-thumb": {
+											"&:hover, &.Mui-focusVisible": {
+												boxShadow: `0 0 0 8px ${alpha("#3b82f6", 0.16)}`,
+											},
+										},
+									}}
+								/>
+								<Typography
+									variant="caption"
+									sx={{
+										display: "block",
+										textAlign: "center",
+										color: "text.cardSubtitle",
+										fontFamily: "Inter, sans-serif",
+									}}
+								>
+									{`${displaySelectedCardCount} / ${displayMaxStandardCards}`}
+								</Typography>
+							</Box>
+						</SettingOption>
+					)}
+
+					{/* Hard Mode Option */}
+					<SettingOption
+						icon={WhatshotIcon}
+						title={t("hard_mode") || "Hard Mode"}
+						description={
+							t("hard_mode_desc") || "Only study cards you got wrong"
 						}
-						sx={{
-							color: "#f97316",
-							"&.Mui-checked": {
+						iconColor="#f97316"
+						delay={0.15}
+					>
+						<Checkbox
+							checked={settings.hardModeEnabled}
+							onChange={(e) =>
+								setSettings((prev) => ({
+									...prev,
+									hardModeEnabled: e.target.checked,
+								}))
+							}
+							sx={{
 								color: "#f97316",
-							},
-						}}
-					/>
-				</SettingOption>
-			</Box>
+								"&.Mui-checked": {
+									color: "#f97316",
+								},
+							}}
+						/>
+					</SettingOption>
+				</Box>
+			)}
 		</StyledModal>
 	);
 }

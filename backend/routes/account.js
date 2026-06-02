@@ -104,6 +104,30 @@ module.exports = (pool) => {
 		}
 	});
 
+	// Update show_todays_finished_decks preference
+	router.put(
+		"/profile/show-todays-finished",
+		authenticateToken,
+		async (req, res) => {
+			const { show_todays_finished_decks } = req.body;
+			const accountId = req.user.accountId;
+			if (typeof show_todays_finished_decks !== "boolean")
+				return res
+					.status(400)
+					.json({ error: "show_todays_finished_decks is required" });
+			try {
+				await pool.query(
+					"UPDATE account_preferences SET show_todays_finished_decks = $1, updated_at = CURRENT_TIMESTAMP WHERE account_id = $2",
+					[show_todays_finished_decks, accountId],
+				);
+				res.json({ success: true, show_todays_finished_decks });
+			} catch (err) {
+				console.error(err);
+				res.status(500).json({ error: "Failed to update preference" });
+			}
+		},
+	);
+
 	// Account stats endpoint
 	router.get("/stats", authenticateToken, async (req, res) => {
 		try {
@@ -295,12 +319,10 @@ module.exports = (pool) => {
 			} = req.body || {};
 
 			if (platform !== "google_play") {
-				return res
-					.status(400)
-					.json({
-						error: "Unsupported platform",
-						code: "UNSUPPORTED_PLATFORM",
-					});
+				return res.status(400).json({
+					error: "Unsupported platform",
+					code: "UNSUPPORTED_PLATFORM",
+				});
 			}
 
 			if (!productId || !purchaseToken) {
@@ -364,12 +386,10 @@ module.exports = (pool) => {
 				? new Date(verification.currentPeriodEnd)
 				: null;
 			if (parsedPeriodEnd && Number.isNaN(parsedPeriodEnd.getTime())) {
-				return res
-					.status(400)
-					.json({
-						error: "Invalid currentPeriodEnd",
-						code: "INVALID_PERIOD_END",
-					});
+				return res.status(400).json({
+					error: "Invalid currentPeriodEnd",
+					code: "INVALID_PERIOD_END",
+				});
 			}
 
 			const effectivePeriodEnd = parsedPeriodEnd

@@ -476,5 +476,8 @@
 	"disabled": "devre dışı",
 	"cards_flashcard_count": "kart",
 	"add_flashcard_desc": "Çalışmaya başlamak için kart ekleyin",
-	"view_price_mobile": "Fiyatları görmek için mobil uygulamayı kullanın"
+	"view_price_mobile": "Fiyatları görmek için mobil uygulamayı kullanın",
+	"show_finished_today": "Bugün çalışılan desteleri göster",
+	"show_finished_today_desc": "Anasayfada destelerinizin bugün çalışılıp çalışılmadığını göster",
+	"completed_today": "Tamamlandı"
 }

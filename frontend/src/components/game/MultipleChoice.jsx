@@ -1,8 +1,6 @@
-import { useState, useContext } from "react";
+import { useContext } from "react";
 import { Box, Typography, alpha, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
 import { I18nContext } from "../../utils/i18n";
 
 const MotionBox = motion.create(Box);
@@ -63,7 +61,7 @@ export default function MultipleChoice({
 	};
 
 	return (
-		<Box sx={{ width: "100%", maxWidth: 600, mx: "auto" }}>
+		<Box sx={{ width: "100%", maxWidth: 600, mx: "auto", overflowX: "hidden" }}>
 			<Box
 				sx={{
 					display: "grid",
@@ -81,10 +79,15 @@ export default function MultipleChoice({
 							initial={{ y: 20 }}
 							animate={{ y: 0 }}
 							transition={{ delay: index * 0.1 }}
-							whileHover={!disabled && !showResult ? { scale: 1.02 } : {}}
+							whileHover={{}}
 							whileTap={!disabled && !showResult ? { scale: 0.98 } : {}}
 							onClick={() => handleSelect(index)}
 							sx={{
+								width: "100%",
+								boxSizing: "border-box",
+								transformOrigin: "center",
+								willChange: "transform",
+								overflow: "hidden",
 								p: 2.5,
 								borderRadius: 2,
 								border: `2px solid`,
@@ -99,7 +102,11 @@ export default function MultipleChoice({
 									!disabled && !showResult
 										? {
 												borderColor: theme.palette.primary.main,
-												background: alpha(theme.palette.primary.main, 0.08),
+												background: alpha(theme.palette.primary.main, 0.06),
+												boxShadow: `inset 0 0 0 2px ${alpha(
+													theme.palette.primary.main,
+													0.18,
+												)}`,
 											}
 										: {},
 							}}
@@ -155,19 +162,7 @@ export default function MultipleChoice({
 								{option.text}
 							</Typography>
 
-							{/* Result icon */}
-							{showResult &&
-								(option.isCorrect || (isSelected && !option.isCorrect)) && (
-									<Box sx={{ flexShrink: 0 }}>
-										{option.isCorrect ? (
-											<CheckCircleIcon
-												sx={{ color: "#22c55e", fontSize: 24 }}
-											/>
-										) : (
-											<CancelIcon sx={{ color: "#ef4444", fontSize: 24 }} />
-										)}
-									</Box>
-								)}
+							{/* Result icon removed per UX request */}
 						</MotionBox>
 					);
 				})}

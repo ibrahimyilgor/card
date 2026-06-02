@@ -20,6 +20,7 @@ import {
 	updateLanguage,
 	updateSoundEffects,
 	getProfile,
+	updateShowTodaysFinishedDecks,
 } from "../services/accountServices";
 import TranslateIcon from "@mui/icons-material/Translate";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
@@ -164,6 +165,9 @@ export default function Settings({
 		() => localStorage.getItem("soundEnabled") !== "false",
 	);
 
+	// Show "Finished today" preference
+	const [showTodaysFinished, setShowTodaysFinished] = useState(true);
+
 	// Load preferences from database on mount
 	useEffect(() => {
 		const loadPreferences = async () => {
@@ -175,6 +179,10 @@ export default function Settings({
 					if (profile.sound_effects_enabled !== undefined) {
 						setSoundEnabled(profile.sound_effects_enabled);
 						localStorage.setItem("soundEnabled", profile.sound_effects_enabled);
+					}
+					// show todays finished decks preference
+					if (profile.show_todays_finished_decks !== undefined) {
+						setShowTodaysFinished(profile.show_todays_finished_decks);
 					}
 				}
 			} catch (error) {
@@ -223,6 +231,15 @@ export default function Settings({
 				);
 			localStorage.setItem("soundEnabled", soundEnabled);
 
+			// Update show todays finished decks preference
+			const showRes = await updateShowTodaysFinishedDecks(
+				showTodaysFinished,
+				accountId,
+			);
+			if (showRes.status !== 200)
+				throw new Error(showRes.data?.error || "Failed to update preference");
+			localStorage.setItem("showTodaysFinished", showTodaysFinished);
+
 			setSaveSuccess(true);
 			setSnackbar({
 				open: true,
@@ -245,7 +262,9 @@ export default function Settings({
 	const hasChanges =
 		selectedTheme !== currentTheme ||
 		selectedLang !== (localStorage.getItem("lang") || "en") ||
-		soundEnabled !== (localStorage.getItem("soundEnabled") !== "false");
+		soundEnabled !== (localStorage.getItem("soundEnabled") !== "false") ||
+		showTodaysFinished !==
+			(localStorage.getItem("showTodaysFinished") !== "false");
 
 	return (
 		<PageContainer>
@@ -387,6 +406,24 @@ export default function Settings({
 								<Switch
 									checked={soundEnabled}
 									onChange={handleSoundChange}
+									color="primary"
+								/>
+							</SettingCard>
+
+							<SettingCard
+								icon={CheckCircleIcon}
+								title={
+									t("show_finished_today") || "Show 'Finished today' on decks"
+								}
+								description={
+									t("show_finished_today_desc") ||
+									"Display a mark on decks that were studied today"
+								}
+								delay={0.35}
+							>
+								<Switch
+									checked={showTodaysFinished}
+									onChange={(e) => setShowTodaysFinished(e.target.checked)}
 									color="primary"
 								/>
 							</SettingCard>
