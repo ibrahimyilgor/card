@@ -45,15 +45,13 @@ const MultipleChoiceView = ({
 		<AnimatePresence mode="wait" initial={false}>
 			<MotionBox
 				key={currentCardIndex}
-				initial={{ y: 20 }}
-				animate={{ y: 0 }}
-				exit={{ y: -20 }}
 				sx={{
 					display: "flex",
 					flexDirection: "column",
 					alignItems: "center",
 					gap: 3,
 					width: "100%",
+					height: "100%",
 				}}
 			>
 				{/* Question */}
@@ -105,14 +103,24 @@ const MultipleChoiceView = ({
 					)}
 				</Box>
 
-				{/* Options */}
-				<MultipleChoice
-					options={flashcard?.options || []}
-					onSelect={onChoiceSelect}
-					disabled={showChoiceResult}
-					showResult={showChoiceResult}
-					selectedIndex={selectedChoice}
-				/>
+				{/* Options - keep question fixed, allow options to scroll if long */}
+				<Box
+					sx={{
+						width: "100%",
+						maxWidth: 700,
+						flex: "1 1 auto",
+						overflowY: "auto",
+						overflowX: "none",
+					}}
+				>
+					<MultipleChoice
+						options={flashcard?.options || []}
+						onSelect={onChoiceSelect}
+						disabled={showChoiceResult}
+						showResult={showChoiceResult}
+						selectedIndex={selectedChoice}
+					/>
+				</Box>
 			</MotionBox>
 		</AnimatePresence>
 	);

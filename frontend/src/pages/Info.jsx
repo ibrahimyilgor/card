@@ -15,6 +15,7 @@ import {
 	deleteDeck,
 	importDeck,
 } from "../services/deckServices";
+import { getProfile } from "../services/accountServices";
 import { getFlashcards } from "../services/flashcardServices";
 import {
 	Box,
@@ -64,7 +65,20 @@ const MotionBox = motion.create(Box);
 
 // Deck card component with animation
 const DeckCard = forwardRef(
-	({ deck, index, onEdit, onCards, onPlay, onDelete, onDownload, t }, ref) => {
+	(
+		{
+			deck,
+			index,
+			onEdit,
+			onCards,
+			onPlay,
+			onDelete,
+			onDownload,
+			t,
+			showTodaysFinishedDecks,
+		},
+		ref,
+	) => {
 		const theme = useTheme();
 		const titleRef = useRef(null);
 		const descRef = useRef(null);
@@ -108,14 +122,20 @@ const DeckCard = forwardRef(
 						display: "flex",
 						flexDirection: "column",
 						width: "100%",
+						position: "relative",
 						minWidth: 0,
 					}}
 				>
-					{/* Card Header with gradient accent */}
+					{/* badge removed: using top accent color to indicate status */}
+					{/* Card Header with gradient accent (red by default, green if finished today) */}
 					<Box
 						sx={{
 							height: 4,
-							background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
+							background: showTodaysFinishedDecks
+								? deck.finished_today
+									? "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
+									: "linear-gradient(90deg, #ef4444 0%, #dc2626 100%)"
+								: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
 						}}
 					/>
 
@@ -392,7 +412,8 @@ export default function Info({ accountId, onStartGame }) {
 	const [selectedDeck, setSelectedDeck] = useState(null);
 	const [gameSettingsModalOpen, setGameSettingsModalOpen] = useState(false);
 	const [selectedDeckForGame, setSelectedDeckForGame] = useState(null);
-	const [selectedDeckForGameTitle, setSelectedDeckForGameTitle] = useState(null);
+	const [selectedDeckForGameTitle, setSelectedDeckForGameTitle] =
+		useState(null);
 
 	// Import modal state
 	const [importModalOpen, setImportModalOpen] = useState(false);
@@ -412,6 +433,24 @@ export default function Info({ accountId, onStartGame }) {
 		if (savedSort && ALLOWED_DECK_SORTS.includes(savedSort)) {
 			setSortBy(savedSort);
 		}
+	}, []);
+
+	// Preference: show today's finished decks
+	const [showTodaysFinishedDecks, setShowTodaysFinishedDecks] = useState(true);
+
+	useEffect(() => {
+		const loadProfile = async () => {
+			try {
+				const res = await getProfile();
+				const profile = res.data?.profile;
+				if (profile && profile.show_todays_finished_decks !== undefined) {
+					setShowTodaysFinishedDecks(profile.show_todays_finished_decks);
+				}
+			} catch (err) {
+				console.error("Failed to load profile", err);
+			}
+		};
+		loadProfile();
 	}, []);
 
 	useEffect(() => {
@@ -917,6 +956,7 @@ export default function Info({ accountId, onStartGame }) {
 									onDelete={handleDeleteClick}
 									onDownload={handleDownloadCSV}
 									t={t}
+									showTodaysFinishedDecks={showTodaysFinishedDecks}
 								/>
 							))}
 						</AnimatePresence>

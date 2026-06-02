@@ -482,5 +482,8 @@
 	"auto_renewal": "Auto Renewal",
 	"will_renew": "Will renew",
 	"will_not_renew": "Will not renew",
-	"view_price_mobile": "Use mobile app to view pricing"
+	"view_price_mobile": "Use mobile app to view pricing",
+	"show_finished_today": "Show finished decks today",
+	"show_finished_today_desc": "Show whether your decks have been finished today on the homepage",
+	"completed_today": "Completed"
 }
