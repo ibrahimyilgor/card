@@ -193,8 +193,8 @@ export default function WriteInput({
 						</Box>
 					)}
 
-					{/* Hint display - reserve fixed space to avoid layout shift */}
-					<Box sx={{ position: "relative", height: 56, width: "100%" }}>
+					{/* Hint display - expand to full content height */}
+					<Box sx={{ position: "relative", width: "100%" }}>
 						<AnimatePresence initial={false}>
 							{showHint && !showResult && (
 								<MotionBox
@@ -203,15 +203,12 @@ export default function WriteInput({
 									exit={{ opacity: 0, scaleY: 0 }}
 									transition={{ duration: 0.18 }}
 									sx={{
-										position: "absolute",
-										left: 0,
-										right: 0,
-										top: 0,
+										position: "relative",
 										p: 2,
 										borderRadius: 2,
 										background: alpha(theme.palette.warning.main, 0.1),
 										border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-										overflow: "hidden",
+										overflow: "visible",
 										transformOrigin: "top",
 										display: "flex",
 										alignItems: "center",
@@ -225,6 +222,8 @@ export default function WriteInput({
 											fontFamily: "monospace",
 											letterSpacing: 2,
 											textAlign: "center",
+											wordBreak: "break-word",
+											whiteSpace: "pre-wrap",
 										}}
 									>
 										{getHint()}

@@ -131,11 +131,10 @@ const DeckCard = forwardRef(
 					<Box
 						sx={{
 							height: 4,
-							background: showTodaysFinishedDecks
-								? deck.finished_today
-									? "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
-									: "linear-gradient(90deg, #ef4444 0%, #dc2626 100%)"
-								: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
+							// Use only green-tone gradients when finished, otherwise only red-tone gradients
+							background: deck.finished_today
+								? "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)"
+								: "linear-gradient(135deg, #dc2626 0%, #ef4444 100%)",
 						}}
 					/>
 

@@ -139,6 +139,51 @@ export default function Game({ onBackToDecks }) {
 	);
 	const lives = useGameLives(settings.lives || 3);
 
+	// Regenerate options for current card every time it's displayed (for timed/survival loops)
+	useEffect(() => {
+		if (gameMode !== "multiple_choice" || !flashcards[currentCardIndex]) return;
+
+		const correctField =
+			cardDirection === "reverse" ? "front_text" : "back_text";
+		const card = flashcards[currentCardIndex];
+		const otherCards = flashcards.filter((_, idx) => idx !== currentCardIndex);
+
+		// Fisher-Yates shuffle
+		const shuffleArray = (arr) => {
+			const shuffled = [...arr];
+			for (let i = shuffled.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+			}
+			return shuffled;
+		};
+
+		// Pick 3 random wrong answers
+		const shuffledOthers = shuffleArray(otherCards).slice(0, 3);
+
+		// Create options with correct answer and random wrong answers
+		const options = [
+			{ text: card[correctField], isCorrect: true },
+			...shuffledOthers.map((c) => ({
+				text: c[correctField],
+				isCorrect: false,
+			})),
+		];
+
+		// Shuffle all options
+		const shuffledOptions = shuffleArray(options);
+
+		// Update options for current card
+		setFlashcards((prev) => {
+			const updated = [...prev];
+			updated[currentCardIndex] = {
+				...updated[currentCardIndex],
+				options: shuffledOptions,
+			};
+			return updated;
+		});
+	}, [currentCardIndex, gameMode, cardDirection, flashcards.length]);
+
 	// Fetch flashcards
 	const fetchFlashcards = useCallback(async () => {
 		setLoading(true);
@@ -160,18 +205,12 @@ export default function Game({ onBackToDecks }) {
 					cards =
 						selectedCardCount === Number.POSITIVE_INFINITY
 							? cards
-							: cards.slice(
-									0,
-									Math.min(selectedCardCount, cards.length),
-								);
+							: cards.slice(0, Math.min(selectedCardCount, cards.length));
 				} else {
 					cards =
 						selectedCardCount === Number.POSITIVE_INFINITY
 							? cards
-							: cards.slice(
-									0,
-									Math.min(selectedCardCount, cards.length),
-								);
+							: cards.slice(0, Math.min(selectedCardCount, cards.length));
 				}
 
 				setFlashcards(cards);
@@ -313,11 +352,14 @@ export default function Game({ onBackToDecks }) {
 				}
 			}
 
-			setCardResults((prev) => [...prev, {
-				front: flashcards[currentCardIndex]?.front_text || "",
-				back: flashcards[currentCardIndex]?.back_text || "",
-				isCorrect,
-			}]);
+			setCardResults((prev) => [
+				...prev,
+				{
+					front: flashcards[currentCardIndex]?.front_text || "",
+					back: flashcards[currentCardIndex]?.back_text || "",
+					isCorrect,
+				},
+			]);
 
 			if (isCorrect) {
 				setScores((prev) => ({ ...prev, correct: prev.correct + 1 }));

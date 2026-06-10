@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { Box, Typography, alpha, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
 import { I18nContext } from "../../utils/i18n";
@@ -17,6 +17,56 @@ export default function MultipleChoice({
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
 	const isDark = theme.palette.mode === "dark";
+
+	// Track pointer state per option so we only confirm selection on pointerup inside
+	const pointerState = useRef({});
+
+	const handlePointerDown = (e, index) => {
+		if (disabled || showResult) return;
+		pointerState.current[index] = { inside: true, active: true };
+		try {
+			e.currentTarget.setPointerCapture?.(e.pointerId);
+		} catch (err) {}
+	};
+
+	const handlePointerMove = (e, index) => {
+		const rect = e.currentTarget.getBoundingClientRect();
+		const inside =
+			e.clientX >= rect.left &&
+			e.clientX <= rect.right &&
+			e.clientY >= rect.top &&
+			e.clientY <= rect.bottom;
+		pointerState.current[index] = {
+			...(pointerState.current[index] || {}),
+			inside,
+		};
+	};
+
+	const handlePointerUp = (e, index) => {
+		const state = pointerState.current[index];
+		if (state && state.inside && state.active && !disabled && !showResult) {
+			onSelect(index, options[index].isCorrect);
+		}
+		try {
+			e.currentTarget.releasePointerCapture?.(e.pointerId);
+		} catch (err) {}
+		pointerState.current[index] = { inside: false, active: false };
+	};
+
+	const handlePointerCancel = (e, index) => {
+		pointerState.current[index] = { inside: false, active: false };
+		try {
+			e.currentTarget.releasePointerCapture?.(e.pointerId);
+		} catch (err) {}
+	};
+
+	const handlePointerLeave = (e, index) => {
+		// mark as outside when the pointer leaves the element
+		pointerState.current[index] = {
+			...(pointerState.current[index] || {}),
+			inside: false,
+		};
+	};
 
 	const handleSelect = (index) => {
 		if (!disabled && !showResult) {
@@ -81,8 +131,17 @@ export default function MultipleChoice({
 							transition={{ delay: index * 0.1 }}
 							whileHover={{}}
 							whileTap={!disabled && !showResult ? { scale: 0.98 } : {}}
-							onClick={() => handleSelect(index)}
+							onPointerDown={(e) => handlePointerDown(e, index)}
+							onPointerMove={(e) => handlePointerMove(e, index)}
+							onPointerUp={(e) => handlePointerUp(e, index)}
+							onPointerCancel={(e) => handlePointerCancel(e, index)}
+							onPointerLeave={(e) => handlePointerLeave(e, index)}
 							sx={{
+								userSelect: "none",
+								WebkitUserSelect: "none",
+								MozUserSelect: "none",
+								msUserSelect: "none",
+								WebkitTouchCallout: "none",
 								width: "100%",
 								boxSizing: "border-box",
 								transformOrigin: "center",
@@ -114,6 +173,11 @@ export default function MultipleChoice({
 							{/* Option label (A, B, C, D) */}
 							<Box
 								sx={{
+									userSelect: "none",
+									WebkitUserSelect: "none",
+									MozUserSelect: "none",
+									msUserSelect: "none",
+									WebkitTouchCallout: "none",
 									width: 36,
 									height: 36,
 									borderRadius: "10px",
@@ -152,6 +216,11 @@ export default function MultipleChoice({
 							<Typography
 								variant="body1"
 								sx={{
+									userSelect: "none",
+									WebkitUserSelect: "none",
+									MozUserSelect: "none",
+									msUserSelect: "none",
+									WebkitTouchCallout: "none",
 									flex: 1,
 									fontFamily: "Inter, sans-serif",
 									fontWeight: 500,
