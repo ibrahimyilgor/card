@@ -1,10 +1,4 @@
-import {
-	useContext,
-	useEffect,
-	useRef,
-	useState,
-	useCallback,
-} from "react";
+import { useContext, useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Box, Typography, IconButton } from "@mui/material";
 import TouchAppIcon from "@mui/icons-material/TouchApp";
@@ -58,7 +52,11 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 	}, [isFlipped, animateBoth]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const handleHoverStart = () => {
-		animateBoth({ scale: 1.02, y: -2, transition: { duration: 0.2, ease: EASE } });
+		animateBoth({
+			scale: 1.02,
+			y: -2,
+			transition: { duration: 0.2, ease: EASE },
+		});
 	};
 
 	const handleHoverEnd = () => {
@@ -80,17 +78,46 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 			if (maxScroll <= 1) return;
 			let y = node.scrollTop || 0;
 			let lastTs = 0;
+			let pauseUntil = 0;
 			const speedPxPerSec = 20;
+			const pauseDurationMs = 1500; // Pause 1.5s at bottom before scrolling back up
 			const tick = (ts) => {
 				const currentNode = containerRef.current;
 				if (!currentNode) return;
-				const currentMax = Math.max(0, currentNode.scrollHeight - currentNode.clientHeight);
-				if (currentMax <= 1) { currentNode.scrollTop = 0; return; }
+				const currentMax = Math.max(
+					0,
+					currentNode.scrollHeight - currentNode.clientHeight,
+				);
+				if (currentMax <= 1) {
+					currentNode.scrollTop = 0;
+					return;
+				}
+
+				// If paused, check if pause duration is over
+				if (pauseUntil > 0) {
+					if (ts < pauseUntil) {
+						rafRef.current = requestAnimationFrame(tick);
+						return;
+					} else {
+						pauseUntil = 0;
+						y = 0;
+						lastTs = ts;
+					}
+				}
+
 				if (!lastTs) lastTs = ts;
 				const dt = Math.min(64, ts - lastTs);
 				lastTs = ts;
 				y += (speedPxPerSec * dt) / 1000;
-				if (y >= currentMax) y = 0;
+
+				// When reaching bottom, start pause
+				if (y >= currentMax) {
+					currentNode.scrollTop = currentMax;
+					pauseUntil = ts + pauseDurationMs;
+					rafRef.current = requestAnimationFrame(tick);
+					return;
+				}
+
 				currentNode.scrollTop = y;
 				rafRef.current = requestAnimationFrame(tick);
 			};
@@ -103,8 +130,12 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 	const evaluateOverflow = useCallback(() => {
 		const frontNode = frontScrollRef.current;
 		const backNode = backScrollRef.current;
-		setFrontHasOverflow(!!frontNode && frontNode.scrollHeight > frontNode.clientHeight + 1);
-		setBackHasOverflow(!!backNode && backNode.scrollHeight > backNode.clientHeight + 1);
+		setFrontHasOverflow(
+			!!frontNode && frontNode.scrollHeight > frontNode.clientHeight + 1,
+		);
+		setBackHasOverflow(
+			!!backNode && backNode.scrollHeight > backNode.clientHeight + 1,
+		);
 	}, []);
 
 	const handleFlip = () => {
@@ -135,7 +166,11 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 		}
 	};
 
-	useEffect(() => { return () => { tts.stop(); }; }, []);
+	useEffect(() => {
+		return () => {
+			tts.stop();
+		};
+	}, []);
 
 	useEffect(() => {
 		const onKeyDown = (e) => {
@@ -165,13 +200,21 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 	useEffect(() => {
 		stopAutoScroll(frontRafRef);
 		stopAutoScroll(backRafRef);
-		if (!isFlipped && frontHasOverflow) startAutoScroll(frontScrollRef, frontRafRef);
-		if (isFlipped && backHasOverflow) startAutoScroll(backScrollRef, backRafRef);
+		if (!isFlipped && frontHasOverflow)
+			startAutoScroll(frontScrollRef, frontRafRef);
+		if (isFlipped && backHasOverflow)
+			startAutoScroll(backScrollRef, backRafRef);
 		return () => {
 			stopAutoScroll(frontRafRef);
 			stopAutoScroll(backRafRef);
 		};
-	}, [isFlipped, frontHasOverflow, backHasOverflow, startAutoScroll, stopAutoScroll]);
+	}, [
+		isFlipped,
+		frontHasOverflow,
+		backHasOverflow,
+		startAutoScroll,
+		stopAutoScroll,
+	]);
 
 	const contentVariants = {
 		hidden: { opacity: 0 },
@@ -206,7 +249,6 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 					borderRadius: "20px",
 				}}
 			>
-
 				{/* Front side */}
 				<Box
 					sx={{
@@ -301,7 +343,10 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 						}}
 					>
 						<TouchAppIcon sx={{ fontSize: 16 }} />
-						<Typography variant="caption" sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}>
+						<Typography
+							variant="caption"
+							sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}
+						>
 							{t("tap_to_flip")}
 						</Typography>
 					</Box>
@@ -416,7 +461,10 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 						}}
 					>
 						<TouchAppIcon sx={{ fontSize: 16 }} />
-						<Typography variant="caption" sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}>
+						<Typography
+							variant="caption"
+							sx={{ fontFamily: "Inter, sans-serif", fontSize: "0.7rem" }}
+						>
 							{t("tap_to_flip_back")}
 						</Typography>
 					</Box>
@@ -433,7 +481,10 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 						}}
 					>
 						<IconButton
-							onClick={(e) => { e.stopPropagation(); handleTtsToggle(); }}
+							onClick={(e) => {
+								e.stopPropagation();
+								handleTtsToggle();
+							}}
 							size="small"
 							aria-label="Play card audio"
 							sx={{
@@ -442,7 +493,11 @@ export default function FlashCard({ front, back, isFlipped, onFlip }) {
 								transition: "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)",
 							}}
 						>
-							{ttsPlaying ? <StopIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
+							{ttsPlaying ? (
+								<StopIcon fontSize="small" />
+							) : (
+								<VolumeUpIcon fontSize="small" />
+							)}
 						</IconButton>
 					</Box>
 				)}
