@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+	useCallback,
+} from "react";
 import {
 	getFlashcards,
 	createFlashcard,
@@ -416,6 +422,8 @@ function FlashcardItem({
 	onToggleEnabled,
 	index,
 	isSearching,
+	isLastItem,
+	onLastItemHover,
 }) {
 	const theme = useTheme();
 	const { t } = useContext(I18nContext);
@@ -435,10 +443,14 @@ function FlashcardItem({
 				delay: isSearching ? 0 : index * 0.03,
 			}}
 			layout="position"
+			onMouseEnter={() => {
+				if (isLastItem) onLastItemHover?.();
+			}}
 		>
 			<StyledCard
 				variant="default"
 				sx={{
+					marginBottom: "1px",
 					p: 0,
 					overflow: "hidden",
 					opacity: flashcard.enabled ? 1 : 0.62,
@@ -607,11 +619,18 @@ export default function FlashcardModal({
 	const [searchQuery, setSearchQuery] = useState("");
 	const [sortBy, setSortBy] = useState("newest");
 	const [showLimitModal, setShowLimitModal] = useState(false);
+	const listRef = useRef(null);
 	const [snackbar, setSnackbar] = useState({
 		open: false,
 		message: "",
 		severity: "success",
 	});
+
+	const scrollListToBottom = useCallback(() => {
+		const node = listRef.current;
+		if (!node) return;
+		node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
+	}, []);
 
 	const handleCloseSnackbar = () => setSnackbar((s) => ({ ...s, open: false }));
 
@@ -1231,6 +1250,7 @@ export default function FlashcardModal({
 					/>
 				) : (
 					<Box
+						ref={listRef}
 						sx={{
 							display: "flex",
 							flexDirection: "column",
@@ -1280,6 +1300,8 @@ export default function FlashcardModal({
 										onToggleEnabled={handleToggleFlashcardEnabled}
 										index={index}
 										isSearching={!!searchQuery}
+										isLastItem={index === sortedFlashcards.length - 1}
+										onLastItemHover={scrollListToBottom}
 									/>
 								),
 							)}
