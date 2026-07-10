@@ -13,9 +13,10 @@ const StyledCard = forwardRef(
 			padding = 3,
 			onClick,
 			sx = {},
+			isHoverColor = true,
 			...props
 		},
-		ref
+		ref,
 	) => {
 		const variants = {
 			default: {
@@ -75,14 +76,15 @@ const StyledCard = forwardRef(
 			? {
 					cursor: onClick ? "pointer" : "default",
 					"&:hover": {
-						borderColor: (theme) => theme.palette.primary.light,
+						borderColor: (theme) =>
+							isHoverColor ? theme.palette.primary.light : "none",
 						boxShadow: (theme) =>
 							theme.palette.mode === "dark"
 								? "0 12px 40px rgba(59, 130, 246, 0.15)"
 								: "0 12px 40px rgba(59, 130, 246, 0.1)",
 						transform: "translateY(-2px)",
 					},
-			  }
+				}
 			: {};
 
 		return (
@@ -108,7 +110,7 @@ const StyledCard = forwardRef(
 				{children}
 			</MotionPaper>
 		);
-	}
+	},
 );
 
 StyledCard.displayName = "StyledCard";

@@ -179,9 +179,6 @@ export default function Achievements() {
 		fetchAchievements();
 	}, []);
 
-	const earnedCount = achievements.filter((a) => a.earned).length;
-	const totalCount = achievements.length;
-
 	// Group achievements by category
 	const groupedAchievements = achievements.reduce((acc, achievement) => {
 		const category = achievement.category;
@@ -237,56 +234,6 @@ export default function Achievements() {
 						{t("achievements_subtitle") || "Track your learning milestones"}
 					</Typography>
 
-					{/* Progress indicator */}
-					{!loading && (
-						<MotionBox
-							initial={{ opacity: 0, scale: 0.9 }}
-							animate={{ opacity: 1, scale: 1 }}
-							transition={{ delay: 0.2 }}
-							sx={{
-								mt: 3,
-								display: "inline-flex",
-								alignItems: "center",
-								gap: 2,
-								px: 3,
-								py: 1.5,
-								borderRadius: 3,
-								bgcolor: (theme) =>
-									theme.palette.mode === "dark"
-										? "rgba(255, 255, 255, 0.05)"
-										: "rgba(0, 0, 0, 0.03)",
-								border: (theme) =>
-									`1px solid ${
-										theme.palette.mode === "dark"
-											? "rgba(255, 255, 255, 0.1)"
-											: "rgba(0, 0, 0, 0.08)"
-									}`,
-							}}
-						>
-							<Typography
-								variant="h5"
-								sx={{
-									fontWeight: 700,
-									fontFamily: "Inter, sans-serif",
-									background:
-										"linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
-									WebkitBackgroundClip: "text",
-									WebkitTextFillColor: "transparent",
-								}}
-							>
-								{earnedCount}/{totalCount}
-							</Typography>
-							<Typography
-								variant="body2"
-								sx={{
-									color: "text.secondary",
-									fontFamily: "Inter, sans-serif",
-								}}
-							>
-								{t("achievements_earned") || "achievements earned"}
-							</Typography>
-						</MotionBox>
-					)}
 				</MotionBox>
 
 				{/* Achievements by category */}

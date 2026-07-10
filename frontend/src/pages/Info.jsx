@@ -116,6 +116,7 @@ const DeckCard = forwardRef(
 				<StyledCard
 					variant="default"
 					padding={0}
+					isHoverColor={false}
 					sx={{
 						overflow: "hidden",
 						height: 200,
