@@ -133,9 +133,11 @@ const DeckCard = forwardRef(
 						sx={{
 							height: 4,
 							// Use only green-tone gradients when finished, otherwise only red-tone gradients
-							background: deck.finished_today
-								? "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)"
-								: "linear-gradient(135deg, #dc2626 0%, #ef4444 100%)",
+							background: !showTodaysFinishedDecks
+								? "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)"
+								: deck.finished_today
+									? "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)"
+									: "linear-gradient(135deg, #dc2626 0%, #ef4444 100%)",
 						}}
 					/>
 
